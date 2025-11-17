@@ -3,11 +3,13 @@ name = "dprint-plugin-deno-base"
 version = "0.1.0"
 authors = ["David Sherret <dsherret@gmail.com>"]
 edition = "2021"
-homepage = "https://github.com/dprint/dprint-plugin-prettier"
-keywords = ["formatting", "formatter", "typescript", "javascript"]
+homepage = "https://github.com/kjanat/dprint-plugin-svgo"
+keywords = ["formatting", "formatter", "svg", "svgo"]
 license = "MIT"
-repository = "https://github.com/dprint/dprint-plugin-prettier"
+repository = "https://github.com/kjanat/dprint-plugin-svgo"
 description = "Helper code for creating a formatting plugin for dprint with deno_core."
+readme = "../README.md"
+categories = ["development-tools"]
 
 [features]
 build = []

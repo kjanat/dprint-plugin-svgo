@@ -54,7 +54,7 @@ const profiles = profileDataItems.map((profile) => {
   return {
     ...profile,
     artifactsName: `${profile.target}-artifacts`,
-    zipFileName: `dprint-plugin-prettier-${profile.target}.zip`,
+    zipFileName: `dprint-plugin-svgo-${profile.target}.zip`,
     zipChecksumEnvVarName: `ZIP_CHECKSUM_${profile.target.toUpperCase().replaceAll("-", "_")}`,
   };
 });
@@ -178,19 +178,19 @@ const ci = {
               case Runner.MacLatest:
                 return [
                   `cd target/${profile.target}/release`,
-                  `zip -r ${profile.zipFileName} dprint-plugin-prettier`,
+                  `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
                   `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
                 ];
               case Runner.Linux:
               case Runner.LinuxArm:
                 return [
                   `cd target/${profile.target}/release`,
-                  `zip -r ${profile.zipFileName} dprint-plugin-prettier`,
+                  `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
                   `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
                 ];
               case Runner.Windows:
                 return [
-                  `Compress-Archive -CompressionLevel Optimal -Force -Path target/${profile.target}/release/dprint-plugin-prettier.exe -DestinationPath target/${profile.target}/release/${profile.zipFileName}`,
+                  `Compress-Archive -CompressionLevel Optimal -Force -Path target/${profile.target}/release/dprint-plugin-svgo.exe -DestinationPath target/${profile.target}/release/${profile.zipFileName}`,
                   `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${profile.target}/release/${profile.zipFileName} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
                 ];
             }
@@ -248,9 +248,9 @@ const ci = {
           run: "deno run -A scripts/create_plugin_file.ts",
         },
         {
-          name: "Get prettier version",
-          id: "get_prettier_version",
-          run: "echo PRETTIER_VERSION=$(deno run --allow-read scripts/output_prettier_version.ts) >> $GITHUB_OUTPUT",
+          name: "Get svgo version",
+          id: "get_svgo_version",
+          run: "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
         },
         {
           name: "Get tag version",
@@ -279,7 +279,7 @@ const ci = {
               // todo: add this
               // "deployment/schema.json",
             ].join("\n"),
-            body: `Prettier \${{ steps.get_prettier_version.outputs.PRETTIER_VERSION }}
+            body: `SVGO \${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
 ## Install
 
 Dependencies:
@@ -288,26 +288,26 @@ Dependencies:
 
 In a dprint configuration file:
 
-1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint config add prettier\`:
+1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint config add svgo\`:
 
    \`\`\`jsonc
    {
      // etc...
      "plugins": [
-       // ...add other dprint plugins here that you want to take precedence over prettier...
-       "https://plugins.dprint.dev/prettier-\${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@\${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
+       // ...add other dprint plugins here...
+       "https://plugins.dprint.dev/svgo-\${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@\${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
      ]
    }
    \`\`\`
-2. Add a \`"prettier"\` configuration property if desired.
+2. Add a \`"svgo"\` configuration property if desired.
 
    \`\`\`jsonc
    {
      // ...etc...
-     "prettier": {
-       "trailingComma": "all",
-       "singleQuote": true,
-       "proseWrap": "always"
+     "svgo": {
+       "multipass": true,
+       "pretty": true,
+       "indent": 2
      }
    }
    \`\`\`

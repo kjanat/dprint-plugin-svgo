@@ -1,27 +1,26 @@
-# dprint-plugin-prettier
+# dprint-plugin-svgo
 
-[![CI](https://github.com/dprint/dprint-plugin-prettier/workflows/CI/badge.svg)](https://github.com/dprint/dprint-plugin-prettier/actions?query=workflow%3ACI)
+[![CI](https://github.com/kjanat/dprint-plugin-svgo/workflows/CI/badge.svg)](https://github.com/kjanat/dprint-plugin-svgo/actions?query=workflow%3ACI)
 
-Wrapper around [prettier](https://prettier.io/) in order to use it as a dprint plugin.
+Wrapper around [SVGO](https://svgo.dev/) in order to use it as a dprint plugin.
 
 ## Install
 
 1. Install [dprint](https://dprint.dev/install/)
-2. Follow instructions at https://github.com/dprint/dprint-plugin-prettier/releases/
+2. Follow instructions at https://github.com/kjanat/dprint-plugin-svgo/releases/
 
 ## Configuration
 
-See Prettier's configuration [here](https://prettier.io/docs/en/options.html). Specify using the "API Override" column.
+See SVGO's configuration [here](https://svgo.dev/docs/configuration/).
 
 ```jsonc
 {
   // ...etc...
-  "prettier": {
-    "trailingComma": "all",
-    "singleQuote": true,
-    "proseWrap": "always",
-    // enable prettier-plugin-jsdoc
-    "plugin.jsDoc": true
+  "svgo": {
+    "multipass": true,
+    "pretty": true,
+    "indent": 2,
+    "eol": "lf"
   }
 }
 ```
@@ -33,31 +32,16 @@ Add the file extension to the start of the configuration option. For example:
 ```jsonc
 {
   // ...etc...
-  "prettier": {
-    "singleQuote": true,
-    // use double quotes in js files
-    "js.singleQuote": false,
-    // use double quotes in ts files
-    "ts.singleQuote": false
+  "svgo": {
+    "multipass": true,
+    // use different settings for specific svg files
+    "svg.multipass": false
   }
 }
 ```
 
-## Included Prettier Plugins
-
-- [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte)
-  - Enabled by default.
-- [prettier-plugin-jsdoc](https://github.com/hosseinmd/prettier-plugin-jsdoc)
-  - Enable with `"plugin.jsDoc": true` configuration
-
-Temporarily removed, but will be added back soon:
-
-- [prettier-plugin-astro](https://github.com/withastro/prettier-plugin-astro)
-
-See [issue #55](https://github.com/dprint/dprint-plugin-prettier/issues/55) for the new plugin system.
-
 ## Why Does This Exist?
 
-The main reason this exists is to be able to use Prettier with dprint's CLI. That way, you can format with all the plugins that dprint supports, still use Prettier, and only have to run `dprint fmt`.
+The main reason this exists is to be able to use SVGO with dprint's CLI. That way, you can format/optimize SVG files with all the other plugins that dprint supports, and only have to run `dprint fmt`.
 
 Additionally it's much faster. This plugin will format files in parallel and you can take advantage of the speed of dprint's incremental formatting if enabled.

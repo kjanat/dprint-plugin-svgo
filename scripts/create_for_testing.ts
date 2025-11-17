@@ -11,9 +11,9 @@ import $ from "dax";
 await $`npm run build:script`.cwd("js/node");
 await $`cargo build --release`;
 if (Deno.build.os === "windows") {
-  await $`powershell -Command ${"Compress-Archive -Force -Path target/release/dprint-plugin-prettier.exe -DestinationPath target/release/dprint-plugin-prettier-x86_64-pc-windows-msvc.zip"}`;
+  await $`powershell -Command ${"Compress-Archive -Force -Path target/release/dprint-plugin-svgo.exe -DestinationPath target/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip"}`;
 } else if (Deno.build.os === "linux") {
-  await $`zip -j target/release/dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip target/release/dprint-plugin-prettier`;
+  await $`zip -j target/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip target/release/dprint-plugin-svgo`;
 } else {
   throw "TODO";
 }

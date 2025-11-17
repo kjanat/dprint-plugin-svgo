@@ -6,7 +6,7 @@ const rootDir = $.path(import.meta.dirname!).parentOrThrow();
 const cargoFilePath = rootDir.join("plugin/Cargo.toml");
 
 await processPlugin.createDprintOrgProcessPlugin({
-  pluginName: "dprint-plugin-prettier",
+  pluginName: "dprint-plugin-svgo",
   version: new CargoToml(cargoFilePath).version(),
   platforms: [
     "darwin-x86_64",

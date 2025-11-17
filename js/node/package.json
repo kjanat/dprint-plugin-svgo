@@ -1,13 +1,49 @@
 {
-  "name": "dprint-plugin-prettier",
-  "private": true,
+  "name": "dprint-plugin-svgo",
   "version": "0.0.0",
-  "scripts": {
-    "build:script": "parcel build"
+  "private": true,
+  "homepage": "https://github.com/kjanat/dprint-plugin-svgo#readme",
+  "bugs": {
+    "url": "https://github.com/kjanat/dprint-plugin-svgo/issues"
   },
-  "source": "./main.ts",
-  "main": "./dist/startup.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kjanat/dprint-plugin-svgo.git"
+  },
+  "license": "MIT",
+  "author": "",
   "type": "module",
+  "main": "./dist/startup.js",
+  "source": "./main.ts",
+  "browser": {
+    "url": "./shims/url.js",
+    "process": "process/browser",
+    "buffer": "./node_modules/buffer"
+  },
+  "scripts": {
+    "build:script": "node build.js"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "process": "^0.11.10",
+    "svgo": "^3.3.2",
+    "url": "^0.11.4"
+  },
+  "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@types/node": "^22",
+    "crypto-browserify": "^3.12.1",
+    "esbuild": "^0.27.0",
+    "events": "^3.3.0",
+    "parcel": "^2.13.3",
+    "stream-browserify": "^3.0.0",
+    "typescript": "^5.7.2",
+    "util": "^0.12.5"
+  },
+  "engines": {
+    "chrome": "58"
+  },
   "targets": {
     "main": false,
     "default": {
@@ -15,43 +51,8 @@
       "includeNodeModules": true,
       "optimize": false,
       "sourceMap": false,
-      "outputFormat": "global",
+      "outputFormat": "esmodule",
       "distDir": "./dist"
     }
-  },
-  "browser": {
-    "url": "./shims/url.js",
-    "process": "process/browser",
-    "buffer": "./node_modules/buffer"
-  },
-  "engines": {
-    "chrome": "58"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dprint/dprint-plugin-prettier.git"
-  },
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/dprint/dprint-plugin-prettier/issues"
-  },
-  "homepage": "https://github.com/dprint/dprint-plugin-prettier#readme",
-  "dependencies": {
-    "buffer": "^6.0.3",
-    "prettier": "^3.5.3",
-    "prettier-plugin-jsdoc": "^1.3.2",
-    "prettier-plugin-svelte": "^3.4.0",
-    "process": "^0.11.10",
-    "url": "^0.11.4"
-  },
-  "devDependencies": {
-    "@types/node": "^22",
-    "crypto-browserify": "^3.12.1",
-    "events": "^3.3.0",
-    "parcel": "^2.13.3",
-    "stream-browserify": "^3.0.0",
-    "typescript": "^5.7.2",
-    "util": "^0.12.5"
   }
 }

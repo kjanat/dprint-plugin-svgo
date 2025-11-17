@@ -1,5 +1,5 @@
 /**
- * This script checks for any prettier updates and then automatically
+ * This script checks for any svgo updates and then automatically
  * publishes a new version of the plugin if so.
  */
 import * as semver from "@std/semver";
@@ -7,13 +7,10 @@ import $ from "dax";
 
 const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();
 
-$.logStep("Upgrading prettier...");
+$.logStep("Upgrading svgo...");
 const jsNodePath = rootDirPath.join("./js/node");
 await $`npm install`.cwd(jsNodePath);
-await $`npm install --save prettier`.cwd(jsNodePath);
-// await $`npm install --save prettier-plugin-astro`.cwd(jsNodePath);
-await $`npm install --save prettier-plugin-jsdoc`.cwd(jsNodePath);
-await $`npm install --save prettier-plugin-svelte`.cwd(jsNodePath);
+await $`npm install --save svgo`.cwd(jsNodePath);
 
 if (!await hasFileChanged("./js/node/package.json")) {
   $.log("No changes.");

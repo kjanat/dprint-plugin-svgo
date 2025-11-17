@@ -103,65 +103,65 @@ jobs:
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-apple-darwin' && startsWith(github.ref, 'refs/tags/'))"
         run: |-
           cd target/x86_64-apple-darwin/release
-          zip -r dprint-plugin-prettier-x86_64-apple-darwin.zip dprint-plugin-prettier
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-prettier-x86_64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          zip -r dprint-plugin-svgo-x86_64-apple-darwin.zip dprint-plugin-svgo
+          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Pre-release (aarch64-apple-darwin)
         id: pre_release_aarch64_apple_darwin
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'aarch64-apple-darwin' && startsWith(github.ref, 'refs/tags/'))"
         run: |-
           cd target/aarch64-apple-darwin/release
-          zip -r dprint-plugin-prettier-aarch64-apple-darwin.zip dprint-plugin-prettier
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-prettier-aarch64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          zip -r dprint-plugin-svgo-aarch64-apple-darwin.zip dprint-plugin-svgo
+          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Pre-release (x86_64-pc-windows-msvc)
         id: pre_release_x86_64_pc_windows_msvc
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-pc-windows-msvc' && startsWith(github.ref, 'refs/tags/'))"
         run: |-
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/x86_64-pc-windows-msvc/release/dprint-plugin-prettier.exe -DestinationPath target/x86_64-pc-windows-msvc/release/dprint-plugin-prettier-x86_64-pc-windows-msvc.zip
-          echo "ZIP_CHECKSUM=$(shasum -a 256 target/x86_64-pc-windows-msvc/release/dprint-plugin-prettier-x86_64-pc-windows-msvc.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo.exe -DestinationPath target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
+          echo "ZIP_CHECKSUM=$(shasum -a 256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Pre-release (x86_64-unknown-linux-gnu)
         id: pre_release_x86_64_unknown_linux_gnu
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/'))"
         run: |-
           cd target/x86_64-unknown-linux-gnu/release
-          zip -r dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip dprint-plugin-prettier
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          zip -r dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip dprint-plugin-svgo
+          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Pre-release (aarch64-unknown-linux-gnu)
         id: pre_release_aarch64_unknown_linux_gnu
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'aarch64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/'))"
         run: |-
           cd target/aarch64-unknown-linux-gnu/release
-          zip -r dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip dprint-plugin-prettier
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          zip -r dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip dprint-plugin-svgo
+          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Upload artifacts (x86_64-apple-darwin)
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-apple-darwin' && startsWith(github.ref, 'refs/tags/'))"
         uses: actions/upload-artifact@v4
         with:
           name: x86_64-apple-darwin-artifacts
-          path: target/x86_64-apple-darwin/release/dprint-plugin-prettier-x86_64-apple-darwin.zip
+          path: target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip
       - name: Upload artifacts (aarch64-apple-darwin)
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'aarch64-apple-darwin' && startsWith(github.ref, 'refs/tags/'))"
         uses: actions/upload-artifact@v4
         with:
           name: aarch64-apple-darwin-artifacts
-          path: target/aarch64-apple-darwin/release/dprint-plugin-prettier-aarch64-apple-darwin.zip
+          path: target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip
       - name: Upload artifacts (x86_64-pc-windows-msvc)
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-pc-windows-msvc' && startsWith(github.ref, 'refs/tags/'))"
         uses: actions/upload-artifact@v4
         with:
           name: x86_64-pc-windows-msvc-artifacts
-          path: target/x86_64-pc-windows-msvc/release/dprint-plugin-prettier-x86_64-pc-windows-msvc.zip
+          path: target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
       - name: Upload artifacts (x86_64-unknown-linux-gnu)
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/'))"
         uses: actions/upload-artifact@v4
         with:
           name: x86_64-unknown-linux-gnu-artifacts
-          path: target/x86_64-unknown-linux-gnu/release/dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip
+          path: target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
       - name: Upload artifacts (aarch64-unknown-linux-gnu)
         if: "(matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && (matrix.config.target == 'aarch64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/'))"
         uses: actions/upload-artifact@v4
         with:
           name: aarch64-unknown-linux-gnu-artifacts
-          path: target/aarch64-unknown-linux-gnu/release/dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip
+          path: target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip
   draft_release:
     name: draft_release
     if: "startsWith(github.ref, 'refs/tags/')"
@@ -175,23 +175,23 @@ jobs:
       - uses: denoland/setup-deno@v2
       - name: Move downloaded artifacts to root directory
         run: |-
-          mv x86_64-apple-darwin-artifacts/dprint-plugin-prettier-x86_64-apple-darwin.zip .
-          mv aarch64-apple-darwin-artifacts/dprint-plugin-prettier-aarch64-apple-darwin.zip .
-          mv x86_64-pc-windows-msvc-artifacts/dprint-plugin-prettier-x86_64-pc-windows-msvc.zip .
-          mv x86_64-unknown-linux-gnu-artifacts/dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip .
-          mv aarch64-unknown-linux-gnu-artifacts/dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip .
+          mv x86_64-apple-darwin-artifacts/dprint-plugin-svgo-x86_64-apple-darwin.zip .
+          mv aarch64-apple-darwin-artifacts/dprint-plugin-svgo-aarch64-apple-darwin.zip .
+          mv x86_64-pc-windows-msvc-artifacts/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip .
+          mv x86_64-unknown-linux-gnu-artifacts/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip .
+          mv aarch64-unknown-linux-gnu-artifacts/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip .
       - name: Output checksums
         run: |-
-          echo "dprint-plugin-prettier-x86_64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_APPLE_DARWIN}}"
-          echo "dprint-plugin-prettier-aarch64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_APPLE_DARWIN}}"
-          echo "dprint-plugin-prettier-x86_64-pc-windows-msvc.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_PC_WINDOWS_MSVC}}"
-          echo "dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_UNKNOWN_LINUX_GNU}}"
-          echo "dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_UNKNOWN_LINUX_GNU}}"
+          echo "dprint-plugin-svgo-x86_64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_APPLE_DARWIN}}"
+          echo "dprint-plugin-svgo-aarch64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_APPLE_DARWIN}}"
+          echo "dprint-plugin-svgo-x86_64-pc-windows-msvc.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_PC_WINDOWS_MSVC}}"
+          echo "dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_UNKNOWN_LINUX_GNU}}"
+          echo "dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_UNKNOWN_LINUX_GNU}}"
       - name: Create plugin file
         run: deno run -A scripts/create_plugin_file.ts
-      - name: Get prettier version
-        id: get_prettier_version
-        run: echo PRETTIER_VERSION=$(deno run --allow-read scripts/output_prettier_version.ts) >> $GITHUB_OUTPUT
+      - name: Get svgo version
+        id: get_svgo_version
+        run: echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT
       - name: Get tag version
         id: get_tag_version
         run: 'echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT'
@@ -204,14 +204,14 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           files: |-
-            dprint-plugin-prettier-x86_64-apple-darwin.zip
-            dprint-plugin-prettier-aarch64-apple-darwin.zip
-            dprint-plugin-prettier-x86_64-pc-windows-msvc.zip
-            dprint-plugin-prettier-x86_64-unknown-linux-gnu.zip
-            dprint-plugin-prettier-aarch64-unknown-linux-gnu.zip
+            dprint-plugin-svgo-x86_64-apple-darwin.zip
+            dprint-plugin-svgo-aarch64-apple-darwin.zip
+            dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
+            dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
+            dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip
             plugin.json
           body: |
-            Prettier ${{ steps.get_prettier_version.outputs.PRETTIER_VERSION }}
+            SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
             ## Install
 
             Dependencies:
@@ -220,26 +220,26 @@ jobs:
 
             In a dprint configuration file:
 
-            1. Specify the plugin url and checksum in the `"plugins"` array or run `dprint config add prettier`:
+            1. Specify the plugin url and checksum in the `"plugins"` array or run `dprint config add svgo`:
 
                ```jsonc
                {
                  // etc...
                  "plugins": [
-                   // ...add other dprint plugins here that you want to take precedence over prettier...
-                   "https://plugins.dprint.dev/prettier-${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
+                   // ...add other dprint plugins here...
+                   "https://plugins.dprint.dev/svgo-${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
                  ]
                }
                ```
-            2. Add a `"prettier"` configuration property if desired.
+            2. Add a `"svgo"` configuration property if desired.
 
                ```jsonc
                {
                  // ...etc...
-                 "prettier": {
-                   "trailingComma": "all",
-                   "singleQuote": true,
-                   "proseWrap": "always"
+                 "svgo": {
+                   "multipass": true,
+                   "pretty": true,
+                   "indent": 2
                  }
                }
                ```

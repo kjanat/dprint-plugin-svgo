@@ -79,7 +79,7 @@ fn main() {
   let file_extensions: Vec<String> = tokio_runtime.block_on(async move {
     let startup_text = get_startup_text(&startup_code_path);
     runtime
-      .execute_script("dprint:prettier.js", startup_text.clone())
+      .execute_script("dprint:svgo.js", startup_text.clone())
       .unwrap();
     runtime
       .execute_async_fn::<Vec<String>>("deno:get_extensions.js", "dprint.getExtensions".to_string())
@@ -103,7 +103,7 @@ fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]
       extensions: extensions(),
       with_runtime_cb: Some(Box::new(move |runtime| {
         runtime
-          .execute_script("dprint:prettier.js", startup_text.clone())
+          .execute_script("dprint:svgo.js", startup_text.clone())
           .unwrap();
       })),
       warmup_script: None,

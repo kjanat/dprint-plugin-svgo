@@ -7,90 +7,105 @@ use dprint_core::configuration::NewLineKind;
 use dprint_core::configuration::ResolveConfigurationResult;
 use serde::Serialize;
 
+/// Plugin-specific configuration for SVGO.
 #[derive(Clone, Serialize, Default)]
-pub struct PrettierPluginConfig {
-  pub js_doc: bool,
+pub struct SvgoPluginConfig {
+  // SVGO-specific plugin configuration can be added here
 }
 
+/// Configuration for the SVGO plugin.
 #[derive(Clone, Serialize, Default)]
-pub struct PrettierConfig {
+pub struct SvgoConfig {
+  /// Main configuration options passed to SVGO.
   pub main: serde_json::Map<String, serde_json::Value>,
+  /// Extension-specific configuration overrides.
   pub extension_overrides: serde_json::Map<String, serde_json::Value>,
-  pub plugins: PrettierPluginConfig,
+  /// SVGO plugin configuration.
+  pub plugins: SvgoPluginConfig,
 }
 
+/// Resolves the SVGO configuration from dprint configuration.
+///
+/// # Arguments
+///
+/// * `config` - The configuration key map from dprint
+/// * `global_config` - Global dprint configuration
+///
+/// # Returns
+///
+/// A result containing the resolved `SvgoConfig` and any diagnostics.
 pub fn resolve_config(
   mut config: ConfigKeyMap,
   global_config: GlobalConfiguration,
-) -> ResolveConfigurationResult<PrettierConfig> {
+) -> ResolveConfigurationResult<SvgoConfig> {
   let mut diagnostics = Vec::new();
   let mut main: serde_json::Map<String, serde_json::Value> = Default::default();
   let mut extension_overrides: serde_json::Map<String, serde_json::Value> = Default::default();
 
-  let plugins = PrettierPluginConfig {
-    js_doc: get_value(&mut config, "plugin.jsDoc", false, &mut diagnostics),
+  let plugins = SvgoPluginConfig {
+    // SVGO-specific plugin configuration
   };
 
-  let dprint_line_width = get_value(
-    &mut config,
-    "lineWidth",
-    global_config.line_width.unwrap_or(80),
-    &mut diagnostics,
-  );
-  main.insert(
-    "printWidth".to_string(),
-    get_value(
-      &mut config,
-      "printWidth",
-      dprint_line_width,
-      &mut diagnostics,
-    )
-    .into(),
-  );
+  // Handle SVGO js2svg configuration options
+  let mut js2svg: serde_json::Map<String, serde_json::Value> = Default::default();
+
   let dprint_tab_width = get_value(
     &mut config,
     "indentWidth",
     global_config.indent_width.unwrap_or(2),
     &mut diagnostics,
   );
-  main.insert(
-    "tabWidth".to_string(),
-    get_value(&mut config, "tabWidth", dprint_tab_width, &mut diagnostics).into(),
+  js2svg.insert(
+    "indent".to_string(),
+    get_value(&mut config, "indent", dprint_tab_width, &mut diagnostics).into(),
   );
-  main.insert(
-    "useTabs".to_string(),
-    get_value(
-      &mut config,
-      "useTabs",
-      global_config.use_tabs.unwrap_or(false),
-      &mut diagnostics,
-    )
-    .into(),
-  );
+
   let dprint_newline_kind: NewLineKind = get_value(
     &mut config,
     "newLineKind",
     global_config.new_line_kind.unwrap_or(NewLineKind::LineFeed),
     &mut diagnostics,
   );
-  let prettier_end_of_line: Option<String> =
-    get_nullable_value(&mut config, "endOfLine", &mut diagnostics);
-  if let Some(prettier_end_of_line) = prettier_end_of_line {
-    main.insert("endOfLine".to_string(), prettier_end_of_line.into());
+  let eol: Option<String> = get_nullable_value(&mut config, "eol", &mut diagnostics);
+  if let Some(eol) = eol {
+    js2svg.insert("eol".to_string(), eol.into());
   } else {
-    main.insert(
-      "endOfLine".to_string(),
+    js2svg.insert(
+      "eol".to_string(),
       match dprint_newline_kind {
-        NewLineKind::Auto => "auto",
         NewLineKind::CarriageReturnLineFeed => "crlf",
-        NewLineKind::LineFeed => "lf",
+        NewLineKind::LineFeed | NewLineKind::Auto => "lf",
       }
       .into(),
     );
   }
 
+  // Handle other js2svg options
+  js2svg.insert(
+    "pretty".to_string(),
+    get_value(&mut config, "pretty", true, &mut diagnostics).into(),
+  );
+
+  main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
+
+  // Handle SVGO multipass option
+  main.insert(
+    "multipass".to_string(),
+    get_value(&mut config, "multipass", false, &mut diagnostics).into(),
+  );
+
   for (key, value) in config {
-    let value = config_key_value_to_json(value);
+    let mut value = config_key_value_to_json(value);
+
+    // Special handling for plugins key: if it's a string, parse it as JSON
+    if key == "plugins" {
+      if let serde_json::Value::String(s) = &value {
+        if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(s) {
+          value = parsed;
+        }
+      }
+    }
+
     if let Some(index) = key.rfind('.') {
       let extension = key[..index].to_lowercase();
       let key = &key[index + 1..];
@@ -106,7 +121,7 @@ pub fn resolve_config(
   }
 
   ResolveConfigurationResult {
-    config: PrettierConfig {
+    config: SvgoConfig {
       main,
       extension_overrides,
       plugins,

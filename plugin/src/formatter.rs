@@ -11,7 +11,7 @@ use dprint_plugin_deno_base::runtime::JsRuntime;
 use dprint_plugin_deno_base::snapshot::deserialize_snapshot;
 use dprint_plugin_deno_base::util::set_v8_max_memory;
 
-use crate::config::PrettierConfig;
+use crate::config::SvgoConfig;
 
 fn get_startup_snapshot() -> &'static [u8] {
   // Copied from Deno's codebase:
@@ -35,11 +35,11 @@ fn get_startup_snapshot() -> &'static [u8] {
   )
 }
 
-pub struct PrettierFormatter {
+pub struct SvgoFormatter {
   runtime: JsRuntime,
 }
 
-impl Default for PrettierFormatter {
+impl Default for SvgoFormatter {
   fn default() -> Self {
     let runtime = JsRuntime::new(CreateRuntimeOptions {
       extensions: vec![
@@ -47,17 +47,17 @@ impl Default for PrettierFormatter {
         deno_console::deno_console::init_ops(),
         deno_url::deno_url::init_ops(),
       ],
-      startup_snapshot: Some(&get_startup_snapshot()),
+      startup_snapshot: Some(get_startup_snapshot()),
     });
     Self { runtime }
   }
 }
 
 #[async_trait(?Send)]
-impl Formatter<PrettierConfig> for PrettierFormatter {
+impl Formatter<SvgoConfig> for SvgoFormatter {
   async fn format_text(
     &mut self,
-    request: FormatRequest<PrettierConfig>,
+    request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, Error> {
     // todo: implement cancellation and range formatting
     let request_value = serde_json::Value::Object({
@@ -84,26 +84,27 @@ impl Formatter<PrettierConfig> for PrettierFormatter {
       .runtime
       .execute_format_script(code)
       .await
-      .map(|s| s.map(|s| s.into_bytes()))
+      .map(|s| s.map(std::string::String::into_bytes))
   }
 }
 
 fn resolve_config<'a>(
   file_path: &str,
-  config: &'a PrettierConfig,
+  config: &'a SvgoConfig,
 ) -> Cow<'a, serde_json::Map<String, serde_json::Value>> {
   let ext = if let Some(index) = file_path.rfind('.') {
     file_path[index + 1..].to_lowercase()
   } else {
     return Cow::Borrowed(&config.main);
   };
-  if let Some(override_config) = config.extension_overrides.get(&ext) {
-    let mut new_config = config.main.clone();
-    for (key, value) in override_config.as_object().unwrap().iter() {
-      new_config.insert(key.to_string(), value.clone());
-    }
-    Cow::Owned(new_config)
-  } else {
-    Cow::Borrowed(&config.main)
-  }
+  config.extension_overrides.get(&ext).map_or_else(
+    || Cow::Borrowed(&config.main),
+    |override_config| {
+      let mut new_config = config.main.clone();
+      for (key, value) in override_config.as_object().unwrap() {
+        new_config.insert(key.to_string(), value.clone());
+      }
+      Cow::Owned(new_config)
+    },
+  )
 }

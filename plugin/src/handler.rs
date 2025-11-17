@@ -16,8 +16,8 @@ use dprint_plugin_deno_base::channel::Channel;
 use dprint_plugin_deno_base::channel::CreateChannelOptions;
 
 use crate::config::resolve_config;
-use crate::config::PrettierConfig;
-use crate::formatter::PrettierFormatter;
+use crate::config::SvgoConfig;
+use crate::formatter::SvgoFormatter;
 
 fn get_supported_extensions() -> &'static Vec<String> {
   static SUPPORTED_EXTENSIONS: OnceLock<Vec<String>> = OnceLock::new();
@@ -28,35 +28,36 @@ fn get_supported_extensions() -> &'static Vec<String> {
   })
 }
 
-pub struct PrettierPluginHandler {
-  channel: Arc<Channel<PrettierConfig>>,
+/// Handler for the SVGO dprint plugin.
+///
+/// This handler manages the formatting of SVG files using SVGO.
+pub struct SvgoPluginHandler {
+  channel: Arc<Channel<SvgoConfig>>,
 }
 
-impl Default for PrettierPluginHandler {
+impl Default for SvgoPluginHandler {
   fn default() -> Self {
     Self {
       channel: Arc::new(Channel::new(CreateChannelOptions {
-        avg_isolate_memory_usage: 600_000, // 600MB guess
-        create_formatter_cb: Arc::new(|| Box::<PrettierFormatter>::default()),
+        avg_isolate_memory_usage: 100_000, // 100MB estimate for SVGO
+        create_formatter_cb: Arc::new(|| Box::<SvgoFormatter>::default()),
       })),
     }
   }
 }
 
 #[async_trait(?Send)]
-impl AsyncPluginHandler for PrettierPluginHandler {
-  type Configuration = PrettierConfig;
+impl AsyncPluginHandler for SvgoPluginHandler {
+  type Configuration = SvgoConfig;
 
   fn plugin_info(&self) -> PluginInfo {
     PluginInfo {
       name: env!("CARGO_PKG_NAME").to_string(),
       version: env!("CARGO_PKG_VERSION").to_string(),
-      config_key: "prettier".to_string(),
-      help_url: "https://dprint.dev/plugins/prettier".to_string(),
-      config_schema_url: "".to_string(),
-      update_url: Some(
-        "https://plugins.dprint.dev/dprint/dprint-plugin-prettier/latest.json".to_string(),
-      ),
+      config_key: "svgo".to_string(),
+      help_url: "https://svgo.dev".to_string(),
+      config_schema_url: String::new(),
+      update_url: None,
     }
   }
 

@@ -1,7 +1,13 @@
 [package]
-name = "dprint-plugin-prettier"
-version = "0.58.2"
+name = "dprint-plugin-svgo"
+version = "0.1.0"
 edition = "2021"
+description = "A dprint plugin for formatting and optimizing SVG files using SVGO"
+license = "MIT"
+repository = "https://github.com/kjanat/dprint-plugin-svgo"
+readme = "../README.md"
+keywords = ["formatting", "formatter", "svg", "svgo"]
+categories = ["development-tools"]
 
 [dependencies]
 deno_console.workspace = true

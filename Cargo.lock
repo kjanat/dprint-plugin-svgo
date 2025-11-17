@@ -500,8 +500,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "dprint-plugin-prettier"
-version = "0.58.2"
+name = "dprint-plugin-svgo"
+version = "0.1.0"
 dependencies = [
  "deno_console",
  "deno_core",
