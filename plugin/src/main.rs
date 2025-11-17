@@ -3,7 +3,7 @@ use dprint_core::plugins::process::handle_process_stdio_messages;
 use dprint_core::plugins::process::start_parent_process_checker_task;
 use dprint_plugin_deno_base::runtime::JsRuntime;
 use dprint_plugin_deno_base::util::create_tokio_runtime;
-use handler::PrettierPluginHandler;
+use handler::SvgoPluginHandler;
 
 mod config;
 mod formatter;
@@ -17,7 +17,7 @@ fn main() {
       start_parent_process_checker_task(parent_process_id);
     }
 
-    handle_process_stdio_messages(PrettierPluginHandler::default()).await
+    handle_process_stdio_messages(SvgoPluginHandler::default()).await
   });
 
   if let Err(err) = result {
