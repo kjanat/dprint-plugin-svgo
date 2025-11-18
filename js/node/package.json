@@ -1,42 +1,28 @@
 {
   "name": "dprint-plugin-svgo",
-  "private": true,
   "version": "0.0.0",
-  "scripts": {
-    "build:script": "node build.js"
-  },
-  "source": "./main.ts",
-  "main": "./dist/startup.js",
-  "type": "module",
-  "targets": {
-    "main": false,
-    "default": {
-      "context": "browser",
-      "includeNodeModules": true,
-      "optimize": false,
-      "sourceMap": false,
-      "outputFormat": "esmodule",
-      "distDir": "./dist"
-    }
-  },
-  "browser": {
-    "url": "./shims/url.js",
-    "process": "process/browser",
-    "buffer": "./node_modules/buffer"
-  },
-  "engines": {
-    "chrome": "58"
+  "private": true,
+  "homepage": "https://github.com/kjanat/dprint-plugin-svgo#readme",
+  "bugs": {
+    "url": "https://github.com/kjanat/dprint-plugin-svgo/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kjanat/dprint-plugin-svgo.git"
   },
-  "author": "",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/kjanat/dprint-plugin-svgo/issues"
+  "author": "",
+  "type": "module",
+  "main": "./dist/startup.js",
+  "source": "./main.ts",
+  "browser": {
+    "url": "./shims/url.js",
+    "process": "process/browser",
+    "buffer": "./node_modules/buffer"
   },
-  "homepage": "https://github.com/kjanat/dprint-plugin-svgo#readme",
+  "scripts": {
+    "build:script": "node build.js"
+  },
   "dependencies": {
     "buffer": "^6.0.3",
     "process": "^0.11.10",
@@ -53,5 +39,19 @@
     "stream-browserify": "^3.0.0",
     "typescript": "^5.7.2",
     "util": "^0.12.5"
+  },
+  "engines": {
+    "chrome": "58"
+  },
+  "targets": {
+    "main": false,
+    "default": {
+      "context": "browser",
+      "includeNodeModules": true,
+      "optimize": false,
+      "sourceMap": false,
+      "outputFormat": "esmodule",
+      "distDir": "./dist"
+    }
   }
 }
