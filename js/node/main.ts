@@ -1,4 +1,4 @@
-import { optimize, type Config } from "../../svgo/lib/svgo.js";
+import { optimize, type Config } from "svgo";
 
 (globalThis as any).dprint = {
   getExtensions,
