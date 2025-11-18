@@ -47,7 +47,7 @@ impl Default for SvgoFormatter {
         deno_console::deno_console::init_ops(),
         deno_url::deno_url::init_ops(),
       ],
-      startup_snapshot: Some(&get_startup_snapshot()),
+      startup_snapshot: Some(get_startup_snapshot()),
     });
     Self { runtime }
   }
@@ -84,7 +84,7 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       .runtime
       .execute_format_script(code)
       .await
-      .map(|s| s.map(|s| s.into_bytes()))
+      .map(|s| s.map(std::string::String::into_bytes))
   }
 }
 
@@ -97,13 +97,14 @@ fn resolve_config<'a>(
   } else {
     return Cow::Borrowed(&config.main);
   };
-  if let Some(override_config) = config.extension_overrides.get(&ext) {
-    let mut new_config = config.main.clone();
-    for (key, value) in override_config.as_object().unwrap().iter() {
-      new_config.insert(key.to_string(), value.clone());
-    }
-    Cow::Owned(new_config)
-  } else {
-    Cow::Borrowed(&config.main)
-  }
+  config.extension_overrides.get(&ext).map_or_else(
+    || Cow::Borrowed(&config.main),
+    |override_config| {
+      let mut new_config = config.main.clone();
+      for (key, value) in override_config.as_object().unwrap() {
+        new_config.insert(key.to_string(), value.clone());
+      }
+      Cow::Owned(new_config)
+    },
+  )
 }

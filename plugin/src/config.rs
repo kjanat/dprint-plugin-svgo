@@ -7,18 +7,33 @@ use dprint_core::configuration::NewLineKind;
 use dprint_core::configuration::ResolveConfigurationResult;
 use serde::Serialize;
 
+/// Plugin-specific configuration for SVGO.
 #[derive(Clone, Serialize, Default)]
 pub struct SvgoPluginConfig {
   // SVGO-specific plugin configuration can be added here
 }
 
+/// Configuration for the SVGO plugin.
 #[derive(Clone, Serialize, Default)]
 pub struct SvgoConfig {
+  /// Main configuration options passed to SVGO.
   pub main: serde_json::Map<String, serde_json::Value>,
+  /// Extension-specific configuration overrides.
   pub extension_overrides: serde_json::Map<String, serde_json::Value>,
+  /// SVGO plugin configuration.
   pub plugins: SvgoPluginConfig,
 }
 
+/// Resolves the SVGO configuration from dprint configuration.
+///
+/// # Arguments
+///
+/// * `config` - The configuration key map from dprint
+/// * `global_config` - Global dprint configuration
+///
+/// # Returns
+///
+/// A result containing the resolved `SvgoConfig` and any diagnostics.
 pub fn resolve_config(
   mut config: ConfigKeyMap,
   global_config: GlobalConfiguration,

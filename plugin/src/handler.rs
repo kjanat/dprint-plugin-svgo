@@ -28,6 +28,9 @@ fn get_supported_extensions() -> &'static Vec<String> {
   })
 }
 
+/// Handler for the SVGO dprint plugin.
+///
+/// This handler manages the formatting of SVG files using SVGO.
 pub struct SvgoPluginHandler {
   channel: Arc<Channel<SvgoConfig>>,
 }
@@ -53,7 +56,7 @@ impl AsyncPluginHandler for SvgoPluginHandler {
       version: env!("CARGO_PKG_VERSION").to_string(),
       config_key: "svgo".to_string(),
       help_url: "https://svgo.dev".to_string(),
-      config_schema_url: "".to_string(),
+      config_schema_url: String::new(),
       update_url: None,
     }
   }
