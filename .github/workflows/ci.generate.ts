@@ -8,7 +8,7 @@ enum Runner {
   // uses an older version of ubuntu because of issue dprint/#483
   Linux = "ubuntu-22.04",
   LinuxArm =
-    "${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}",
+    "${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}",
 }
 
 interface ProfileData {
@@ -64,8 +64,8 @@ const profiles = profileDataItems.map((profile) => {
 const ci = {
   name: "CI",
   on: {
-    pull_request: { branches: ["main"] },
-    push: { branches: ["main"], tags: ["*"] },
+    pull_request: { branches: ["master", "main"] },
+    push: { branches: ["master", "main"], tags: ["*"] },
   },
   concurrency: {
     // https://stackoverflow.com/a/72408109/188246
@@ -100,14 +100,15 @@ const ci = {
         RUST_BACKTRACE: "full",
       },
       steps: [
-        { uses: "actions/checkout@v4" },
+        { uses: "actions/checkout@v5" },
         { uses: "dsherret/rust-toolchain-file@v1" },
         {
           name: "Cache cargo",
           uses: "Swatinem/rust-cache@v2",
           with: {
             "prefix-key": "v3-${{matrix.config.target}}",
-            "save-if": "${{ github.ref == 'refs/heads/main' }}",
+            "save-if":
+              "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
           },
         },
         {
@@ -119,18 +120,24 @@ const ci = {
         {
           uses: "actions/setup-node@v4",
           with: {
-            "node-version": 21,
+            "node-version": "latest",
           },
         },
         {
-          name: "npm install",
-          run: "cd js/node && npm ci",
+          uses: "oven-sh/setup-bun@v2",
+          with: {
+            "version": "latest",
+          },
+        },
+        {
+          name: "bun install",
+          run: "cd js/node && bun install",
         },
         {
           name: "Setup cross",
           if: "matrix.config.cross == 'true'",
           run: [
-            "cd js/node && npm run build:script",
+            "cd js/node && bun run build:script",
             "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3",
           ].join("\n"),
         },
@@ -231,8 +238,8 @@ const ci = {
       ].map((step) =>
         withCondition(
           step,
-          // only run arm64 linux on main or tags
-          "matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')",
+          // only run arm64 linux on main/master or tags
+          "matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')",
         )
       ),
     },
@@ -242,7 +249,7 @@ const ci = {
       needs: "build",
       "runs-on": "ubuntu-latest",
       steps: [
-        { name: "Checkout", uses: "actions/checkout@v4" },
+        { name: "Checkout", uses: "actions/checkout@v5" },
         { name: "Download artifacts", uses: "actions/download-artifact@v4" },
         { uses: "denoland/setup-deno@v2" },
         {
@@ -279,22 +286,15 @@ const ci = {
           run:
             "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
         },
-        // todo: implement this
-        // {
-        //   name: "Update Config Schema Version",
-        //   run:
-        //     "sed -i 's/prettier\\/0.0.0/prettier\\/${{ steps.get_tag_version.outputs.TAG_VERSION }}/' deployment/schema.json",
-        // },
         {
           name: "Release",
           uses: "softprops/action-gh-release@v2",
           env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" },
           with: {
+            draft: true,
             files: [
               ...profiles.map((profile) => profile.zipFileName),
               "plugin.json",
-              // todo: add this
-              // "deployment/schema.json",
             ].join("\n"),
             body: `SVGO \${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
 ## Install
@@ -305,9 +305,9 @@ Dependencies:
 
 In a dprint configuration file:
 
-1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint config add svgo\`:
+1. Specify the plugin url and checksum in the ${"`"}"plugins"${"`"} array or run ${"`"}dprint config add svgo${"`"}:
 
-   \`\`\`jsonc
+   ${"```"}jsonc
    {
      // etc...
      "plugins": [
@@ -315,10 +315,11 @@ In a dprint configuration file:
        "https://plugins.dprint.dev/svgo-\${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@\${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
      ]
    }
-   \`\`\`
-2. Add a \`"svgo"\` configuration property if desired.
+   ${"```"}
 
-   \`\`\`jsonc
+2. Add a ${"`"}"svgo"${"`"} configuration property if desired.
+
+   ${"```"}jsonc
    {
      // ...etc...
      "svgo": {
@@ -327,9 +328,8 @@ In a dprint configuration file:
        "indent": 2
      }
    }
-   \`\`\`
+   ${"```"}
 `,
-            draft: false,
           },
         },
       ],
@@ -341,6 +341,7 @@ let finalText = `# GENERATED BY ./ci.generate.ts -- DO NOT DIRECTLY EDIT\n\n`;
 finalText += yaml.stringify(ci, {
   lineWidth: 10_000,
   compatMode: false,
+  styles: { "!!str": "double" },
 });
 
 Deno.writeTextFileSync(new URL("./ci.yml", import.meta.url), finalText);
