@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "setup": "cd js/node && bun install"
+  },
+  "imports": {
+    "dax": "jsr:@david/dax@^0.44.0",
+    "@std/semver": "jsr:@std/semver@^1.0.7",
+    "@std/yaml": "jsr:@std/yaml@^1.0.10"
+  }
+}
