@@ -34,4 +34,11 @@ pub enum SvgoError {
     /// Maximum allowed elements.
     max: usize,
   },
+
+  /// Format operation timed out.
+  #[error("Format operation timed out after {seconds} seconds")]
+  Timeout {
+    /// Timeout duration in seconds.
+    seconds: u64,
+  },
 }

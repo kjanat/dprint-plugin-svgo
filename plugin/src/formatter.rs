@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::path::Path;
 use std::sync::OnceLock;
+use std::time::Duration;
 
 use deno_core::serde_json;
 use dprint_core::async_runtime::async_trait;
@@ -10,6 +11,7 @@ use dprint_plugin_deno_base::runtime::CreateRuntimeOptions;
 use dprint_plugin_deno_base::runtime::JsRuntime;
 use dprint_plugin_deno_base::snapshot::deserialize_snapshot;
 use dprint_plugin_deno_base::util::set_v8_max_memory;
+use tokio::time::timeout;
 
 use crate::config::SvgoConfig;
 use crate::error::SvgoError;
@@ -19,6 +21,9 @@ const MAX_SVG_DEPTH: usize = 100;
 
 /// Maximum allowed number of elements in SVG.
 const MAX_SVG_ELEMENTS: usize = 100_000;
+
+/// Timeout for format operations in seconds.
+const FORMAT_TIMEOUT_SECS: u64 = 30;
 
 fn get_startup_snapshot() -> &'static [u8] {
   // Copied from Deno's codebase:
@@ -98,11 +103,16 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       "(async () => {{ return await dprint.formatText({{ ...{}, config: {}, pluginsConfig: {} }}); }})()",
       request_value, config_json, plugins_json,
     );
-    self
-      .runtime
-      .execute_format_script(code)
-      .await
-      .map(|s| s.map(std::string::String::into_bytes))
+    let result = timeout(
+      Duration::from_secs(FORMAT_TIMEOUT_SECS),
+      self.runtime.execute_format_script(code),
+    )
+    .await
+    .map_err(|_| SvgoError::Timeout {
+      seconds: FORMAT_TIMEOUT_SECS,
+    })?;
+
+    result.map(|s| s.map(std::string::String::into_bytes))
   }
 }
 

@@ -9,8 +9,8 @@
 
 ### Security (Phase 1 - Mandatory before release)
 
-- [ ] Add input size validation (10MB limit) - prevent DoS
-- [ ] Add operation timeout (30 seconds) - prevent CPU exhaustion
+- [x] ~~Add input size validation~~ (removed: large SVGs are primary use case)
+- [x] Add operation timeout (30 seconds) - prevent infinite loops
 
 ## Medium Priority
 

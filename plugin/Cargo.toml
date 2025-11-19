@@ -19,6 +19,7 @@ dprint-plugin-deno-base = { path = "../base", version = "0.2.0" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+tokio = { version = "1", features = ["time"] }
 
 [dev-dependencies]
 dprint-development = "0.10"
