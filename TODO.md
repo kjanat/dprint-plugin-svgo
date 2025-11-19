@@ -22,7 +22,7 @@
 
 ### Test Improvements
 
-- [ ] Reduce test coupling to internal config structure
+- [x] ~~Reduce test coupling~~ (kept: unit tests appropriately test internals; behavioral tests added)
 
 ## Low Priority
 
@@ -32,8 +32,8 @@
 
 ### Code Cleanup
 
-- [ ] Remove empty `SvgoPluginConfig` struct if unused (placeholder for future use)
-- [ ] ~~Consider returning `&'static str` for license text~~ (blocked: trait requires `String`)
+- [x] ~~Remove empty `SvgoPluginConfig`~~ (kept: placeholder for future SVGO plugin config)
+- [x] ~~`&'static str` for license text~~ (blocked: trait requires `String`)
 
 ## Completed
 
