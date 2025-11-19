@@ -2,11 +2,10 @@ import * as yaml from "@std/yaml";
 import $ from "dax";
 
 enum Runner {
-  Mac13 = "macos-13",
+  Mac13 = "macos-latest",
   MacLatest = "macos-latest",
   Windows = "windows-latest",
-  // uses an older version of ubuntu because of issue dprint/#483
-  Linux = "ubuntu-22.04",
+  Linux = "ubuntu-latest",
   LinuxArm =
     "${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}",
 }
@@ -126,7 +125,7 @@ const ci = {
         {
           uses: "oven-sh/setup-bun@v2",
           with: {
-            "version": "latest",
+            "bun-version": "latest",
           },
         },
         {
