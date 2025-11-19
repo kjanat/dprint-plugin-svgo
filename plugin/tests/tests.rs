@@ -744,3 +744,112 @@ fn format_hidden_file_no_extension() {
     assert!(result.is_ok());
   });
 }
+
+// SVG structure validation tests
+
+#[test]
+fn format_deeply_nested_svg_fails() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // Create SVG with 101 nested elements (exceeds MAX_SVG_DEPTH of 100)
+    let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
+    for _ in 0..101 {
+      svg.push_str("<g>");
+    }
+    svg.push_str("<rect/>");
+    for _ in 0..101 {
+      svg.push_str("</g>");
+    }
+    svg.push_str("</svg>");
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("deep.svg"),
+          file_bytes: svg.into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // Should fail due to depth limit
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("too deep") || err_msg.contains("depth"));
+  });
+}
+
+#[test]
+fn format_normal_depth_svg_succeeds() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // Create SVG with 50 nested elements (under MAX_SVG_DEPTH of 100)
+    let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
+    for _ in 0..50 {
+      svg.push_str("<g>");
+    }
+    svg.push_str("<rect/>");
+    for _ in 0..50 {
+      svg.push_str("</g>");
+    }
+    svg.push_str("</svg>");
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("normal.svg"),
+          file_bytes: svg.into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // Should succeed
+    assert!(result.is_ok());
+  });
+}
+
+#[test]
+fn format_svg_with_self_closing_tags() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // SVG with many self-closing tags (should not affect depth)
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg">
+      <rect/><rect/><rect/><rect/><rect/>
+      <circle/><circle/><circle/><circle/><circle/>
+    </svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("selfclose.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+  });
+}

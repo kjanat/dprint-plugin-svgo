@@ -20,4 +20,18 @@ pub enum SvgoError {
   /// V8 runtime error during formatting.
   #[error("Formatting failed: {0}")]
   Runtime(#[from] deno_core::anyhow::Error),
+
+  /// SVG structure exceeds maximum allowed depth.
+  #[error("SVG structure too deep: maximum depth {max} exceeded")]
+  MaxDepthExceeded {
+    /// Maximum allowed depth.
+    max: usize,
+  },
+
+  /// SVG contains too many elements.
+  #[error("SVG has too many elements: maximum {max} exceeded")]
+  MaxElementsExceeded {
+    /// Maximum allowed elements.
+    max: usize,
+  },
 }

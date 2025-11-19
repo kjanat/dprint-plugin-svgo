@@ -28,7 +28,7 @@
 
 ### Security (Phase 3)
 
-- [ ] Error message sanitization (avoid leaking internal paths)
+- [x] Error message sanitization (avoid leaking internal paths)
 
 ### Code Cleanup
 

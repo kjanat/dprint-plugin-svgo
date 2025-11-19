@@ -14,6 +14,12 @@ use dprint_plugin_deno_base::util::set_v8_max_memory;
 use crate::config::SvgoConfig;
 use crate::error::SvgoError;
 
+/// Maximum allowed nesting depth in SVG structure.
+const MAX_SVG_DEPTH: usize = 100;
+
+/// Maximum allowed number of elements in SVG.
+const MAX_SVG_ELEMENTS: usize = 100_000;
+
 fn get_startup_snapshot() -> &'static [u8] {
   // Copied from Deno's codebase:
   // https://github.com/denoland/deno/blob/daa7c6d32ab5a4029f8084e174d621f5562256be/cli/tsc.rs#L55
@@ -67,13 +73,17 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
     // TODO(#future): Cancellation support requires passing token to V8 runtime.
     // Range formatting not supported by SVGO - always formats entire document.
+    let file_text = String::from_utf8(request.file_bytes).map_err(SvgoError::InvalidUtf8)?;
+
+    // Validate SVG structure before processing
+    validate_svg_structure(&file_text)?;
+
     let request_value = serde_json::Value::Object({
       let mut obj = serde_json::Map::new();
       obj.insert(
         "filePath".to_string(),
         request.file_path.to_string_lossy().into(),
       );
-      let file_text = String::from_utf8(request.file_bytes).map_err(SvgoError::InvalidUtf8)?;
       obj.insert("fileText".to_string(), file_text.into());
       obj
     });
@@ -118,4 +128,95 @@ fn resolve_config<'a>(
       Ok(Cow::Owned(new_config))
     }
   }
+}
+
+/// Validates SVG structure to prevent malicious deeply nested content.
+///
+/// Checks for:
+/// - Maximum nesting depth (prevents stack exhaustion)
+/// - Maximum element count (prevents memory exhaustion)
+fn validate_svg_structure(content: &str) -> Result<(), SvgoError> {
+  let mut depth: usize = 0;
+  let mut max_depth: usize = 0;
+  let mut element_count: usize = 0;
+  let mut in_tag = false;
+  let mut is_closing = false;
+  let mut is_self_closing = false;
+  let bytes = content.as_bytes();
+  let len = bytes.len();
+  let mut i = 0;
+
+  while i < len {
+    let c = bytes[i];
+
+    match c {
+      b'<' => {
+        in_tag = true;
+        is_closing = false;
+        is_self_closing = false;
+
+        // Check if it's a closing tag
+        if i + 1 < len && bytes[i + 1] == b'/' {
+          is_closing = true;
+        }
+        // Skip comments and CDATA
+        else if i + 3 < len && bytes[i + 1] == b'!' {
+          // Skip to end of comment/CDATA
+          while i < len && !(bytes[i] == b'>' && i > 0 && bytes[i - 1] == b'-') {
+            i += 1;
+          }
+          in_tag = false;
+        }
+        // Skip processing instructions
+        else if i + 1 < len && bytes[i + 1] == b'?' {
+          while i < len && bytes[i] != b'>' {
+            i += 1;
+          }
+          in_tag = false;
+        }
+      }
+      b'/' if in_tag => {
+        // Check for self-closing tag
+        if i + 1 < len && bytes[i + 1] == b'>' {
+          is_self_closing = true;
+        }
+      }
+      b'>' if in_tag => {
+        in_tag = false;
+
+        if is_closing {
+          // Closing tag - decrease depth
+          depth = depth.saturating_sub(1);
+        } else if is_self_closing {
+          // Self-closing tag - count but don't change depth
+          element_count += 1;
+          if element_count > MAX_SVG_ELEMENTS {
+            return Err(SvgoError::MaxElementsExceeded {
+              max: MAX_SVG_ELEMENTS,
+            });
+          }
+        } else {
+          // Opening tag - increase depth
+          element_count += 1;
+          if element_count > MAX_SVG_ELEMENTS {
+            return Err(SvgoError::MaxElementsExceeded {
+              max: MAX_SVG_ELEMENTS,
+            });
+          }
+          depth += 1;
+          if depth > max_depth {
+            max_depth = depth;
+          }
+          if max_depth > MAX_SVG_DEPTH {
+            return Err(SvgoError::MaxDepthExceeded { max: MAX_SVG_DEPTH });
+          }
+        }
+      }
+      _ => {}
+    }
+
+    i += 1;
+  }
+
+  Ok(())
 }
