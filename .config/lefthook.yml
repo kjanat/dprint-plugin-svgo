@@ -1,0 +1,23 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: dprint fmt
+      run: dprint fmt --staged
+      stage_fixed: true
+
+    - name: cargo clippy
+      glob: "*.rs"
+      run: cargo clippy --all-targets -- -D warnings
+
+    - name: typescript check
+      root: "js/node"
+      glob: "*.{ts,js}"
+      run: bun typecheck
+
+pre-push:
+  jobs:
+    - name: cargo test
+      run: cargo test --all
+
+    - name: cargo build release
+      run: cargo build --release
