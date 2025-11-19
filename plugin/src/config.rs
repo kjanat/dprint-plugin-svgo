@@ -99,23 +99,23 @@ pub fn resolve_config(
     let mut value = config_key_value_to_json(value);
 
     // Special handling for plugins key: if it's a string, parse it as JSON
-    if key == "plugins" {
-      if let serde_json::Value::String(s) = &value {
-        if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(s) {
-          value = parsed;
-        }
-      }
+    if key == "plugins"
+      && let serde_json::Value::String(s) = &value
+      && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(s)
+    {
+      value = parsed;
     }
 
     if let Some(index) = key.rfind('.') {
       let extension = key[..index].to_lowercase();
       let key = &key[index + 1..];
-      extension_overrides
+      let entry = extension_overrides
         .entry(extension)
-        .or_insert_with(|| serde_json::Value::Object(Default::default()))
-        .as_object_mut()
-        .unwrap()
-        .insert(key.to_string(), value);
+        .or_insert_with(|| serde_json::Value::Object(Default::default()));
+      // Safe: we just inserted an Object above if missing
+      if let Some(obj) = entry.as_object_mut() {
+        obj.insert(key.to_string(), value);
+      }
     } else {
       main.insert(key, value);
     }

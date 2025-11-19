@@ -12,6 +12,8 @@ extern crate dprint_core;
 
 /// Configuration types for the SVGO plugin.
 pub mod config;
+/// Error types for the SVGO plugin.
+pub mod error;
 mod formatter;
 mod handler;
 

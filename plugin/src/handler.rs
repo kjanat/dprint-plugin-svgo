@@ -24,7 +24,8 @@ fn get_supported_extensions() -> &'static Vec<String> {
   SUPPORTED_EXTENSIONS.get_or_init(|| {
     let json_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/SUPPORTED_EXTENSIONS.json"));
 
-    deno_core::serde_json::from_slice(json_bytes).unwrap()
+    deno_core::serde_json::from_slice(json_bytes)
+      .expect("Failed to parse SUPPORTED_EXTENSIONS.json - this is a build error")
   })
 }
 

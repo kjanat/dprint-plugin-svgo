@@ -13,6 +13,7 @@ deno_webidl = "0.184.0"
 dprint-core = "0.67.4"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+thiserror = "2"
 zstd = "0.13.3"
 
 # rusty-v8 needs at least -O1 to not miscompile

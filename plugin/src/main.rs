@@ -6,6 +6,7 @@ use dprint_plugin_deno_base::util::create_tokio_runtime;
 use handler::SvgoPluginHandler;
 
 mod config;
+mod error;
 mod formatter;
 mod handler;
 
