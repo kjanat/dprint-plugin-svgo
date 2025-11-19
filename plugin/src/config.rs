@@ -24,7 +24,8 @@ pub struct SvgoConfig {
   pub plugins: SvgoPluginConfig,
 }
 
-#[allow(dead_code)] // Public API methods for library consumers
+// These methods are public API for library consumers but not used by the binary
+#[allow(dead_code)]
 impl SvgoConfig {
   /// Get the js2svg configuration object.
   #[must_use]

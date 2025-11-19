@@ -77,7 +77,7 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     &mut self,
     request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
-    // TODO(#future): Cancellation support requires passing token to V8 runtime.
+    // Cancellation support not yet implemented. See: https://github.com/kjanat/dprint-plugin-svgo/issues/2
     // Range formatting not supported by SVGO - always formats entire document.
     let file_text = String::from_utf8(request.file_bytes).map_err(SvgoError::InvalidUtf8)?;
 

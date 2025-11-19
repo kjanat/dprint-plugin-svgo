@@ -1,3 +1,4 @@
+use std::fmt;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -54,6 +55,20 @@ pub struct Channel<TConfiguration: Send + Sync + 'static> {
   sender: async_channel::Sender<Request<TConfiguration>>,
   receiver: async_channel::Receiver<Request<TConfiguration>>,
   options: CreateChannelOptions<TConfiguration>,
+}
+
+impl<TConfiguration: Send + Sync + 'static> fmt::Debug for Channel<TConfiguration> {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    let stats = self.stats.lock();
+    f.debug_struct("Channel")
+      .field("total_runtimes", &stats.total_runtimes)
+      .field("pending_runtimes", &stats.pending_runtimes)
+      .field(
+        "avg_isolate_memory_usage",
+        &self.options.avg_isolate_memory_usage,
+      )
+      .finish_non_exhaustive()
+  }
 }
 
 impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {

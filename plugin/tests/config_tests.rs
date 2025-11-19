@@ -3,6 +3,7 @@ use dprint_core::configuration::ConfigKeyValue;
 use dprint_core::configuration::GlobalConfiguration;
 use dprint_core::configuration::NewLineKind;
 use dprint_plugin_svgo::config::resolve_config;
+use proptest::prelude::*;
 
 fn empty_global_config() -> GlobalConfiguration {
   GlobalConfiguration {
@@ -580,4 +581,119 @@ fn resolve_config_valid_float_precision() {
   let result = resolve_config(config, empty_global_config());
 
   assert!(result.diagnostics.is_empty());
+}
+
+// Tests for SvgoConfig accessor methods
+
+#[test]
+fn svgo_config_get_main_value() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("multipass".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(3));
+
+  let result = resolve_config(config, empty_global_config());
+
+  // Test get_main_value
+  assert!(result.config.get_main_value("multipass").is_some());
+  assert!(result.config.get_main_value("js2svg").is_some());
+  assert!(result.config.get_main_value("nonexistent").is_none());
+}
+
+#[test]
+fn svgo_config_get_js2svg() {
+  let config = ConfigKeyMap::new();
+  let result = resolve_config(config, empty_global_config());
+
+  // Test get_js2svg returns the js2svg object
+  let js2svg = result.config.get_js2svg();
+  assert!(js2svg.is_some());
+
+  let js2svg = js2svg.unwrap();
+  assert!(js2svg.contains_key("indent"));
+  assert!(js2svg.contains_key("eol"));
+  assert!(js2svg.contains_key("pretty"));
+}
+
+#[test]
+fn svgo_config_has_extension_override() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+
+  let result = resolve_config(config, empty_global_config());
+
+  // Test has_extension_override
+  assert!(result.config.has_extension_override("svg"));
+  assert!(!result.config.has_extension_override("svgz"));
+  assert!(!result.config.has_extension_override("png"));
+}
+
+// Property-based tests
+
+proptest! {
+  #[test]
+  fn prop_resolve_config_doesnt_panic_with_numeric_indent(indent in -1000i32..1000) {
+    let mut config = ConfigKeyMap::new();
+    config.insert("indent".to_string(), ConfigKeyValue::Number(indent));
+    let _ = resolve_config(config, empty_global_config());
+  }
+
+  #[test]
+  fn prop_resolve_config_doesnt_panic_with_float_precision(precision in -100i32..100) {
+    let mut config = ConfigKeyMap::new();
+    config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(precision));
+    let _ = resolve_config(config, empty_global_config());
+  }
+
+  #[test]
+  fn prop_resolve_config_doesnt_panic_with_arbitrary_string_values(value in "\\PC*") {
+    let mut config = ConfigKeyMap::new();
+    config.insert("eol".to_string(), ConfigKeyValue::String(value));
+    let _ = resolve_config(config, empty_global_config());
+  }
+
+  #[test]
+  fn prop_resolve_config_handles_arbitrary_extension_keys(ext in "[a-z]{1,10}", key in "[a-zA-Z]{1,20}") {
+    let mut config = ConfigKeyMap::new();
+    config.insert(format!("{ext}.{key}"), ConfigKeyValue::Bool(true));
+    let _ = resolve_config(config, empty_global_config());
+  }
+
+  #[test]
+  fn prop_resolve_config_handles_combined_settings(
+    indent in 0i32..20,
+    multipass in prop::bool::ANY,
+    pretty in prop::bool::ANY,
+  ) {
+    let mut config = ConfigKeyMap::new();
+    config.insert("indent".to_string(), ConfigKeyValue::Number(indent));
+    config.insert("multipass".to_string(), ConfigKeyValue::Bool(multipass));
+    config.insert("pretty".to_string(), ConfigKeyValue::Bool(pretty));
+
+    let result = resolve_config(config, empty_global_config());
+
+    // Should produce valid config with expected values
+    assert_eq!(result.config.get_indent(), Some(i64::from(indent)));
+    assert_eq!(result.config.is_multipass(), Some(multipass));
+    assert_eq!(result.config.is_pretty(), Some(pretty));
+  }
+
+  #[test]
+  fn prop_resolve_config_handles_global_config_variations(
+    indent_width in prop::option::of(1u8..20),
+    use_tabs in prop::option::of(prop::bool::ANY),
+  ) {
+    let config = ConfigKeyMap::new();
+    let global_config = GlobalConfiguration {
+      indent_width,
+      use_tabs,
+      line_width: None,
+      new_line_kind: None,
+    };
+
+    let result = resolve_config(config, global_config);
+
+    // Should use global indent_width if set, otherwise default to 2
+    let expected_indent = i64::from(indent_width.unwrap_or(2));
+    assert_eq!(result.config.get_indent(), Some(expected_indent));
+  }
 }
