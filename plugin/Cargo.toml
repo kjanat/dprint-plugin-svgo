@@ -1,6 +1,6 @@
 [package]
 name = "dprint-plugin-svgo"
-version = "0.1.0"
+version = "0.1.1"
 categories = ["development-tools"]
 edition = "2024"
 keywords = ["formatter", "formatting", "svg", "svgo"]
