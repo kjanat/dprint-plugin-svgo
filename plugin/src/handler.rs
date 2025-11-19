@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::sync::OnceLock;
 
-use dprint_core::async_runtime::async_trait;
 use dprint_core::async_runtime::LocalBoxFuture;
+use dprint_core::async_runtime::async_trait;
 use dprint_core::configuration::ConfigKeyMap;
 use dprint_core::configuration::GlobalConfiguration;
 use dprint_core::plugins::AsyncPluginHandler;
@@ -15,8 +15,8 @@ use dprint_core::plugins::PluginResolveConfigurationResult;
 use dprint_plugin_deno_base::channel::Channel;
 use dprint_plugin_deno_base::channel::CreateChannelOptions;
 
-use crate::config::resolve_config;
 use crate::config::SvgoConfig;
+use crate::config::resolve_config;
 use crate::formatter::SvgoFormatter;
 
 fn get_supported_extensions() -> &'static Vec<String> {

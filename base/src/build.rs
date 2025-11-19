@@ -14,7 +14,8 @@ pub struct CreateSnapshotOptions {
 }
 
 /// Creates a snapshot, returning the uncompressed bytes.
-#[must_use] pub fn create_snapshot(options: CreateSnapshotOptions) -> Box<[u8]> {
+#[must_use]
+pub fn create_snapshot(options: CreateSnapshotOptions) -> Box<[u8]> {
   let snapshot_output = deno_core::snapshot::create_snapshot(
     deno_core::snapshot::CreateSnapshotOptions {
       cargo_manifest_dir: options.cargo_manifest_dir,

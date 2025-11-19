@@ -1,10 +1,10 @@
-use dprint_core::configuration::get_nullable_value;
-use dprint_core::configuration::get_value;
 use dprint_core::configuration::ConfigKeyMap;
 use dprint_core::configuration::ConfigKeyValue;
 use dprint_core::configuration::GlobalConfiguration;
 use dprint_core::configuration::NewLineKind;
 use dprint_core::configuration::ResolveConfigurationResult;
+use dprint_core::configuration::get_nullable_value;
+use dprint_core::configuration::get_value;
 use serde::Serialize;
 
 /// Plugin-specific configuration for SVGO.
@@ -34,7 +34,8 @@ pub struct SvgoConfig {
 /// # Returns
 ///
 /// A result containing the resolved `SvgoConfig` and any diagnostics.
-#[must_use] pub fn resolve_config(
+#[must_use]
+pub fn resolve_config(
   mut config: ConfigKeyMap,
   global_config: GlobalConfiguration,
 ) -> ResolveConfigurationResult<SvgoConfig> {

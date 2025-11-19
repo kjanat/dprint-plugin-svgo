@@ -48,7 +48,8 @@ pub struct Channel<TConfiguration: Send + Sync + 'static> {
 }
 
 impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {
-  #[must_use] pub fn new(options: CreateChannelOptions<TConfiguration>) -> Self {
+  #[must_use]
+  pub fn new(options: CreateChannelOptions<TConfiguration>) -> Self {
     let (sender, receiver) = async_channel::unbounded();
     Self {
       stats: Arc::new(Mutex::new(Stats {

@@ -1,13 +1,13 @@
-use deno_core::anyhow::anyhow;
+use deno_core::Extension;
+use deno_core::PollEventLoopOptions;
+use deno_core::RuntimeOptions;
 use deno_core::anyhow::Error;
 use deno_core::anyhow::Result;
+use deno_core::anyhow::anyhow;
 use deno_core::serde_v8;
 use deno_core::v8;
 use deno_core::v8::Platform;
 use deno_core::v8::SharedRef;
-use deno_core::Extension;
-use deno_core::PollEventLoopOptions;
-use deno_core::RuntimeOptions;
 use serde::Deserialize;
 
 fn get_platform() -> SharedRef<Platform> {

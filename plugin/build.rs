@@ -53,7 +53,10 @@ fn main() {
   );
 
   let startup_code_path = js_dir.join("node/dist/main.js");
-  assert!(startup_code_path.exists(), "Run `cd js/node && npm run build:script` first.");
+  assert!(
+    startup_code_path.exists(),
+    "Run `cd js/node && npm run build:script` first."
+  );
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
 
