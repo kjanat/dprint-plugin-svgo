@@ -213,6 +213,16 @@ fn config_key_value_to_json(value: ConfigKeyValue) -> serde_json::Value {
   }
 }
 
+/// Known SVGO configuration keys for validation.
+const KNOWN_SVGO_KEYS: &[&str] = &[
+  "plugins",
+  "floatPrecision",
+  "datauri",
+  "js2svg",
+  "multipass",
+  "path",
+];
+
 /// Validates a configuration value and adds diagnostics for invalid values.
 fn validate_config_value(
   key: &str,
@@ -271,8 +281,19 @@ fn validate_config_value(
         });
       }
     }
+    "multipass" | "path" => {
+      // Known keys with no additional validation
+    }
     _ => {
-      // No validation for unknown keys - SVGO may accept additional options
+      // Warn about unknown keys that might be typos
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: key.to_string(),
+        message: format!(
+          "Unknown SVGO option '{}'. Known options: {}",
+          base_key,
+          KNOWN_SVGO_KEYS.join(", ")
+        ),
+      });
     }
   }
 }

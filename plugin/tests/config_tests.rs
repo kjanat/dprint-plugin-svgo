@@ -195,7 +195,7 @@ fn resolve_config_plugins_as_array() {
 }
 
 #[test]
-fn resolve_config_unknown_key_passes_through() {
+fn resolve_config_unknown_key_passes_through_with_warning() {
   let mut config = ConfigKeyMap::new();
   config.insert(
     "customOption".to_string(),
@@ -204,6 +204,7 @@ fn resolve_config_unknown_key_passes_through() {
 
   let result = resolve_config(config, empty_global_config());
 
+  // Unknown keys pass through but generate a diagnostic warning
   assert_eq!(
     result
       .config
@@ -213,6 +214,14 @@ fn resolve_config_unknown_key_passes_through() {
       .as_str()
       .unwrap(),
     "value"
+  );
+
+  // Should warn about unknown key
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(
+    result.diagnostics[0]
+      .message
+      .contains("Unknown SVGO option")
   );
 }
 

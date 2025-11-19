@@ -635,9 +635,21 @@ fn resolve_config_with_wrong_type_indent() {
       .resolve_config(config, GlobalConfiguration::default())
       .await;
 
-    // Should still resolve but the string value passes through as-is
-    // SVGO will handle the type mismatch
-    assert!(result.diagnostics.is_empty() || !result.diagnostics.is_empty());
+    // String "four" can't be parsed as number, generates diagnostic
+    assert_eq!(result.diagnostics.len(), 1);
+    assert!(result.diagnostics[0].message.contains("invalid digit"));
+
+    // Config still resolves with default indent value
+    let js2svg = result
+      .config
+      .main
+      .get("js2svg")
+      .expect("js2svg should exist")
+      .as_object()
+      .expect("js2svg should be object");
+    let indent = js2svg.get("indent").expect("indent should exist");
+    // Falls back to default when parsing fails
+    assert!(indent.is_number(), "Should use default number indent");
   });
 }
 
@@ -842,6 +854,136 @@ fn format_svg_with_self_closing_tags() {
           config_id: FormatConfigId::from_raw(0),
           file_path: PathBuf::from("selfclose.svg"),
           file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+  });
+}
+
+#[test]
+fn format_svg_with_cdata_section() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // SVG with CDATA section containing < and > characters
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg">
+      <script><![CDATA[
+        if (a < b && c > d) { console.log("test"); }
+      ]]></script>
+    </svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("cdata.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // CDATA should be skipped by validator
+    assert!(result.is_ok());
+  });
+}
+
+#[test]
+fn format_svg_with_processing_instruction() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // SVG with processing instruction
+    let svg = r#"<?xml version="1.0" encoding="UTF-8"?>
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <rect/>
+    </svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("pi.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // Processing instruction should be skipped
+    assert!(result.is_ok());
+  });
+}
+
+#[test]
+fn format_svg_with_comments() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // SVG with comments
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg">
+      <!-- This is a comment with <fake> tags -->
+      <rect/>
+      <!-- Another comment -->
+    </svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("comments.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // Comments should be skipped by validator
+    assert!(result.is_ok());
+  });
+}
+
+#[test]
+fn format_svg_with_many_elements_succeeds() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // SVG with many elements but within limit
+    let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
+    for _ in 0..1000 {
+      svg.push_str("<rect/>");
+    }
+    svg.push_str("</svg>");
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("many_elements.svg"),
+          file_bytes: svg.into_bytes(),
           config: Arc::new(Default::default()),
           range: None,
           token: Arc::new(NullCancellationToken),
