@@ -14,6 +14,11 @@ pre-commit:
       glob: "*.{ts,js}"
       run: bun typecheck
 
+    - name: deno check
+      root: "js/node"
+      glob: "*.{ts,js}"
+      run: deno check main.ts build.ts
+
 pre-push:
   jobs:
     - name: cargo test
