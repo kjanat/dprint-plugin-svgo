@@ -6,8 +6,6 @@ enum Runner {
   MacLatest = "macos-latest",
   Windows = "windows-latest",
   Linux = "ubuntu-latest",
-  LinuxArm =
-    "${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}",
 }
 
 interface ProfileData {
@@ -16,16 +14,6 @@ interface ProfileData {
   runTests?: boolean;
   // currently not used
   cross?: boolean;
-}
-
-function withCondition(
-  step: Record<string, unknown>,
-  condition: string,
-): Record<string, unknown> {
-  return {
-    ...step,
-    if: "if" in step ? `(${condition}) && (${step.if})` : condition,
-  };
 }
 
 const profileDataItems: ProfileData[] = [{
@@ -45,9 +33,9 @@ const profileDataItems: ProfileData[] = [{
   target: "x86_64-unknown-linux-gnu",
   runTests: true,
 }, {
-  runner: Runner.LinuxArm,
+  runner: Runner.Linux,
   target: "aarch64-unknown-linux-gnu",
-  runTests: true,
+  cross: true,
 }];
 const profiles = profileDataItems.map((profile) => {
   return {
@@ -235,13 +223,7 @@ const ci = {
             },
           };
         }),
-      ].map((step) =>
-        withCondition(
-          step,
-          // only run arm64 linux on main/master or tags
-          "matrix.config.target != 'aarch64-unknown-linux-gnu' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')",
-        )
-      ),
+      ],
     },
     draft_release: {
       name: "draft_release",
