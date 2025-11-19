@@ -38,7 +38,12 @@ async function formatText(
     }
   } catch (error) {
     // If SVGO fails to optimize (e.g., invalid SVG), return undefined to keep original
-    console.error(`SVGO error for ${filePath}:`, error);
+    // Sanitize error message to avoid leaking internal paths
+    const fileName = filePath.split(/[/\\]/).pop() || filePath;
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(`SVGO error for ${fileName}: ${errorMessage}`);
     return undefined;
   }
 }
