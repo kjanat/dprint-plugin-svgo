@@ -11,18 +11,18 @@ repository = "https://github.com/kjanat/dprint-plugin-svgo"
 description = "Helper code for creating a formatting plugin for dprint with deno_core."
 
 [dependencies]
-async-channel = "2.3.1"
+async-channel = "2.5"
 deno_core = { workspace = true }
 dprint-core = { workspace = true, features = ["process"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sysinfo = { version = "0.33", default-features = false, features = ["system"] }
+sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 tokio = { version = "1", features = ["macros", "rt", "time"] }
-tokio-util = { version = "0.7.13" }
+tokio-util = "0.7"
 zstd.workspace = true
 
 [dev-dependencies]
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4"
 
 [features]
 build = []

@@ -20,8 +20,8 @@ serde.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
-dprint-development = "0.9.5"
-pretty_assertions = "1.4.0"
+dprint-development = "0.10"
+pretty_assertions = "1.4"
 
 [build-dependencies]
 deno_console.workspace = true
@@ -29,5 +29,5 @@ deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"]
 deno_url.workspace = true
 deno_webidl.workspace = true
 dprint-plugin-deno-base = { path = "../base", version = "0.1.0", features = ["build"] }
-sha256 = "1.5.0"
+sha256 = "1.6"
 zstd.workspace = true
