@@ -1,16 +1,16 @@
-use std::sync::Arc;
-use std::path::PathBuf;
-use dprint_core::plugins::AsyncPluginHandler;
-use dprint_core::plugins::{FormatRequest, FormatConfigId, NullCancellationToken};
-use dprint_core::configuration::ConfigKeyMap;
-use dprint_plugin_deno_base::util::create_tokio_runtime;
 use deno_core::futures::FutureExt;
+use dprint_core::configuration::ConfigKeyMap;
+use dprint_core::plugins::AsyncPluginHandler;
+use dprint_core::plugins::{FormatConfigId, FormatRequest, NullCancellationToken};
+use dprint_plugin_deno_base::util::create_tokio_runtime;
 use dprint_plugin_svgo::config::resolve_config;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 fn main() {
-    let runtime = create_tokio_runtime();
+  let runtime = create_tokio_runtime();
 
-    runtime.block_on(async {
+  runtime.block_on(async {
         let handler = dprint_plugin_svgo::SvgoPluginHandler::default();
 
         let test_svg = r#"<?xml version="1.0" encoding="UTF-8"?>

@@ -66,4 +66,3 @@ fn handle_valid_svg() {
     assert!(formatted.is_some());
   });
 }
-

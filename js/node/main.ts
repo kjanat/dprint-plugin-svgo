@@ -1,4 +1,4 @@
-import { optimize, type Config } from "svgo";
+import { type Config, optimize } from "svgo/browser";
 
 (globalThis as any).dprint = {
   getExtensions,
@@ -21,7 +21,9 @@ interface PluginsConfig {
   // SVGO-specific plugin configuration can be added here
 }
 
-async function formatText({ filePath, fileText, config, pluginsConfig }: FormatTextOptions) {
+async function formatText(
+  { filePath, fileText, config, pluginsConfig }: FormatTextOptions,
+) {
   try {
     const result = optimize(fileText, {
       path: filePath,

@@ -55,7 +55,9 @@ const profiles = profileDataItems.map((profile) => {
     ...profile,
     artifactsName: `${profile.target}-artifacts`,
     zipFileName: `dprint-plugin-svgo-${profile.target}.zip`,
-    zipChecksumEnvVarName: `ZIP_CHECKSUM_${profile.target.toUpperCase().replaceAll("-", "_")}`,
+    zipChecksumEnvVarName: `ZIP_CHECKSUM_${
+      profile.target.toUpperCase().replaceAll("-", "_")
+    }`,
   };
 });
 
@@ -67,7 +69,8 @@ const ci = {
   },
   concurrency: {
     // https://stackoverflow.com/a/72408109/188246
-    group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+    group:
+      "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
     "cancel-in-progress": true,
   },
   jobs: {
@@ -87,8 +90,8 @@ const ci = {
       outputs: Object.fromEntries(
         profiles.map((profile) => [
           profile.zipChecksumEnvVarName,
-          "${{steps.pre_release_" + profile.target.replaceAll("-", "_")
-          + ".outputs.ZIP_CHECKSUM}}",
+          "${{steps.pre_release_" + profile.target.replaceAll("-", "_") +
+          ".outputs.ZIP_CHECKSUM}}",
         ]),
       ),
       env: {
@@ -133,41 +136,50 @@ const ci = {
         },
         {
           name: "Build (Debug)",
-          if: "matrix.config.cross != 'true' && !startsWith(github.ref, 'refs/tags/')",
-          run: "cargo build --locked --all-targets --target ${{matrix.config.target}}",
+          if:
+            "matrix.config.cross != 'true' && !startsWith(github.ref, 'refs/tags/')",
+          run:
+            "cargo build --locked --all-targets --target ${{matrix.config.target}}",
         },
         {
           name: "Build release",
-          if: "matrix.config.cross != 'true' && startsWith(github.ref, 'refs/tags/')",
-          run: "cargo build --locked --all-targets --target ${{matrix.config.target}} --release",
+          if:
+            "matrix.config.cross != 'true' && startsWith(github.ref, 'refs/tags/')",
+          run:
+            "cargo build --locked --all-targets --target ${{matrix.config.target}} --release",
         },
         {
           name: "Build cross (Debug)",
-          if: "matrix.config.cross == 'true' && !startsWith(github.ref, 'refs/tags/')",
+          if:
+            "matrix.config.cross == 'true' && !startsWith(github.ref, 'refs/tags/')",
           run: [
             "cross build --locked --target ${{matrix.config.target}}",
           ].join("\n"),
         },
         {
           name: "Build cross (Release)",
-          if: "matrix.config.cross == 'true' && startsWith(github.ref, 'refs/tags/')",
+          if:
+            "matrix.config.cross == 'true' && startsWith(github.ref, 'refs/tags/')",
           run: [
             "cross build --locked --target ${{matrix.config.target}} --release",
           ].join("\n"),
         },
         {
           name: "Lint",
-          if: "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
+          if:
+            "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
           run: "cargo clippy",
         },
         {
           name: "Test (Debug)",
-          if: "matrix.config.run_tests == 'true' && !startsWith(github.ref, 'refs/tags/')",
+          if:
+            "matrix.config.run_tests == 'true' && !startsWith(github.ref, 'refs/tags/')",
           run: "cargo test --locked --all-features",
         },
         {
           name: "Test (Release)",
-          if: "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')",
+          if:
+            "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')",
           run: "cargo test --locked --all-features --release",
         },
         // zip files
@@ -198,7 +210,8 @@ const ci = {
           return {
             name: `Pre-release (${profile.target})`,
             id: `pre_release_${profile.target.replaceAll("-", "_")}`,
-            if: `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
+            if:
+              `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
             run: getRunSteps().join("\n"),
           };
         }),
@@ -206,7 +219,8 @@ const ci = {
         ...profiles.map((profile) => {
           return {
             name: `Upload artifacts (${profile.target})`,
-            if: `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
+            if:
+              `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
             uses: "actions/upload-artifact@v4",
             with: {
               name: profile.artifactsName,
@@ -250,17 +264,20 @@ const ci = {
         {
           name: "Get svgo version",
           id: "get_svgo_version",
-          run: "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
+          run:
+            "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
         },
         {
           name: "Get tag version",
           id: "get_tag_version",
-          run: "echo TAG_VERSION=${GITHUB_REF/refs\\/tags\\//} >> $GITHUB_OUTPUT",
+          run:
+            "echo TAG_VERSION=${GITHUB_REF/refs\\/tags\\//} >> $GITHUB_OUTPUT",
         },
         {
           name: "Get plugin file checksum",
           id: "get_plugin_file_checksum",
-          run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
+          run:
+            "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
         },
         // todo: implement this
         // {

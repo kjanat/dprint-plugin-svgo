@@ -1,0 +1,93 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+
+  /** General */
+  "lineWidth": 80,
+  "indentWidth": 2,
+  "useTabs": false,
+
+  /** Language specific */
+  "json": {
+    "indentWidth": 2,
+    "trailingCommas": "never"
+  },
+  "markdown": {},
+  "toml": {},
+  "malva": {},
+  "markup": {},
+  "yaml": {},
+
+  /** Exec plugin for external commands */
+  "exec": {
+    "cwd": "${configDir}",
+    "commands": [
+      {
+        /** Sorts package.json files */
+        "command": "bunx sort-package-json --stdin",
+        "fileNames": ["package.json"],
+        "stdin": true
+      },
+      {
+        /** Prettifies anf minifies SVG files */
+        "command": "svgo --config /home/kjanat/.svgo.mjs --multipass --pretty -q --input - --output -",
+        "exts": ["svg"],
+        "stdin": true
+      },
+      {
+        /** Formats toml files */
+        "command": "tombi format --stdin-filename {{file_path}} -",
+        "exts": ["toml"]
+      },
+      {
+        "command": "rustfmt --edition 2021",
+        "exts": ["rs"],
+        // add the config files for automatic cache invalidation when the rust version or rustfmt config changes
+        "cacheKeyFiles": [".rustfmt.toml", "rust-toolchain.toml"]
+      },
+      {
+        "command": "deno fmt --no-config --indent-width {{indent_width}} --line-width {{line_width}} --use-tabs={{use_tabs}} -",
+        "exts": [
+          "ts",
+          "tsx",
+          "js",
+          "jsx",
+          "mts",
+          "mjs",
+          "cts",
+          "cjs",
+          "md",
+          "json",
+          "jsonc",
+          "css",
+          "scss",
+          "sass",
+          "less",
+          "html",
+          "svelte",
+          "vue",
+          "astro",
+          "yml",
+          "yaml",
+          "ipynb",
+          "sql",
+          "vto",
+          "njk"
+        ],
+        "stdin": true
+      }
+    ]
+  },
+
+  /** File inclusions/exclusions */
+  "excludes": ["**/node_modules", "**/*-lock.json"],
+  /** Plugins */
+  "plugins": [
+    "https://plugins.dprint.dev/json-0.21.0.wasm",
+    "https://plugins.dprint.dev/markdown-0.20.0.wasm",
+    "https://plugins.dprint.dev/toml-0.7.0.wasm",
+    "https://plugins.dprint.dev/g-plane/malva-v0.15.0.wasm",
+    "https://plugins.dprint.dev/g-plane/markup_fmt-v0.24.1.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.5.1.wasm",
+    "https://plugins.dprint.dev/exec-0.6.0.json@a054130d458f124f9b5c91484833828950723a5af3f8ff2bd1523bd47b83b364"
+  ]
+}

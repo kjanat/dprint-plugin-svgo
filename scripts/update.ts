@@ -41,7 +41,9 @@ async function bumpMinorVersion() {
   if (currentVersion == null) {
     throw new Error("Could not find version.");
   }
-  const newVersion = semver.format(semver.increment(semver.parse(currentVersion), "minor"));
+  const newVersion = semver.format(
+    semver.increment(semver.parse(currentVersion), "minor"),
+  );
   const newText = text.replace(versionRegex, `version = "${newVersion}"`);
   await projectFile.writeText(newText);
   return newVersion;

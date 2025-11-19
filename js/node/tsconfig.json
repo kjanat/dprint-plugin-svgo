@@ -8,9 +8,5 @@
     "removeComments": true,
     "importHelpers": false
   },
-  "include": [
-    "./src",
-    "main.ts",
-    "types.d.ts"
-  ]
+  "include": ["./src", "main.ts", "build.ts", "types.d.ts"]
 }

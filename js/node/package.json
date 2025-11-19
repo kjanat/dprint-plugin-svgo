@@ -11,7 +11,7 @@
     "url": "git+https://github.com/kjanat/dprint-plugin-svgo.git"
   },
   "license": "MIT",
-  "author": "",
+  "author": "Kaj Kowalski <info@kajkowalski.com>",
   "type": "module",
   "main": "./dist/startup.js",
   "source": "./main.ts",
@@ -21,24 +21,24 @@
     "buffer": "./node_modules/buffer"
   },
   "scripts": {
-    "build:script": "node build.js"
+    "build:script": "bun build.ts"
   },
   "dependencies": {
     "buffer": "^6.0.3",
     "process": "^0.11.10",
-    "svgo": "^3.3.2",
+    "svgo": "^4.0.0",
     "url": "^0.11.4"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@types/node": "^22",
+    "@types/node": "^24.10.1",
     "crypto-browserify": "^3.12.1",
     "esbuild": "^0.27.0",
     "events": "^3.3.0",
-    "parcel": "^2.13.3",
+    "parcel": "^2.16.1",
     "stream-browserify": "^3.0.0",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "util": "^0.12.5"
   },
   "engines": {

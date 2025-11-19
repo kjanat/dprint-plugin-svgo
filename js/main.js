@@ -7,4 +7,6 @@ globalThis.URLPattern = urlPattern.URLPattern;
 globalThis.URLSearchParams = urlPattern.URLSearchParams;
 const core = globalThis.Deno.core;
 // always print to stderr because we use stdout for communication
-globalThis.console = new console.Console((msg, _level) => core.print(msg, true));
+globalThis.console = new console.Console((msg, _level) =>
+  core.print(msg, true)
+);
