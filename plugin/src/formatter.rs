@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::path::Path;
 use std::sync::OnceLock;
 
 use deno_core::serde_json;
@@ -36,6 +37,10 @@ fn get_startup_snapshot() -> &'static [u8] {
   )
 }
 
+/// SVGO formatter that wraps a V8 JavaScript runtime for SVG optimization.
+///
+/// This struct manages a Deno-based V8 runtime that executes SVGO to optimize SVG files.
+/// Each instance maintains its own isolated runtime for thread safety.
 pub struct SvgoFormatter {
   runtime: JsRuntime,
 }
@@ -60,7 +65,8 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     &mut self,
     request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
-    // todo: implement cancellation and range formatting
+    // TODO(#future): Cancellation support requires passing token to V8 runtime.
+    // Range formatting not supported by SVGO - always formats entire document.
     let request_value = serde_json::Value::Object({
       let mut obj = serde_json::Map::new();
       obj.insert(
@@ -94,10 +100,9 @@ fn resolve_config<'a>(
   file_path: &str,
   config: &'a SvgoConfig,
 ) -> Result<Cow<'a, serde_json::Map<String, serde_json::Value>>, SvgoError> {
-  let ext = if let Some(index) = file_path.rfind('.') {
-    file_path[index + 1..].to_lowercase()
-  } else {
-    return Ok(Cow::Borrowed(&config.main));
+  let ext = match Path::new(file_path).extension().and_then(|e| e.to_str()) {
+    Some(e) => e.to_lowercase(),
+    None => return Ok(Cow::Borrowed(&config.main)),
   };
 
   match config.extension_overrides.get(&ext) {
