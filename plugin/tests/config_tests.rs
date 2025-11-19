@@ -469,3 +469,106 @@ fn resolve_config_global_auto_newline() {
   // Auto should default to lf
   assert_eq!(result.config.get_eol(), Some("lf"));
 }
+
+// Schema validation tests
+
+#[test]
+fn resolve_config_invalid_plugins_not_array() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "plugins".to_string(),
+    ConfigKeyValue::String("preset-default".to_string()),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("array"));
+}
+
+#[test]
+fn resolve_config_invalid_float_precision_negative() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(-1));
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("between 0 and 20"));
+}
+
+#[test]
+fn resolve_config_invalid_float_precision_too_high() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(25));
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("between 0 and 20"));
+}
+
+#[test]
+fn resolve_config_invalid_datauri() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "datauri".to_string(),
+    ConfigKeyValue::String("invalid".to_string()),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("base64"));
+}
+
+#[test]
+fn resolve_config_invalid_js2svg_not_object() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "js2svg".to_string(),
+    ConfigKeyValue::String("invalid".to_string()),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("object"));
+}
+
+#[test]
+fn resolve_config_valid_plugins_array() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "plugins".to_string(),
+    ConfigKeyValue::Array(vec![ConfigKeyValue::String("preset-default".to_string())]),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  // No diagnostics for valid array
+  assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn resolve_config_valid_datauri() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "datauri".to_string(),
+    ConfigKeyValue::String("base64".to_string()),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn resolve_config_valid_float_precision() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(5));
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert!(result.diagnostics.is_empty());
+}

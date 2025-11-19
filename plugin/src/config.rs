@@ -166,6 +166,9 @@ pub fn resolve_config(
       value = parsed;
     }
 
+    // Validate configuration schema
+    validate_config_value(&key, &value, &mut diagnostics);
+
     if let Some(index) = key.rfind('.') {
       let extension = key[..index].to_lowercase();
       let key = &key[index + 1..];
@@ -207,5 +210,69 @@ fn config_key_value_to_json(value: ConfigKeyValue) -> serde_json::Value {
       serde_json::Value::Array(value.into_iter().map(config_key_value_to_json).collect())
     }
     ConfigKeyValue::Null => serde_json::Value::Null,
+  }
+}
+
+/// Validates a configuration value and adds diagnostics for invalid values.
+fn validate_config_value(
+  key: &str,
+  value: &serde_json::Value,
+  diagnostics: &mut Vec<dprint_core::configuration::ConfigurationDiagnostic>,
+) {
+  use dprint_core::configuration::ConfigurationDiagnostic;
+
+  // Extract the base key (without extension prefix like "svg.")
+  let base_key = key.rfind('.').map_or(key, |i| &key[i + 1..]);
+
+  match base_key {
+    "plugins" => {
+      if !value.is_array() {
+        diagnostics.push(ConfigurationDiagnostic {
+          property_name: key.to_string(),
+          message: "Expected 'plugins' to be an array of plugin configurations".to_string(),
+        });
+      }
+    }
+    "floatPrecision" => {
+      if let Some(n) = value.as_i64() {
+        if !(0..=20).contains(&n) {
+          diagnostics.push(ConfigurationDiagnostic {
+            property_name: key.to_string(),
+            message: format!("'floatPrecision' should be between 0 and 20, got {n}"),
+          });
+        }
+      } else if !value.is_number() {
+        diagnostics.push(ConfigurationDiagnostic {
+          property_name: key.to_string(),
+          message: "Expected 'floatPrecision' to be a number".to_string(),
+        });
+      }
+    }
+    "datauri" => {
+      if let Some(s) = value.as_str() {
+        if !["base64", "enc", "unenc"].contains(&s) {
+          diagnostics.push(ConfigurationDiagnostic {
+            property_name: key.to_string(),
+            message: format!("'datauri' must be 'base64', 'enc', or 'unenc', got '{s}'"),
+          });
+        }
+      } else {
+        diagnostics.push(ConfigurationDiagnostic {
+          property_name: key.to_string(),
+          message: "Expected 'datauri' to be a string".to_string(),
+        });
+      }
+    }
+    "js2svg" => {
+      if !value.is_object() {
+        diagnostics.push(ConfigurationDiagnostic {
+          property_name: key.to_string(),
+          message: "Expected 'js2svg' to be an object".to_string(),
+        });
+      }
+    }
+    _ => {
+      // No validation for unknown keys - SVGO may accept additional options
+    }
   }
 }

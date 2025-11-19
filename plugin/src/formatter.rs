@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::path::MAIN_SEPARATOR;
 use std::path::Path;
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -83,16 +84,14 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     // Validate SVG structure before processing
     validate_svg_structure(&file_text)?;
 
+    // Normalize file path for consistent JSON serialization across platforms
+    let file_path = normalize_path_for_json(&request.file_path.to_string_lossy());
     let request_value = serde_json::Value::Object({
       let mut obj = serde_json::Map::new();
-      obj.insert(
-        "filePath".to_string(),
-        request.file_path.to_string_lossy().into(),
-      );
+      obj.insert("filePath".to_string(), file_path.clone().into());
       obj.insert("fileText".to_string(), file_text.into());
       obj
     });
-    let file_path = request.file_path.to_string_lossy();
     let config = &request.config;
     let resolved_config = resolve_config(&file_path, config)?;
     let config_json =
@@ -229,4 +228,15 @@ fn validate_svg_structure(content: &str) -> Result<(), SvgoError> {
   }
 
   Ok(())
+}
+
+/// Normalizes a file path for consistent JSON serialization across platforms.
+///
+/// Converts backslashes to forward slashes for cross-platform consistency.
+fn normalize_path_for_json(path: &str) -> String {
+  if MAIN_SEPARATOR == '\\' {
+    path.replace('\\', "/")
+  } else {
+    path.to_string()
+  }
 }

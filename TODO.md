@@ -17,8 +17,8 @@
 ### Security (Phase 2)
 
 - [x] Add SVG structure validation (depth/element count limits)
-- [ ] Improve JSON serialization consistency for file paths
-- [ ] Add configuration schema validation
+- [x] Improve JSON serialization consistency for file paths
+- [x] Add configuration schema validation
 
 ### Test Improvements
 
