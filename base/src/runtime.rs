@@ -8,7 +8,7 @@ use deno_core::serde_v8;
 use deno_core::v8;
 use deno_core::v8::Platform;
 use deno_core::v8::SharedRef;
-use serde::Deserialize;
+use serde::de::DeserializeOwned;
 
 fn get_platform() -> SharedRef<Platform> {
   static PLATFORM: std::sync::OnceLock<SharedRef<Platform>> = std::sync::OnceLock::new();
@@ -85,13 +85,13 @@ impl JsRuntime {
   ///
   /// Returns an error if script execution fails, the function call fails,
   /// or the result cannot be deserialized.
-  pub async fn execute_async_fn<'de, T>(
+  pub async fn execute_async_fn<T>(
     &mut self,
     script_name: &'static str,
     fn_name: String,
   ) -> Result<T>
   where
-    T: Deserialize<'de>,
+    T: DeserializeOwned,
   {
     let inner = &mut self.inner;
     let fn_value = inner.execute_script(script_name, fn_name)?;

@@ -6,10 +6,18 @@ use deno_core::parking_lot::Mutex;
 use dprint_core::async_runtime::async_trait;
 use dprint_core::plugins::FormatRequest;
 use dprint_core::plugins::FormatResult;
+use sysinfo::MemoryRefreshKind;
+use sysinfo::System;
 use tokio::sync::oneshot;
 
 use crate::util::create_tokio_runtime;
-use crate::util::system_available_memory;
+
+/// Safety margin multiplier for memory checks.
+/// 2.2x provides buffer for concurrent plugin instances to avoid going over memory limits.
+const MEMORY_SAFETY_MARGIN: f64 = 2.2;
+
+/// Channel capacity for format requests. Provides backpressure under heavy load.
+const CHANNEL_CAPACITY: usize = 100;
 
 #[async_trait(?Send)]
 pub trait Formatter<TConfiguration> {
@@ -42,6 +50,7 @@ struct Stats {
 
 pub struct Channel<TConfiguration: Send + Sync + 'static> {
   stats: Arc<Mutex<Stats>>,
+  sys: Mutex<System>,
   sender: async_channel::Sender<Request<TConfiguration>>,
   receiver: async_channel::Receiver<Request<TConfiguration>>,
   options: CreateChannelOptions<TConfiguration>,
@@ -50,51 +59,60 @@ pub struct Channel<TConfiguration: Send + Sync + 'static> {
 impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {
   #[must_use]
   pub fn new(options: CreateChannelOptions<TConfiguration>) -> Self {
-    let (sender, receiver) = async_channel::unbounded();
+    let (sender, receiver) = async_channel::bounded(CHANNEL_CAPACITY);
     Self {
       stats: Arc::new(Mutex::new(Stats {
         pending_runtimes: 0,
         total_runtimes: 0,
       })),
+      sys: Mutex::new(System::new()),
       sender,
       receiver,
       options,
     }
   }
 
+  /// Formats text using a pooled JS runtime.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error if the format request fails or channel communication fails.
   pub async fn format(&self, request: FormatRequest<TConfiguration>) -> FormatResult {
     let (send, recv) = oneshot::channel::<FormatResult>();
-    let mut should_inc_pending_runtimes = false;
-    {
+    let should_create_runtime = {
       let mut stats = self.stats.lock();
       if stats.pending_runtimes == 0 && (stats.total_runtimes == 0 || self.has_memory_available()) {
         stats.total_runtimes += 1;
-        stats.pending_runtimes += 1;
-        drop(stats);
-        self.create_js_runtime();
-      } else if stats.pending_runtimes > 0 {
-        stats.pending_runtimes -= 1;
-        should_inc_pending_runtimes = true;
+        // Don't increment pending_runtimes here - the runtime will do it when ready
+        true
+      } else {
+        false
       }
+    };
+
+    if should_create_runtime {
+      self.create_js_runtime();
     }
 
     self.sender.send((request, send)).await?;
 
-    let result = recv.await?;
-    if should_inc_pending_runtimes {
-      self.stats.lock().pending_runtimes += 1;
-    }
-    result
+    recv.await?
   }
 
   fn has_memory_available(&self) -> bool {
     // Only allow creating another instance if the amount of available
     // memory on the system is greater than a comfortable amount
-    let available_memory = system_available_memory();
-    // I chose 2x because that would maybe prevent at least two plugins
-    // from potentially creating an isolate at the same time and going over the
-    // memory limit. It's definitely not perfect.
-    available_memory > (self.options.avg_isolate_memory_usage as f64 * 2.2) as u64
+    let mut sys = self.sys.lock();
+    sys.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
+    let available_memory = sys.available_memory();
+    // Use safety margin to prevent concurrent plugins from exceeding memory limits
+    #[expect(
+      clippy::cast_precision_loss,
+      clippy::cast_possible_truncation,
+      clippy::cast_sign_loss
+    )]
+    let threshold = (self.options.avg_isolate_memory_usage as f64 * MEMORY_SAFETY_MARGIN) as u64;
+    available_memory > threshold
   }
 
   fn create_js_runtime(&self) {
@@ -105,29 +123,39 @@ impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {
       let tokio_runtime = create_tokio_runtime();
       tokio_runtime.block_on(async move {
         let mut formatter = (create_formatter_cb)();
+
+        // Mark this runtime as pending now that it's ready to receive work
+        stats.lock().pending_runtimes += 1;
+
         loop {
+          // Use biased selection to prioritize processing requests over idle timeout
           tokio::select! {
-            // automatically shut down after a certain amount of time to save memory
-            // in an editor scenario
-            () = tokio::time::sleep(Duration::from_secs(30)) => {
-              // only shut down if we're not the last pending runtime
-              let mut stats = stats.lock();
-              if stats.total_runtimes > 1 && stats.pending_runtimes > 1 {
-                stats.total_runtimes -= 1;
-                stats.pending_runtimes -= 1;
-                return;
-              }
-            }
+            biased;
+
             request = receiver.recv() => {
               let (request, response) = match request {
                 Ok(result) => result,
                 Err(_) => {
-                  // receiver dropped, so exit
+                  // Channel closed, clean up and exit
+                  let mut stats = stats.lock();
+                  stats.total_runtimes -= 1;
+                  stats.pending_runtimes -= 1;
                   return;
                 }
               };
               let result = formatter.format_text(request).await;
               let _ = response.send(result);
+            }
+            // Automatically shut down after idle timeout to save memory in editor scenarios
+            () = tokio::time::sleep(Duration::from_secs(30)) => {
+              // Only shut down if we're not the last runtime
+              let mut stats = stats.lock();
+              if stats.total_runtimes > 1 {
+                stats.total_runtimes -= 1;
+                stats.pending_runtimes -= 1;
+                return;
+              }
+              // We're the last runtime, keep it alive
             }
           }
         }

@@ -1,6 +1,6 @@
 [package]
 name = "dprint-plugin-svgo"
-version = "0.1.0"
+version = "0.0.0"
 categories = ["development-tools"]
 edition = "2024"
 keywords = ["formatter", "formatting", "svg", "svgo"]
@@ -15,7 +15,7 @@ deno_core.workspace = true
 deno_url.workspace = true
 deno_webidl.workspace = true
 dprint-core = { workspace = true, features = ["process"] }
-dprint-plugin-deno-base = { path = "../base", version = "0.1.0" }
+dprint-plugin-deno-base = { path = "../base", version = "0.2.0" }
 serde.workspace = true
 serde_json.workspace = true
 
@@ -28,6 +28,6 @@ deno_console.workspace = true
 deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
 deno_url.workspace = true
 deno_webidl.workspace = true
-dprint-plugin-deno-base = { path = "../base", version = "0.1.0", features = ["build"] }
+dprint-plugin-deno-base = { path = "../base", version = "0.2.0", features = ["build"] }
 sha256 = "1.6"
 zstd.workspace = true

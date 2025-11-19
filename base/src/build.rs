@@ -14,6 +14,10 @@ pub struct CreateSnapshotOptions {
 }
 
 /// Creates a snapshot, returning the uncompressed bytes.
+///
+/// # Panics
+///
+/// Panics if snapshot creation fails or the output file cannot be written.
 #[must_use]
 pub fn create_snapshot(options: CreateSnapshotOptions) -> Box<[u8]> {
   let snapshot_output = deno_core::snapshot::create_snapshot(
@@ -27,17 +31,30 @@ pub fn create_snapshot(options: CreateSnapshotOptions) -> Box<[u8]> {
     },
     options.warmup_script,
   )
-  .unwrap();
+  .expect("failed to create V8 snapshot");
 
-  let mut output = snapshot_output.output.clone();
-  if !cfg!(debug_assertions) {
+  let output: Box<[u8]> = if cfg!(debug_assertions) {
+    // In debug mode, use uncompressed snapshot for faster builds
+    snapshot_output.output.clone()
+  } else {
+    // In release mode, compress the snapshot
     eprintln!("Compressing snapshot...");
-    let mut vec = Vec::with_capacity(output.len());
-    vec.extend((output.len() as u32).to_le_bytes());
-    vec.extend_from_slice(&zstd::bulk::compress(&output, 22).expect("snapshot compression failed"));
-    output = vec.into();
-  }
-  std::fs::write(&options.snapshot_path, output).unwrap();
+    let uncompressed = &snapshot_output.output;
+    let mut vec = Vec::with_capacity(uncompressed.len());
+    vec.extend((uncompressed.len() as u32).to_le_bytes());
+    vec.extend_from_slice(
+      &zstd::bulk::compress(uncompressed, 22).expect("snapshot compression failed"),
+    );
+    vec.into()
+  };
+
+  std::fs::write(&options.snapshot_path, &output).unwrap_or_else(|e| {
+    panic!(
+      "failed to write snapshot to {}: {}",
+      options.snapshot_path.display(),
+      e
+    )
+  });
 
   for file in snapshot_output.files_loaded_during_snapshot {
     println!("cargo:rerun-if-changed={}", file.display());

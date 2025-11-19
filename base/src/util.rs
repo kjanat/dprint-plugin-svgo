@@ -1,11 +1,26 @@
+use std::io;
+
 use sysinfo::MemoryRefreshKind;
 use sysinfo::System;
 
-/// Creates a single threaded tokio runtime that can be used
-/// with `deno_core`.
+/// Creates a single threaded tokio runtime that can be used with `deno_core`.
+///
+/// # Panics
+///
+/// Panics if the tokio runtime cannot be created (e.g., resource exhaustion).
+/// Use `try_create_tokio_runtime` for fallible creation.
 #[must_use]
 pub fn create_tokio_runtime() -> tokio::runtime::Runtime {
-  create_tokio_runtime_builder().build().unwrap()
+  try_create_tokio_runtime().expect("failed to create tokio runtime")
+}
+
+/// Creates a single threaded tokio runtime that can be used with `deno_core`.
+///
+/// # Errors
+///
+/// Returns an error if the runtime cannot be created (e.g., resource exhaustion).
+pub fn try_create_tokio_runtime() -> io::Result<tokio::runtime::Runtime> {
+  create_tokio_runtime_builder().build()
 }
 
 #[must_use]
