@@ -111,9 +111,10 @@ const ci = {
           },
         },
         {
-          name: "Setup Rust (aarch64-apple-darwin)",
-          if: `matrix.config.target == 'aarch64-apple-darwin'`,
-          run: "rustup target add aarch64-apple-darwin",
+          name: "Setup Rust target",
+          if:
+            `matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'`,
+          run: "rustup target add ${{matrix.config.target}}",
         },
         { uses: "denoland/setup-deno@v2" },
         {
