@@ -24,7 +24,7 @@ pub type CreateFormatterCb<TConfiguration> =
 
 pub struct CreateChannelOptions<TConfiguration> {
   /// The amount of memory that a single isolate might use. You can approximate
-  /// this value out by launching the plugin with DPRINT_MAX_THREADS=1 and seeing
+  /// this value out by launching the plugin with `DPRINT_MAX_THREADS=1` and seeing
   /// how much memory is used when formatting some large files.
   ///
   /// This provides some protection against using too much memory on the system,
@@ -48,7 +48,7 @@ pub struct Channel<TConfiguration: Send + Sync + 'static> {
 }
 
 impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {
-  pub fn new(options: CreateChannelOptions<TConfiguration>) -> Self {
+  #[must_use] pub fn new(options: CreateChannelOptions<TConfiguration>) -> Self {
     let (sender, receiver) = async_channel::unbounded();
     Self {
       stats: Arc::new(Mutex::new(Stats {
@@ -108,7 +108,7 @@ impl<TConfiguration: Send + Sync + 'static> Channel<TConfiguration> {
           tokio::select! {
             // automatically shut down after a certain amount of time to save memory
             // in an editor scenario
-            _ = tokio::time::sleep(Duration::from_secs(30)) => {
+            () = tokio::time::sleep(Duration::from_secs(30)) => {
               // only shut down if we're not the last pending runtime
               let mut stats = stats.lock();
               if stats.total_runtimes > 1 && stats.pending_runtimes > 1 {

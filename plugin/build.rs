@@ -26,14 +26,12 @@ fn main() {
     .status();
   match build_result {
     Ok(status) => {
-      if status.code() != Some(0) {
-        panic!("Error building.");
-      }
+      assert!(status.code() == Some(0), "Error building.");
     }
     Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
       eprintln!("Skipping build because npm executable not found.");
     }
-    Err(err) => panic!("Error building to script: {}", err),
+    Err(err) => panic!("Error building to script: {err}"),
   }
 
   // ensure the build is invalidated if any of these files change
@@ -55,10 +53,8 @@ fn main() {
   );
 
   let startup_code_path = js_dir.join("node/dist/main.js");
-  if !startup_code_path.exists() {
-    panic!("Run `cd js/node && npm run build:script` first.");
-  }
-  let snapshot = create_snapshot(startup_snapshot_path.clone(), &startup_code_path);
+  assert!(startup_code_path.exists(), "Run `cd js/node && npm run build:script` first.");
+  let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
 
   // serialize the supported extensions

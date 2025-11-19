@@ -23,7 +23,7 @@ fn handle_invalid_svg() {
         FormatRequest {
           config_id: FormatConfigId::from_raw(0),
           file_path: PathBuf::from("file.svg"),
-          file_bytes: "not valid svg".to_string().into_bytes(),
+          file_bytes: b"not valid svg".to_vec(),
           config: Arc::new(Default::default()),
           range: None,
           token: Arc::new(NullCancellationToken),

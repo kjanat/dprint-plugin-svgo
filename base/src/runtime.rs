@@ -28,8 +28,8 @@ pub struct JsRuntime {
 }
 
 impl JsRuntime {
-  pub fn new(options: CreateRuntimeOptions) -> JsRuntime {
-    JsRuntime {
+  #[must_use] pub fn new(options: CreateRuntimeOptions) -> Self {
+    Self {
       inner: deno_core::JsRuntime::new(RuntimeOptions {
         startup_snapshot: options.startup_snapshot,
         v8_platform: Some(get_platform()),
@@ -41,7 +41,7 @@ impl JsRuntime {
 
   /// Call this once on the main thread.
   pub fn initialize_main_thread() {
-    deno_core::JsRuntime::init_platform(Some(get_platform()), false)
+    deno_core::JsRuntime::init_platform(Some(get_platform()), false);
   }
 
   pub async fn execute_format_script(&mut self, code: String) -> Result<Option<String>, Error> {

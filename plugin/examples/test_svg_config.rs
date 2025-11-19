@@ -20,7 +20,7 @@ fn main() {
 
     // Test 1: Default config (minified)
     println!("=== Test 1: Default Config (Minified) ===");
-    println!("Input:\n{}\n", test_svg);
+    println!("Input:\n{test_svg}\n");
 
     let result = handler
       .format(
@@ -78,7 +78,7 @@ fn main() {
   </g>
 </svg>"#;
 
-    println!("Input:\n{}\n", complex_svg);
+    println!("Input:\n{complex_svg}\n");
 
     let mut config_map = ConfigKeyMap::new();
     config_map.insert("multipass".to_string(), "true".into());

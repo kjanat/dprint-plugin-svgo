@@ -34,7 +34,7 @@ pub struct SvgoConfig {
 /// # Returns
 ///
 /// A result containing the resolved `SvgoConfig` and any diagnostics.
-pub fn resolve_config(
+#[must_use] pub fn resolve_config(
   mut config: ConfigKeyMap,
   global_config: GlobalConfiguration,
 ) -> ResolveConfigurationResult<SvgoConfig> {
@@ -137,7 +137,7 @@ fn config_key_value_to_json(value: ConfigKeyValue) -> serde_json::Value {
     ConfigKeyValue::Number(value) => value.into(),
     ConfigKeyValue::Object(value) => {
       let mut values = serde_json::Map::new();
-      for (key, value) in value.into_iter() {
+      for (key, value) in value {
         values.insert(key, config_key_value_to_json(value));
       }
       serde_json::Value::Object(values)

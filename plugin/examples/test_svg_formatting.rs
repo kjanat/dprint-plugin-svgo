@@ -18,7 +18,7 @@ fn main() {
 </svg>"#;
 
     println!("Testing SVG 1 (extra whitespace):");
-    println!("Input:\n{}\n", svg1);
+    println!("Input:\n{svg1}\n");
 
     let result = handler
       .format(
@@ -54,7 +54,7 @@ fn main() {
 </svg>"#;
 
     println!("Testing SVG 2 (with XML declaration and comment):");
-    println!("Input:\n{}\n", svg2);
+    println!("Input:\n{svg2}\n");
 
     let result = handler
       .format(
