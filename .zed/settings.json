@@ -18,7 +18,6 @@
     "TypeScript": {
       "language_servers": [
         "deno",
-        "tsgo",
         "!typescript-language-server",
         "!vtsls",
         "!eslint"
@@ -28,7 +27,6 @@
     "JavaScript": {
       "language_servers": [
         "deno",
-        "tsgo",
         "!typescript-language-server",
         "!vtsls",
         "!eslint"
