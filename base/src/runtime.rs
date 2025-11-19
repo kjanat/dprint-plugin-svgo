@@ -28,7 +28,8 @@ pub struct JsRuntime {
 }
 
 impl JsRuntime {
-  #[must_use] pub fn new(options: CreateRuntimeOptions) -> Self {
+  #[must_use]
+  pub fn new(options: CreateRuntimeOptions) -> Self {
     Self {
       inner: deno_core::JsRuntime::new(RuntimeOptions {
         startup_snapshot: options.startup_snapshot,
@@ -44,6 +45,11 @@ impl JsRuntime {
     deno_core::JsRuntime::init_platform(Some(get_platform()), false);
   }
 
+  /// Executes a format script and returns the formatted output.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error if script execution fails or the result cannot be deserialized.
   pub async fn execute_format_script(&mut self, code: String) -> Result<Option<String>, Error> {
     let global = self.inner.execute_script("format.js", code)?;
     let resolve = self.inner.resolve(global);
@@ -64,10 +70,21 @@ impl JsRuntime {
     }
   }
 
+  /// Executes a script by name.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error if script execution fails.
   pub fn execute_script(&mut self, script_name: &'static str, code: String) -> Result<(), Error> {
     self.inner.execute_script(script_name, code).map(|_| ())
   }
 
+  /// Executes an async function and returns the deserialized result.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error if script execution fails, the function call fails,
+  /// or the result cannot be deserialized.
   pub async fn execute_async_fn<'de, T>(
     &mut self,
     script_name: &'static str,
