@@ -20,28 +20,13 @@ fn resolve_config_defaults() {
 
   assert!(result.diagnostics.is_empty());
 
-  // Check default js2svg settings
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("indent").unwrap().as_i64().unwrap(), 2);
-  assert_eq!(js2svg.get("eol").unwrap().as_str().unwrap(), "lf");
-  assert!(js2svg.get("pretty").unwrap().as_bool().unwrap());
+  // Check default js2svg settings using accessor methods
+  assert_eq!(result.config.get_indent(), Some(2));
+  assert_eq!(result.config.get_eol(), Some("lf"));
+  assert_eq!(result.config.is_pretty(), Some(true));
 
   // Check default multipass
-  assert!(
-    !result
-      .config
-      .main
-      .get("multipass")
-      .unwrap()
-      .as_bool()
-      .unwrap()
-  );
+  assert_eq!(result.config.is_multipass(), Some(false));
 }
 
 #[test]
@@ -51,14 +36,7 @@ fn resolve_config_with_custom_indent() {
 
   let result = resolve_config(config, empty_global_config());
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("indent").unwrap().as_i64().unwrap(), 4);
+  assert_eq!(result.config.get_indent(), Some(4));
 }
 
 #[test]
@@ -71,14 +49,7 @@ fn resolve_config_with_global_indent_width() {
 
   let result = resolve_config(config, global_config);
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("indent").unwrap().as_i64().unwrap(), 8);
+  assert_eq!(result.config.get_indent(), Some(8));
 }
 
 #[test]
@@ -92,15 +63,8 @@ fn resolve_config_local_overrides_global() {
 
   let result = resolve_config(config, global_config);
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
   // Local indent (3) should override global indent_width (8)
-  assert_eq!(js2svg.get("indent").unwrap().as_i64().unwrap(), 3);
+  assert_eq!(result.config.get_indent(), Some(3));
 }
 
 #[test]
@@ -113,14 +77,7 @@ fn resolve_config_with_crlf_eol() {
 
   let result = resolve_config(config, empty_global_config());
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("eol").unwrap().as_str().unwrap(), "crlf");
+  assert_eq!(result.config.get_eol(), Some("crlf"));
 }
 
 #[test]
@@ -133,14 +90,7 @@ fn resolve_config_with_global_newline_kind() {
 
   let result = resolve_config(config, global_config);
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("eol").unwrap().as_str().unwrap(), "crlf");
+  assert_eq!(result.config.get_eol(), Some("crlf"));
 }
 
 #[test]
@@ -150,15 +100,7 @@ fn resolve_config_with_multipass() {
 
   let result = resolve_config(config, empty_global_config());
 
-  assert!(
-    result
-      .config
-      .main
-      .get("multipass")
-      .unwrap()
-      .as_bool()
-      .unwrap()
-  );
+  assert_eq!(result.config.is_multipass(), Some(true));
 }
 
 #[test]
@@ -168,14 +110,7 @@ fn resolve_config_with_pretty_false() {
 
   let result = resolve_config(config, empty_global_config());
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert!(!(js2svg.get("pretty").unwrap().as_bool().unwrap()));
+  assert_eq!(result.config.is_pretty(), Some(false));
 }
 
 #[test]
@@ -186,21 +121,12 @@ fn resolve_config_with_extension_override() {
   let result = resolve_config(config, empty_global_config());
 
   // Main config should have default multipass
-  assert!(
-    !result
-      .config
-      .main
-      .get("multipass")
-      .unwrap()
-      .as_bool()
-      .unwrap()
-  );
+  assert_eq!(result.config.is_multipass(), Some(false));
 
   // Extension override should have multipass true
   let svg_override = result
     .config
-    .extension_overrides
-    .get("svg")
+    .get_extension_override("svg")
     .unwrap()
     .as_object()
     .unwrap();
@@ -219,8 +145,7 @@ fn resolve_config_with_multiple_extension_overrides() {
   // SVG override
   let svg_override = result
     .config
-    .extension_overrides
-    .get("svg")
+    .get_extension_override("svg")
     .unwrap()
     .as_object()
     .unwrap();
@@ -230,8 +155,7 @@ fn resolve_config_with_multiple_extension_overrides() {
   // SVGZ override
   let svgz_override = result
     .config
-    .extension_overrides
-    .get("svgz")
+    .get_extension_override("svgz")
     .unwrap()
     .as_object()
     .unwrap();
@@ -300,8 +224,8 @@ fn resolve_config_extension_case_insensitive() {
   let result = resolve_config(config, empty_global_config());
 
   // Should be stored as lowercase
-  assert!(result.config.extension_overrides.contains_key("svg"));
-  assert!(!result.config.extension_overrides.contains_key("SVG"));
+  assert!(result.config.has_extension_override("svg"));
+  assert!(!result.config.has_extension_override("SVG"));
 }
 
 // Tests for config_key_value_to_json recursive cases
@@ -527,16 +451,9 @@ fn resolve_config_all_js2svg_options() {
 
   let result = resolve_config(config, empty_global_config());
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert_eq!(js2svg.get("indent").unwrap().as_i64().unwrap(), 4);
-  assert_eq!(js2svg.get("eol").unwrap().as_str().unwrap(), "crlf");
-  assert!(!(js2svg.get("pretty").unwrap().as_bool().unwrap()));
+  assert_eq!(result.config.get_indent(), Some(4));
+  assert_eq!(result.config.get_eol(), Some("crlf"));
+  assert_eq!(result.config.is_pretty(), Some(false));
 }
 
 #[test]
@@ -549,13 +466,6 @@ fn resolve_config_global_auto_newline() {
 
   let result = resolve_config(config, global_config);
 
-  let js2svg = result
-    .config
-    .main
-    .get("js2svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
   // Auto should default to lf
-  assert_eq!(js2svg.get("eol").unwrap().as_str().unwrap(), "lf");
+  assert_eq!(result.config.get_eol(), Some("lf"));
 }

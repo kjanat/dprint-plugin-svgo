@@ -24,6 +24,66 @@ pub struct SvgoConfig {
   pub plugins: SvgoPluginConfig,
 }
 
+#[allow(dead_code)] // Public API methods for library consumers
+impl SvgoConfig {
+  /// Get the js2svg configuration object.
+  #[must_use]
+  pub fn get_js2svg(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
+    self.main.get("js2svg").and_then(|v| v.as_object())
+  }
+
+  /// Get the configured indent value.
+  #[must_use]
+  pub fn get_indent(&self) -> Option<i64> {
+    self
+      .get_js2svg()
+      .and_then(|js2svg| js2svg.get("indent"))
+      .and_then(|v| v.as_i64())
+  }
+
+  /// Get the configured end-of-line style.
+  #[must_use]
+  pub fn get_eol(&self) -> Option<&str> {
+    self
+      .get_js2svg()
+      .and_then(|js2svg| js2svg.get("eol"))
+      .and_then(|v| v.as_str())
+  }
+
+  /// Get whether pretty printing is enabled.
+  #[must_use]
+  pub fn is_pretty(&self) -> Option<bool> {
+    self
+      .get_js2svg()
+      .and_then(|js2svg| js2svg.get("pretty"))
+      .and_then(|v| v.as_bool())
+  }
+
+  /// Get whether multipass optimization is enabled.
+  #[must_use]
+  pub fn is_multipass(&self) -> Option<bool> {
+    self.main.get("multipass").and_then(|v| v.as_bool())
+  }
+
+  /// Get a value from the main configuration.
+  #[must_use]
+  pub fn get_main_value(&self, key: &str) -> Option<&serde_json::Value> {
+    self.main.get(key)
+  }
+
+  /// Get extension-specific override configuration.
+  #[must_use]
+  pub fn get_extension_override(&self, ext: &str) -> Option<&serde_json::Value> {
+    self.extension_overrides.get(ext)
+  }
+
+  /// Check if an extension has override configuration.
+  #[must_use]
+  pub fn has_extension_override(&self, ext: &str) -> bool {
+    self.extension_overrides.contains_key(ext)
+  }
+}
+
 /// Resolves the SVGO configuration from dprint configuration.
 ///
 /// # Arguments
