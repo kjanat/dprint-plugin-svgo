@@ -21,7 +21,8 @@
     "buffer": "./node_modules/buffer"
   },
   "scripts": {
-    "build:script": "bun build.ts"
+    "build:script": "bun build.ts",
+    "typecheck": "bunx @typescript/native-preview --noEmit"
   },
   "dependencies": {
     "buffer": "^6.0.3",
