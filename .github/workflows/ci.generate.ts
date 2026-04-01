@@ -106,7 +106,7 @@ function setupDeno(): Step {
 function denoInstall(): Step {
   return {
     name: "Install dependencies",
-    run: "deno install --frozen",
+    run: "deno install",
     "working-directory": "js/node",
   };
 }

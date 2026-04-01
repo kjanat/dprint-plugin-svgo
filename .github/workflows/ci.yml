@@ -46,7 +46,7 @@ jobs:
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
-        run: deno install --frozen
+        run: deno install
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
@@ -119,7 +119,7 @@ jobs:
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
-        run: deno install --frozen
+        run: deno install
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
