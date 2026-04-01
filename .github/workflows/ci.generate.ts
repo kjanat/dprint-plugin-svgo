@@ -1,10 +1,10 @@
+#!/usr/bin/env -S deno run -A
+
 /**
  * CI workflow generator for dprint-plugin-svgo.
  *
  * Generates `.github/workflows/ci.yml` from a programmatic TypeScript
  * definition, ensuring the workflow stays consistent and maintainable.
- *
- * Usage: deno run -A .github/workflows/ci.generate.ts
  *
  * @module
  */

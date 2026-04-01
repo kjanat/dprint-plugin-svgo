@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run --allow-read
+
 import $ from "dax";
 
 const rootDir = $.path(import.meta.dirname!).parentOrThrow();
