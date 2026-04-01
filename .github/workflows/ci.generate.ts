@@ -1,7 +1,16 @@
+/**
+ * CI workflow generator for dprint-plugin-svgo.
+ *
+ * Generates `.github/workflows/ci.yml` from a programmatic TypeScript
+ * definition, ensuring the workflow stays consistent and maintainable.
+ *
+ * Usage: deno run -A .github/workflows/ci.generate.ts
+ *
+ * @module
+ */
+
 import { stringify } from "@std/yaml";
 import $ from "dax";
-
-// To regenerate ci.yml: deno run -A .github/workflows/ci.generate.ts
 
 // --- Configuration ---
 
@@ -12,11 +21,17 @@ const CROSS_REV = "4090beca3cfffa44371a5bba524de3a578aa46c3";
 
 type Runner = "macos-latest" | "ubuntu-latest" | "windows-latest";
 
+/** A build target platform with its CI configuration. */
 interface Target {
+  /** GitHub Actions runner OS. */
   runner: Runner;
+  /** Rust target triple (e.g. `x86_64-unknown-linux-gnu`). */
   target: string;
+  /** Whether to run `cargo test` for this target. */
   runTests?: boolean;
+  /** Whether this target requires cross-compilation via `cross`. */
   cross?: boolean;
+  /** Whether to include this target in the reduced PR matrix. */
   runOnPr?: boolean;
 }
 
@@ -57,6 +72,8 @@ function stepId(t: Target) {
 }
 
 // --- Step builders ---
+// Each function returns a GitHub Actions step (or array of steps) as a plain
+// object that gets serialized to YAML by the `stringify` call at the bottom.
 
 // deno-lint-ignore no-explicit-any
 type Step = Record<string, any>;
@@ -94,6 +111,7 @@ function denoInstall(): Step {
   };
 }
 
+/** Shared setup sequence used by both check and build jobs. */
 function setupSteps(): Step[] {
   return [
     checkout(),
@@ -115,6 +133,7 @@ function setupRustTarget(): Step {
   };
 }
 
+/** Pre-build JS bundle and install `cross` for cross-compilation targets. */
 function setupCross(): Step[] {
   return [
     {
@@ -132,6 +151,7 @@ function setupCross(): Step[] {
   ];
 }
 
+/** Generate a cargo/cross build step with appropriate conditionals for mode and cross-compilation. */
 function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
   const isRelease = mode === "release";
   const cmd = cross ? "cross" : "cargo";
@@ -172,6 +192,7 @@ function test(mode: "debug" | "release"): Step {
   };
 }
 
+/** Zip the release binary and compute its SHA-256 checksum. Uses PowerShell on Windows, bash elsewhere. */
 function preRelease(t: Target): Step {
   const isWindows = t.runner === "windows-latest";
   const zip = zipFileName(t);
@@ -214,6 +235,7 @@ function uploadArtifact(t: Target): Step {
 
 // --- Job builders ---
 
+/** Convert target definitions into a GitHub Actions matrix configuration. */
 function matrixConfig(items: Target[]) {
   return {
     config: items.map((t) => ({
@@ -225,6 +247,10 @@ function matrixConfig(items: Target[]) {
   };
 }
 
+/**
+ * Create a CI build job with the given targets and event condition.
+ * Used for both the PR `check` job (reduced matrix) and the push `build` job (full matrix).
+ */
 function buildJob(
   items: Target[],
   condition: string,
@@ -254,6 +280,7 @@ function buildJob(
   };
 }
 
+/** Generate the GitHub Release body with install instructions. */
 function releaseBody(): string {
   const tag = "${{ steps.get_tag_version.outputs.TAG_VERSION }}";
   const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
@@ -298,6 +325,7 @@ function releaseBody(): string {
   ].join("\n");
 }
 
+/** Create the draft release job that downloads artifacts, computes checksums, and publishes. */
 function draftReleaseJob() {
   return {
     name: "draft_release",

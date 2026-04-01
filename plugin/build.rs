@@ -1,5 +1,12 @@
-// Code in this file is largely copy and pasted from Deno's codebase
-// https://github.com/denoland/deno/blob/main/cli/build.rs
+//! Build script for the SVGO dprint plugin.
+//!
+//! Performs three steps at compile time:
+//! 1. Bundles JS (main.ts + SVGO) via esbuild, invoked through `deno run -A build.ts`
+//! 2. Creates a V8 heap snapshot from the bundled JS for fast runtime startup
+//! 3. Extracts supported file extensions (["svg"]) by calling into the JS
+//!
+//! Based on patterns from Deno's codebase:
+//! https://github.com/denoland/deno/blob/main/cli/build.rs
 
 use std::env;
 use std::path::Path;
@@ -105,6 +112,8 @@ fn main() {
   eprintln!("Done");
 }
 
+/// Create a V8 snapshot with the bundled SVGO JS pre-loaded and executed.
+/// The snapshot is compressed with zstd in release builds.
 fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]> {
   let startup_text = get_startup_text(startup_code_path);
   dprint_plugin_deno_base::build::create_snapshot(
@@ -122,6 +131,7 @@ fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]
   )
 }
 
+/// Read the bundled JS source from `dist/main.js`.
 fn get_startup_text(startup_code_path: &Path) -> String {
   std::fs::read_to_string(startup_code_path).unwrap()
 }
@@ -135,6 +145,7 @@ deno_core::extension!(
   ]
 );
 
+/// Deno extensions providing console, URL, and WebIDL APIs to the V8 runtime.
 fn extensions() -> Vec<Extension> {
   vec![
     deno_webidl::deno_webidl::init_ops_and_esm(),
