@@ -298,7 +298,7 @@ function releaseBody(): string {
     "",
     "In a dprint configuration file:",
     "",
-    '1. Specify the plugin url and checksum in the `"plugins"` array or run `dprint config add svgo`:',
+    `1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint add ${GITHUB_OWNER}/${PLUGIN_NAME}\`:`,
     "",
     "   ```jsonc",
     "   {",
