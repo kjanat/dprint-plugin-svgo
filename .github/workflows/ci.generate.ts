@@ -216,8 +216,8 @@ function buildJob(items: Target[], condition: string) {
       lint(),
       test("debug"),
       test("release"),
-      ...targets.map(preRelease),
-      ...targets.map(uploadArtifact),
+      ...items.map(preRelease),
+      ...items.map(uploadArtifact),
     ],
   };
 }

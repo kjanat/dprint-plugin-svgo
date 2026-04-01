@@ -59,6 +59,10 @@ fn main() {
     "cargo:rerun-if-changed={}",
     root_dir.join("deno.json").display()
   );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("deno.lock").display()
+  );
 
   let startup_code_path = js_dir.join("node/dist/main.js");
   assert!(

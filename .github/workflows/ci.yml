@@ -77,13 +77,6 @@ jobs:
       - name: Test (Release)
         if: 'matrix.config.run_tests == ''true'' && startsWith(github.ref, ''refs/tags/'')'
         run: cargo test --locked --all-features --release
-      - name: Pre-release (x86_64-apple-darwin)
-        id: pre_release_x86_64_apple_darwin
-        if: 'matrix.config.target == ''x86_64-apple-darwin'' && startsWith(github.ref, ''refs/tags/'')'
-        run: |-
-          zip -r dprint-plugin-svgo-x86_64-apple-darwin.zip dprint-plugin-svgo
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
-        working-directory: target/x86_64-apple-darwin/release
       - name: Pre-release (aarch64-apple-darwin)
         id: pre_release_aarch64_apple_darwin
         if: 'matrix.config.target == ''aarch64-apple-darwin'' && startsWith(github.ref, ''refs/tags/'')'
@@ -91,13 +84,6 @@ jobs:
           zip -r dprint-plugin-svgo-aarch64-apple-darwin.zip dprint-plugin-svgo
           echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
         working-directory: target/aarch64-apple-darwin/release
-      - name: Pre-release (x86_64-pc-windows-msvc)
-        id: pre_release_x86_64_pc_windows_msvc
-        if: 'matrix.config.target == ''x86_64-pc-windows-msvc'' && startsWith(github.ref, ''refs/tags/'')'
-        run: |-
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo.exe -DestinationPath target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
-          $hash = (Get-FileHash -Algorithm SHA256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip).Hash.ToLower()
-          "ZIP_CHECKSUM=$hash" >> $env:GITHUB_OUTPUT
       - name: Pre-release (x86_64-unknown-linux-gnu)
         id: pre_release_x86_64_unknown_linux_gnu
         if: 'matrix.config.target == ''x86_64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
@@ -105,43 +91,18 @@ jobs:
           zip -r dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip dprint-plugin-svgo
           echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
         working-directory: target/x86_64-unknown-linux-gnu/release
-      - name: Pre-release (aarch64-unknown-linux-gnu)
-        id: pre_release_aarch64_unknown_linux_gnu
-        if: 'matrix.config.target == ''aarch64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
-        run: |-
-          zip -r dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip dprint-plugin-svgo
-          echo "ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
-        working-directory: target/aarch64-unknown-linux-gnu/release
-      - name: Upload artifacts (x86_64-apple-darwin)
-        if: 'matrix.config.target == ''x86_64-apple-darwin'' && startsWith(github.ref, ''refs/tags/'')'
-        uses: actions/upload-artifact@v7
-        with:
-          name: x86_64-apple-darwin-artifacts
-          path: target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip
       - name: Upload artifacts (aarch64-apple-darwin)
         if: 'matrix.config.target == ''aarch64-apple-darwin'' && startsWith(github.ref, ''refs/tags/'')'
         uses: actions/upload-artifact@v7
         with:
           name: aarch64-apple-darwin-artifacts
           path: target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip
-      - name: Upload artifacts (x86_64-pc-windows-msvc)
-        if: 'matrix.config.target == ''x86_64-pc-windows-msvc'' && startsWith(github.ref, ''refs/tags/'')'
-        uses: actions/upload-artifact@v7
-        with:
-          name: x86_64-pc-windows-msvc-artifacts
-          path: target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
       - name: Upload artifacts (x86_64-unknown-linux-gnu)
         if: 'matrix.config.target == ''x86_64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
         uses: actions/upload-artifact@v7
         with:
           name: x86_64-unknown-linux-gnu-artifacts
           path: target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
-      - name: Upload artifacts (aarch64-unknown-linux-gnu)
-        if: 'matrix.config.target == ''aarch64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
-        uses: actions/upload-artifact@v7
-        with:
-          name: aarch64-unknown-linux-gnu-artifacts
-          path: target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip
   build:
     name: '${{ matrix.config.target }}'
     if: github.event_name == 'push'
