@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Install JS dependencies (required before Rust build)
 deno task setup
-# or: cd js/node && bun install
+# or: cd js/node && deno install
 
 # Build debug
 cargo build
@@ -56,7 +56,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 ### Build Process
 
-`plugin/build.rs` runs `npm run build:script` to bundle JS, creates V8 snapshot, extracts supported extensions (["svg"])
+`plugin/build.rs` runs `deno run -A build.ts` to bundle JS via esbuild, creates V8 snapshot, extracts supported extensions (["svg"])
 
 ## Configuration
 

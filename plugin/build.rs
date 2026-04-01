@@ -1,5 +1,12 @@
-// Code in this file is largely copy and pasted from Deno's codebase
-// https://github.com/denoland/deno/blob/main/cli/build.rs
+//! Build script for the SVGO dprint plugin.
+//!
+//! Performs three steps at compile time:
+//! 1. Bundles JS (main.ts + SVGO) via esbuild, invoked through `deno run -A build.ts`
+//! 2. Creates a V8 heap snapshot from the bundled JS for fast runtime startup
+//! 3. Extracts supported file extensions (["svg"]) by calling into the JS
+//!
+//! Based on patterns from Deno's codebase:
+//! https://github.com/denoland/deno/blob/main/cli/build.rs
 
 use std::env;
 use std::path::Path;
@@ -20,8 +27,8 @@ fn main() {
   let supported_extensions_path = out_dir.join("SUPPORTED_EXTENSIONS.json");
 
   eprintln!("Running JS build...");
-  let build_result = Command::new(if cfg!(windows) { "npm.cmd" } else { "npm" })
-    .args(["run", "build:script"])
+  let build_result = Command::new("deno")
+    .args(["run", "-A", "build.ts"])
     .current_dir(js_dir.join("node"))
     .status();
   match build_result {
@@ -29,7 +36,7 @@ fn main() {
       assert!(status.code() == Some(0), "Error building.");
     }
     Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-      eprintln!("Skipping build because npm executable not found.");
+      eprintln!("Skipping build because deno executable not found.");
     }
     Err(err) => panic!("Error building to script: {err}"),
   }
@@ -38,6 +45,10 @@ fn main() {
   println!(
     "cargo:rerun-if-changed={}",
     js_dir.join("node/main.ts").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    js_dir.join("node/build.ts").display()
   );
   println!(
     "cargo:rerun-if-changed={}",
@@ -51,11 +62,19 @@ fn main() {
     "cargo:rerun-if-changed={}",
     js_dir.join("node/shims/url.js").display()
   );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("deno.json").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("deno.lock").display()
+  );
 
   let startup_code_path = js_dir.join("node/dist/main.js");
   assert!(
     startup_code_path.exists(),
-    "Run `cd js/node && npm run build:script` first."
+    "Run `cd js/node && deno run -A build.ts` first."
   );
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
@@ -93,6 +112,8 @@ fn main() {
   eprintln!("Done");
 }
 
+/// Create a V8 snapshot with the bundled SVGO JS pre-loaded and executed.
+/// The snapshot is compressed with zstd in release builds.
 fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]> {
   let startup_text = get_startup_text(startup_code_path);
   dprint_plugin_deno_base::build::create_snapshot(
@@ -110,6 +131,7 @@ fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]
   )
 }
 
+/// Read the bundled JS source from `dist/main.js`.
 fn get_startup_text(startup_code_path: &Path) -> String {
   std::fs::read_to_string(startup_code_path).unwrap()
 }
@@ -123,6 +145,7 @@ deno_core::extension!(
   ]
 );
 
+/// Deno extensions providing console, URL, and WebIDL APIs to the V8 runtime.
 fn extensions() -> Vec<Extension> {
   vec![
     deno_webidl::deno_webidl::init_ops_and_esm(),

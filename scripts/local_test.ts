@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run -A
+
 import $ from "dax";
 import { getChecksum } from "https://raw.githubusercontent.com/dprint/automation/0.10.0/hash.ts";
 

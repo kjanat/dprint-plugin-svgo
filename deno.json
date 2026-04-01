@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "setup": "cd js/node && bun install"
+    "setup": "cd js/node && deno install"
   },
   "imports": {
     "@esbuild-plugins/node-globals-polyfill": "npm:@esbuild-plugins/node-globals-polyfill@^0.2.3",

@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run -A
+
 /**
  * This script checks for any svgo updates and then automatically
  * publishes a new version of the plugin if so.

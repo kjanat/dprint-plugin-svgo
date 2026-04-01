@@ -9,11 +9,6 @@ pre-commit:
       glob: "*.rs"
       run: cargo clippy --all-targets -- -D warnings
 
-    - name: typescript check
-      root: "js/node"
-      glob: "*.{ts,js}"
-      run: bun typecheck
-
     - name: deno check
       root: "js/node"
       glob: "*.{ts,js}"

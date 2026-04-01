@@ -15,10 +15,14 @@ jobs:
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: denoland/setup-deno@v2
       - uses: dsherret/rust-toolchain-file@v1
+      # setup-node needed for npm install --save in scripts/update.ts
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
 
       - name: Run script
         run: |

@@ -164,7 +164,7 @@ if total_runtimes > 1 && pending_runtimes > 1 {
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  main.ts     │     │   bun/       │     │  dist/       │
+│  main.ts     │     │   deno/      │     │  dist/       │
 │  + svgo      │ ──> │   esbuild    │ ──> │  main.js     │
 │  + polyfills │     │              │     │              │
 └──────────────┘     └──────────────┘     └──────────────┘

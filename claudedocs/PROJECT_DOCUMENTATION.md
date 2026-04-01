@@ -178,7 +178,7 @@ avg_isolate_memory_usage: 100_000  // 100MB
 ### JavaScript Bundling
 
 ```bash
-cd js/node && npm run build:script  # Uses bun build.ts
+cd js/node && deno run -A build.ts  # Bundles main.ts via esbuild
 ```
 
 Produces `js/node/dist/main.js` bundled for browser context.
@@ -191,7 +191,7 @@ cargo build --release --target <target>
 
 The `plugin/build.rs`:
 
-1. Runs `npm run build:script`
+1. Runs `deno run -A build.ts` (bundles JS via esbuild)
 2. Creates V8 snapshot from bundled JS
 3. Extracts supported extensions (["svg"])
 4. Writes `STARTUP_SNAPSHOT.bin` and `SUPPORTED_EXTENSIONS.json`
@@ -332,7 +332,7 @@ dprint check         # Check formatting
 
 ```bash
 # Install dependencies
-cd js/node && npm ci
+cd js/node && deno install
 
 # Build debug
 cargo build
@@ -414,7 +414,7 @@ pub struct SvgoPluginConfig {
 
 ```bash
 # Ensure JS is built first
-cd js/node && npm run build:script
+cd js/node && deno run -A build.ts
 ```
 
 ### OOM Errors

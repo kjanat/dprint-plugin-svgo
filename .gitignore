@@ -3,3 +3,4 @@ target
 node_modules
 .parcel-cache
 .vscode
+.deno_cache/

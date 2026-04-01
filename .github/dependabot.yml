@@ -36,8 +36,8 @@ updates:
         patterns:
           - "*"
 
-  # Bun dependencies
-  - package-ecosystem: "bun"
+  # npm dependencies
+  - package-ecosystem: "npm"
     directory: "/js/node"
     schedule:
       interval: "monthly"
