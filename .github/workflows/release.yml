@@ -24,14 +24,14 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - uses: denoland/setup-deno@v2
       - uses: dsherret/rust-toolchain-file@v1
 
       - name: Bump version and tag
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           GH_WORKFLOW_ACTOR: ${{ github.actor }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"

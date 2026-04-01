@@ -342,7 +342,7 @@ function draftReleaseJob() {
       {
         name: "Release",
         uses: "softprops/action-gh-release@v2",
-        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" },
+        env: { GITHUB_TOKEN: "${{ github.token }}" },
         with: {
           draft: true,
           files: [...targets.map(zipFileName), "plugin.json"].join("\n"),
