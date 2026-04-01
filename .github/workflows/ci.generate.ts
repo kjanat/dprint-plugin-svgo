@@ -22,9 +22,23 @@ interface Target {
 
 const targets: Target[] = [
   { runner: "macos-latest", target: "x86_64-apple-darwin", runTests: true },
-  { runner: "macos-latest", target: "aarch64-apple-darwin", runTests: true, runOnPr: true },
-  { runner: "windows-latest", target: "x86_64-pc-windows-msvc", runTests: true },
-  { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", runTests: true, runOnPr: true },
+  {
+    runner: "macos-latest",
+    target: "aarch64-apple-darwin",
+    runTests: true,
+    runOnPr: true,
+  },
+  {
+    runner: "windows-latest",
+    target: "x86_64-pc-windows-msvc",
+    runTests: true,
+  },
+  {
+    runner: "ubuntu-latest",
+    target: "x86_64-unknown-linux-gnu",
+    runTests: true,
+    runOnPr: true,
+  },
   { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", cross: true },
 ];
 
@@ -61,7 +75,9 @@ function cargoCache(): Step {
     uses: "Swatinem/rust-cache@v2",
     with: {
       "prefix-key": "v3-${{matrix.config.target}}",
-      "save-if": `\${{ ${BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")} }}`,
+      "save-if": `\${{ ${
+        BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")
+      } }}`,
     },
   };
 }
@@ -79,7 +95,13 @@ function denoInstall(): Step {
 }
 
 function setupSteps(): Step[] {
-  return [checkout(), rustToolchain(), cargoCache(), setupDeno(), denoInstall()];
+  return [
+    checkout(),
+    rustToolchain(),
+    cargoCache(),
+    setupDeno(),
+    denoInstall(),
+  ];
 }
 
 function setupRustTarget(): Step {
@@ -104,7 +126,8 @@ function setupCross(): Step[] {
     {
       name: "Install cross",
       if: "matrix.config.cross == 'true'",
-      run: `cargo install cross --locked --git https://github.com/cross-rs/cross --rev ${CROSS_REV}`,
+      run:
+        `cargo install cross --locked --git https://github.com/cross-rs/cross --rev ${CROSS_REV}`,
     },
   ];
 }
@@ -123,14 +146,16 @@ function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
   return {
     name: `Build ${cross ? "cross " : ""}(${isRelease ? "Release" : "Debug"})`,
     if: `${crossCond} && ${tagCond}`,
-    run: `${cmd} build --locked${flags} --target \${{matrix.config.target}}${releaseFlag}`,
+    run:
+      `${cmd} build --locked${flags} --target \${{matrix.config.target}}${releaseFlag}`,
   };
 }
 
 function lint(): Step {
   return {
     name: "Lint",
-    if: "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
+    if:
+      "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
     run: "cargo clippy",
   };
 }
@@ -164,7 +189,8 @@ function preRelease(t: Target): Step {
   const step: Step = {
     name: `Pre-release (${t.target})`,
     id: stepId(t),
-    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    if:
+      `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     run: lines.join("\n"),
   };
   if (!isWindows) {
@@ -176,7 +202,8 @@ function preRelease(t: Target): Step {
 function uploadArtifact(t: Target): Step {
   return {
     name: `Upload artifacts (${t.target})`,
-    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    if:
+      `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     uses: "actions/upload-artifact@v7",
     with: {
       name: artifactsName(t),
@@ -278,19 +305,28 @@ function draftReleaseJob() {
       setupDeno(),
       {
         name: "Move downloaded artifacts to root directory",
-        run: targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`).join("\n"),
+        run: targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`)
+          .join("\n"),
       },
       {
         name: "Output checksums",
         run: targets
-          .map((t) => `echo "${zipFileName(t)}: $(shasum -a 256 ${zipFileName(t)} | awk '{print $1}')"`)
+          .map((t) =>
+            `echo "${zipFileName(t)}: $(shasum -a 256 ${
+              zipFileName(t)
+            } | awk '{print $1}')"`
+          )
           .join("\n"),
       },
-      { name: "Create plugin file", run: "deno run -A scripts/create_plugin_file.ts" },
+      {
+        name: "Create plugin file",
+        run: "deno run -A scripts/create_plugin_file.ts",
+      },
       {
         name: "Get svgo version",
         id: "get_svgo_version",
-        run: "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
+        run:
+          "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
       },
       {
         name: "Get tag version",
@@ -300,7 +336,8 @@ function draftReleaseJob() {
       {
         name: "Get plugin file checksum",
         id: "get_plugin_file_checksum",
-        run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
+        run:
+          "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
       },
       {
         name: "Release",
@@ -327,7 +364,8 @@ const ci = {
     push: { branches: [...BRANCHES], tags: ["*"] },
   },
   concurrency: {
-    group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+    group:
+      "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
     "cancel-in-progress": true,
   },
   jobs: {

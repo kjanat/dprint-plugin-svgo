@@ -11,25 +11,25 @@ on:
       - master
       - main
     tags:
-      - '*'
+      - "*"
 concurrency:
-  group: '${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}'
+  group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
   cancel-in-progress: true
 jobs:
   check:
-    name: '${{ matrix.config.target }}'
+    name: "${{ matrix.config.target }}"
     if: github.event_name == 'pull_request'
-    runs-on: '${{ matrix.config.os }}'
+    runs-on: "${{ matrix.config.os }}"
     strategy:
       matrix:
         config:
           - os: macos-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: aarch64-apple-darwin
           - os: ubuntu-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: x86_64-unknown-linux-gnu
     env:
       CARGO_INCREMENTAL: 0
@@ -40,7 +40,7 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: 'v3-${{matrix.config.target}}'
+          prefix-key: "v3-${{matrix.config.target}}"
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
@@ -48,26 +48,26 @@ jobs:
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
-        run: 'rustup target add ${{matrix.config.target}}'
+        run: "rustup target add ${{matrix.config.target}}"
       - name: Build JS (cross)
         if: matrix.config.cross == 'true'
         run: deno run -A build.ts
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
-        run: 'cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3'
+        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3"
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
-        run: 'cargo build --locked --all-targets --target ${{matrix.config.target}}'
+        run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"
       - name: Build (Release)
         if: 'matrix.config.cross != ''true'' && startsWith(github.ref, ''refs/tags/'')'
-        run: 'cargo build --locked --all-targets --target ${{matrix.config.target}} --release'
+        run: "cargo build --locked --all-targets --target ${{matrix.config.target}} --release"
       - name: Build cross (Debug)
         if: 'matrix.config.cross == ''true'' && !startsWith(github.ref, ''refs/tags/'')'
-        run: 'cross build --locked --target ${{matrix.config.target}}'
+        run: "cross build --locked --target ${{matrix.config.target}}"
       - name: Build cross (Release)
         if: 'matrix.config.cross == ''true'' && startsWith(github.ref, ''refs/tags/'')'
-        run: 'cross build --locked --target ${{matrix.config.target}} --release'
+        run: "cross build --locked --target ${{matrix.config.target}} --release"
       - name: Lint
         if: '!startsWith(github.ref, ''refs/tags/'') && matrix.config.target == ''x86_64-unknown-linux-gnu'''
         run: cargo clippy
@@ -104,31 +104,31 @@ jobs:
           name: x86_64-unknown-linux-gnu-artifacts
           path: target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
   build:
-    name: '${{ matrix.config.target }}'
+    name: "${{ matrix.config.target }}"
     if: github.event_name == 'push'
-    runs-on: '${{ matrix.config.os }}'
+    runs-on: "${{ matrix.config.os }}"
     strategy:
       matrix:
         config:
           - os: macos-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: x86_64-apple-darwin
           - os: macos-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: aarch64-apple-darwin
           - os: windows-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: x86_64-pc-windows-msvc
           - os: ubuntu-latest
-            run_tests: 'true'
-            cross: 'false'
+            run_tests: "true"
+            cross: "false"
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
-            run_tests: 'false'
-            cross: 'true'
+            run_tests: "false"
+            cross: "true"
             target: aarch64-unknown-linux-gnu
     env:
       CARGO_INCREMENTAL: 0
@@ -139,7 +139,7 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: 'v3-${{matrix.config.target}}'
+          prefix-key: "v3-${{matrix.config.target}}"
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
@@ -147,26 +147,26 @@ jobs:
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
-        run: 'rustup target add ${{matrix.config.target}}'
+        run: "rustup target add ${{matrix.config.target}}"
       - name: Build JS (cross)
         if: matrix.config.cross == 'true'
         run: deno run -A build.ts
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
-        run: 'cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3'
+        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3"
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
-        run: 'cargo build --locked --all-targets --target ${{matrix.config.target}}'
+        run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"
       - name: Build (Release)
         if: 'matrix.config.cross != ''true'' && startsWith(github.ref, ''refs/tags/'')'
-        run: 'cargo build --locked --all-targets --target ${{matrix.config.target}} --release'
+        run: "cargo build --locked --all-targets --target ${{matrix.config.target}} --release"
       - name: Build cross (Debug)
         if: 'matrix.config.cross == ''true'' && !startsWith(github.ref, ''refs/tags/'')'
-        run: 'cross build --locked --target ${{matrix.config.target}}'
+        run: "cross build --locked --target ${{matrix.config.target}}"
       - name: Build cross (Release)
         if: 'matrix.config.cross == ''true'' && startsWith(github.ref, ''refs/tags/'')'
-        run: 'cross build --locked --target ${{matrix.config.target}} --release'
+        run: "cross build --locked --target ${{matrix.config.target}} --release"
       - name: Lint
         if: '!startsWith(github.ref, ''refs/tags/'') && matrix.config.target == ''x86_64-unknown-linux-gnu'''
         run: cargo clippy
@@ -280,7 +280,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           draft: true
           files: |-
