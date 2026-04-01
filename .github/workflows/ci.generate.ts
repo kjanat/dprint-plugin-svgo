@@ -285,7 +285,7 @@ function releaseBody(): string {
   const tag = "${{ steps.get_tag_version.outputs.TAG_VERSION }}";
   const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
   const version = "${{ steps.get_svgo_version.outputs.SVGO_VERSION }}";
-  const pluginUrl = `https://plugins.dprint.dev/svgo-${tag}.json@${checksum}`;
+  const pluginUrl = `https://github.com/kjanat/dprint-plugin-svgo/releases/download/${tag}/plugin.json@${checksum}`;
 
   return [
     `SVGO ${version}`,
