@@ -53,7 +53,19 @@ const schema = {
     plugins: {
       description: "Array of SVGO plugin configurations.",
       type: "array",
-      items: {},
+      items: {
+        oneOf: [
+          { type: "string", description: "Plugin name as a string." },
+          {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Plugin name." },
+              params: { type: "object", description: "Plugin parameters." },
+            },
+            required: ["name"],
+          },
+        ],
+      },
     },
     floatPrecision: {
       description: "Number of digits after the decimal point (0\u201320).",
