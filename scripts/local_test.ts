@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
 import $ from "dax";
-import { getChecksum } from "https://raw.githubusercontent.com/dprint/automation/0.10.0/hash.ts";
+import { getChecksum } from "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts";
 
 await $`./scripts/create_for_testing.ts`;
 const checksum = await getChecksum(

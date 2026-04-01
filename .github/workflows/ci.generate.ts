@@ -14,6 +14,7 @@ import $ from "dax";
 
 // --- Configuration ---
 
+const GITHUB_OWNER = "kjanat";
 const PLUGIN_NAME = "dprint-plugin-svgo";
 const BRANCHES = ["master", "main"];
 // Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
@@ -285,7 +286,7 @@ function releaseBody(): string {
   const tag = "${{ steps.get_tag_version.outputs.TAG_VERSION }}";
   const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
   const version = "${{ steps.get_svgo_version.outputs.SVGO_VERSION }}";
-  const pluginUrl = `https://plugins.dprint.dev/svgo-${tag}.json@${checksum}`;
+  const pluginUrl = `https://github.com/${GITHUB_OWNER}/${PLUGIN_NAME}/releases/download/${tag}/plugin.json@${checksum}`;
 
   return [
     `SVGO ${version}`,
@@ -297,7 +298,7 @@ function releaseBody(): string {
     "",
     "In a dprint configuration file:",
     "",
-    '1. Specify the plugin url and checksum in the `"plugins"` array or run `dprint config add svgo`:',
+    `1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint add ${GITHUB_OWNER}/${PLUGIN_NAME}\`:`,
     "",
     "   ```jsonc",
     "   {",
