@@ -1,5 +1,7 @@
-import { stringify } from "jsr:@std/yaml@^1.0.10";
-import $ from "jsr:@david/dax@^0.44.0";
+import { stringify } from "@std/yaml";
+import $ from "dax";
+
+// To regenerate ci.yml: deno run -A .github/workflows/ci.generate.ts
 
 // --- Configuration ---
 
