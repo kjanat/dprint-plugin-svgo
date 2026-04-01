@@ -8,15 +8,43 @@ import {
 const rootDir = $.path(import.meta.dirname!).parentOrThrow();
 const cargoFilePath = rootDir.join("plugin/Cargo.toml");
 
-await processPlugin.createDprintOrgProcessPlugin({
-  pluginName: "dprint-plugin-svgo",
-  version: new CargoToml(cargoFilePath).version(),
-  platforms: [
-    "darwin-x86_64",
-    "darwin-aarch64",
-    "linux-x86_64",
-    "linux-aarch64",
-    "windows-x86_64",
-  ],
-  isTest: Deno.args.some((a) => a == "--test"),
+const pluginName = "dprint-plugin-svgo";
+const version = new CargoToml(cargoFilePath).version();
+const isTest = Deno.args.some((a) => a == "--test");
+const githubOwner = "kjanat";
+const githubRepo = pluginName;
+
+const platforms = [
+  "darwin-x86_64",
+  "darwin-aarch64",
+  "linux-x86_64",
+  "linux-aarch64",
+  "windows-x86_64",
+] as const;
+
+const builder = new processPlugin.PluginFileBuilder({
+  name: pluginName,
+  version,
 });
+
+for (const platform of platforms) {
+  if (isTest && platform !== processPlugin.getCurrentPlatform()) {
+    continue;
+  }
+  const zipFileName = processPlugin.getStandardZipFileName(
+    pluginName,
+    platform,
+  );
+  const zipUrl = isTest
+    ? undefined
+    : `https://github.com/${githubOwner}/${githubRepo}/releases/download/${version}/${zipFileName}`;
+  await builder.addPlatform({
+    platform,
+    zipFilePath: isTest
+      ? $.path(rootDir).join("target/release").join(zipFileName).toString()
+      : undefined,
+    zipUrl,
+  });
+}
+
+await builder.writeToPath("plugin.json");
