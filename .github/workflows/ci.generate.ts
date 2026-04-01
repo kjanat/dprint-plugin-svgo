@@ -225,7 +225,12 @@ function matrixConfig(items: Target[]) {
   };
 }
 
-function buildJob(items: Target[], condition: string) {
+function buildJob(
+  items: Target[],
+  condition: string,
+  opts?: { includeRelease?: boolean },
+) {
+  const includeRelease = opts?.includeRelease ?? true;
   return {
     name: "${{ matrix.config.target }}",
     if: condition,
@@ -243,8 +248,8 @@ function buildJob(items: Target[], condition: string) {
       lint(),
       test("debug"),
       test("release"),
-      ...items.map(preRelease),
-      ...items.map(uploadArtifact),
+      ...(includeRelease ? items.map(preRelease) : []),
+      ...(includeRelease ? items.map(uploadArtifact) : []),
     ],
   };
 }
@@ -369,7 +374,9 @@ const ci = {
     "cancel-in-progress": true,
   },
   jobs: {
-    check: buildJob(prTargets, "github.event_name == 'pull_request'"),
+    check: buildJob(prTargets, "github.event_name == 'pull_request'", {
+      includeRelease: false,
+    }),
     build: buildJob(targets, "github.event_name == 'push'"),
     draft_release: draftReleaseJob(),
   },
