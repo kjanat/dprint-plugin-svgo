@@ -14,6 +14,8 @@ interface ProfileData {
   runTests?: boolean;
   // currently not used
   cross?: boolean;
+  /** Include this target in PR builds for cross-platform coverage */
+  runOnPr?: boolean;
 }
 
 const profileDataItems: ProfileData[] = [{
@@ -24,6 +26,7 @@ const profileDataItems: ProfileData[] = [{
   runner: Runner.MacLatest,
   target: "aarch64-apple-darwin",
   runTests: true,
+  runOnPr: true,
 }, {
   runner: Runner.Windows,
   target: "x86_64-pc-windows-msvc",
@@ -32,6 +35,7 @@ const profileDataItems: ProfileData[] = [{
   runner: Runner.Linux,
   target: "x86_64-unknown-linux-gnu",
   runTests: true,
+  runOnPr: true,
 }, {
   runner: Runner.Linux,
   target: "aarch64-unknown-linux-gnu",
@@ -48,30 +52,177 @@ const profiles = profileDataItems.map((profile) => {
   };
 });
 
-const setupSteps = [
-  { uses: "actions/checkout@v5" },
-  { uses: "dsherret/rust-toolchain-file@v1" },
-  {
-    name: "Cache cargo",
-    uses: "Swatinem/rust-cache@v2",
-    with: {
-      "prefix-key": "v3-${{matrix.config.target}}",
-      "save-if":
-        "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
+const prProfiles = profiles.filter((p) => p.runOnPr);
+
+function makeSetupSteps(opts?: { cachePrefix?: string; cacheSaveIf?: string }) {
+  return [
+    { uses: "actions/checkout@v5" },
+    { uses: "dsherret/rust-toolchain-file@v1" },
+    {
+      name: "Cache cargo",
+      uses: "Swatinem/rust-cache@v2",
+      with: {
+        "prefix-key": opts?.cachePrefix ?? "v3-${{matrix.config.target}}",
+        "save-if": opts?.cacheSaveIf ??
+          "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
+      },
     },
-  },
-  { uses: "denoland/setup-deno@v2" },
-  {
-    uses: "actions/setup-node@v6",
-    with: {
-      "node-version": "latest",
+    { uses: "denoland/setup-deno@v2" },
+    {
+      uses: "actions/setup-node@v6",
+      with: {
+        "node-version-file": ".node-version",
+      },
     },
-  },
-  {
-    name: "npm install",
-    run: "cd js/node && npm install",
-  },
-];
+    {
+      name: "npm ci",
+      run: "cd js/node && npm ci",
+    },
+  ];
+}
+
+function makeBuildJob(
+  jobProfiles: typeof profiles,
+  opts: { condition: string; name: string },
+) {
+  return {
+    name: opts.name,
+    if: opts.condition,
+    "runs-on": "${{ matrix.config.os }}",
+    strategy: {
+      matrix: {
+        config: jobProfiles.map((profile) => ({
+          os: profile.runner,
+          run_tests: (profile.runTests ?? false).toString(),
+          cross: (profile.cross ?? false).toString(),
+          target: profile.target,
+        })),
+      },
+    },
+    outputs: Object.fromEntries(
+      profiles.map((profile) => [
+        profile.zipChecksumEnvVarName,
+        "${{steps.pre_release_" + profile.target.replaceAll("-", "_") +
+        ".outputs.ZIP_CHECKSUM}}",
+      ]),
+    ),
+    env: {
+      CARGO_INCREMENTAL: 0,
+      RUST_BACKTRACE: "full",
+    },
+    steps: [
+      ...makeSetupSteps(),
+      {
+        name: "Setup Rust target",
+        if:
+          `matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'`,
+        run: "rustup target add ${{matrix.config.target}}",
+      },
+      {
+        name: "Setup cross",
+        if: "matrix.config.cross == 'true'",
+        run: [
+          "cd js/node && npm run build:script",
+          "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3",
+        ].join("\n"),
+      },
+      {
+        name: "Build (Debug)",
+        if:
+          "matrix.config.cross != 'true' && !startsWith(github.ref, 'refs/tags/')",
+        run:
+          "cargo build --locked --all-targets --target ${{matrix.config.target}}",
+      },
+      {
+        name: "Build release",
+        if:
+          "matrix.config.cross != 'true' && startsWith(github.ref, 'refs/tags/')",
+        run:
+          "cargo build --locked --all-targets --target ${{matrix.config.target}} --release",
+      },
+      {
+        name: "Build cross (Debug)",
+        if:
+          "matrix.config.cross == 'true' && !startsWith(github.ref, 'refs/tags/')",
+        run: [
+          "cross build --locked --target ${{matrix.config.target}}",
+        ].join("\n"),
+      },
+      {
+        name: "Build cross (Release)",
+        if:
+          "matrix.config.cross == 'true' && startsWith(github.ref, 'refs/tags/')",
+        run: [
+          "cross build --locked --target ${{matrix.config.target}} --release",
+        ].join("\n"),
+      },
+      {
+        name: "Lint",
+        if:
+          "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
+        run: "cargo clippy",
+      },
+      {
+        name: "Test (Debug)",
+        if:
+          "matrix.config.run_tests == 'true' && !startsWith(github.ref, 'refs/tags/')",
+        run: "cargo test --locked --all-features",
+      },
+      {
+        name: "Test (Release)",
+        if:
+          "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')",
+        run: "cargo test --locked --all-features --release",
+      },
+      // zip files
+      ...profiles.map((profile) => {
+        function getRunSteps() {
+          switch (profile.runner) {
+            case Runner.Mac13:
+            case Runner.MacLatest:
+              return [
+                `cd target/${profile.target}/release`,
+                `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
+                `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
+              ];
+            case Runner.Linux:
+            case Runner.LinuxArm:
+              return [
+                `cd target/${profile.target}/release`,
+                `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
+                `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
+              ];
+            case Runner.Windows:
+              return [
+                `Compress-Archive -CompressionLevel Optimal -Force -Path target/${profile.target}/release/dprint-plugin-svgo.exe -DestinationPath target/${profile.target}/release/${profile.zipFileName}`,
+                `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${profile.target}/release/${profile.zipFileName} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+              ];
+          }
+        }
+        return {
+          name: `Pre-release (${profile.target})`,
+          id: `pre_release_${profile.target.replaceAll("-", "_")}`,
+          if:
+            `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
+          run: getRunSteps().join("\n"),
+        };
+      }),
+      // upload artifacts
+      ...profiles.map((profile) => {
+        return {
+          name: `Upload artifacts (${profile.target})`,
+          if:
+            `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
+          uses: "actions/upload-artifact@v4",
+          with: {
+            name: profile.artifactsName,
+            path: `target/${profile.target}/release/${profile.zipFileName}`,
+          },
+        };
+      }),
+    ],
+  };
+}
 
 const ci = {
   name: "CI",
@@ -86,191 +237,16 @@ const ci = {
     "cancel-in-progress": true,
   },
   jobs: {
-    // Lightweight check on PRs: linux x86_64 only
-    check: {
-      name: "check",
-      if: "github.event_name == 'pull_request'",
-      "runs-on": "ubuntu-latest",
-      env: {
-        CARGO_INCREMENTAL: 0,
-        RUST_BACKTRACE: "full",
-      },
-      steps: [
-        { uses: "actions/checkout@v5" },
-        { uses: "dsherret/rust-toolchain-file@v1" },
-        {
-          name: "Cache cargo",
-          uses: "Swatinem/rust-cache@v2",
-          with: {
-            "prefix-key": "v3-x86_64-unknown-linux-gnu",
-            "save-if": "false",
-          },
-        },
-        { uses: "denoland/setup-deno@v2" },
-        {
-          uses: "actions/setup-node@v6",
-          with: {
-            "node-version": "latest",
-          },
-        },
-        {
-          name: "npm install",
-          run: "cd js/node && npm install",
-        },
-        {
-          name: "Build",
-          run:
-            "cargo build --locked --all-targets --target x86_64-unknown-linux-gnu",
-        },
-        {
-          name: "Lint",
-          run: "cargo clippy",
-        },
-        {
-          name: "Test",
-          run: "cargo test --locked --all-features",
-        },
-      ],
-    },
-    // Full multi-platform build on push to main and tags
-    build: {
+    // Reduced matrix on PRs: linux + macOS for cross-platform coverage
+    check: makeBuildJob(prProfiles, {
       name: "${{ matrix.config.target }}",
-      if: "github.event_name == 'push'",
-      "runs-on": "${{ matrix.config.os }}",
-      strategy: {
-        matrix: {
-          config: profiles.map((profile) => ({
-            os: profile.runner,
-            run_tests: (profile.runTests ?? false).toString(),
-            cross: (profile.cross ?? false).toString(),
-            target: profile.target,
-          })),
-        },
-      },
-      outputs: Object.fromEntries(
-        profiles.map((profile) => [
-          profile.zipChecksumEnvVarName,
-          "${{steps.pre_release_" + profile.target.replaceAll("-", "_") +
-          ".outputs.ZIP_CHECKSUM}}",
-        ]),
-      ),
-      env: {
-        // disabled to reduce ./target size and generally it's slower enabled
-        CARGO_INCREMENTAL: 0,
-        RUST_BACKTRACE: "full",
-      },
-      steps: [
-        ...setupSteps,
-        {
-          name: "Setup Rust target",
-          if:
-            `matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'`,
-          run: "rustup target add ${{matrix.config.target}}",
-        },
-        {
-          name: "Setup cross",
-          if: "matrix.config.cross == 'true'",
-          run: [
-            "cd js/node && npm run build:script",
-            "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3",
-          ].join("\n"),
-        },
-        {
-          name: "Build (Debug)",
-          if:
-            "matrix.config.cross != 'true' && !startsWith(github.ref, 'refs/tags/')",
-          run:
-            "cargo build --locked --all-targets --target ${{matrix.config.target}}",
-        },
-        {
-          name: "Build release",
-          if:
-            "matrix.config.cross != 'true' && startsWith(github.ref, 'refs/tags/')",
-          run:
-            "cargo build --locked --all-targets --target ${{matrix.config.target}} --release",
-        },
-        {
-          name: "Build cross (Debug)",
-          if:
-            "matrix.config.cross == 'true' && !startsWith(github.ref, 'refs/tags/')",
-          run: [
-            "cross build --locked --target ${{matrix.config.target}}",
-          ].join("\n"),
-        },
-        {
-          name: "Build cross (Release)",
-          if:
-            "matrix.config.cross == 'true' && startsWith(github.ref, 'refs/tags/')",
-          run: [
-            "cross build --locked --target ${{matrix.config.target}} --release",
-          ].join("\n"),
-        },
-        {
-          name: "Lint",
-          if:
-            "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
-          run: "cargo clippy",
-        },
-        {
-          name: "Test (Debug)",
-          if:
-            "matrix.config.run_tests == 'true' && !startsWith(github.ref, 'refs/tags/')",
-          run: "cargo test --locked --all-features",
-        },
-        {
-          name: "Test (Release)",
-          if:
-            "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')",
-          run: "cargo test --locked --all-features --release",
-        },
-        // zip files
-        ...profiles.map((profile) => {
-          function getRunSteps() {
-            switch (profile.runner) {
-              case Runner.Mac13:
-              case Runner.MacLatest:
-                return [
-                  `cd target/${profile.target}/release`,
-                  `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
-                  `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
-                ];
-              case Runner.Linux:
-              case Runner.LinuxArm:
-                return [
-                  `cd target/${profile.target}/release`,
-                  `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
-                  `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
-                ];
-              case Runner.Windows:
-                return [
-                  `Compress-Archive -CompressionLevel Optimal -Force -Path target/${profile.target}/release/dprint-plugin-svgo.exe -DestinationPath target/${profile.target}/release/${profile.zipFileName}`,
-                  `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${profile.target}/release/${profile.zipFileName} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
-                ];
-            }
-          }
-          return {
-            name: `Pre-release (${profile.target})`,
-            id: `pre_release_${profile.target.replaceAll("-", "_")}`,
-            if:
-              `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
-            run: getRunSteps().join("\n"),
-          };
-        }),
-        // upload artifacts
-        ...profiles.map((profile) => {
-          return {
-            name: `Upload artifacts (${profile.target})`,
-            if:
-              `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
-            uses: "actions/upload-artifact@v4",
-            with: {
-              name: profile.artifactsName,
-              path: `target/${profile.target}/release/${profile.zipFileName}`,
-            },
-          };
-        }),
-      ],
-    },
+      condition: "github.event_name == 'pull_request'",
+    }),
+    // Full multi-platform build on push to main and tags
+    build: makeBuildJob(profiles, {
+      name: "${{ matrix.config.target }}",
+      condition: "github.event_name == 'push'",
+    }),
     draft_release: {
       name: "draft_release",
       if: "startsWith(github.ref, 'refs/tags/')",

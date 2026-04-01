@@ -21,9 +21,7 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
       - uses: actions/setup-node@v6
         with:
-          node-version: latest
-      - name: Install JS dependencies
-        run: cd js/node && npm install
+          node-version-file: .node-version
 
       - name: Run script
         run: |
