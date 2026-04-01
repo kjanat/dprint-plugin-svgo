@@ -10,7 +10,7 @@ const cargoFilePath = rootDir.join("plugin/Cargo.toml");
 
 const pluginName = "dprint-plugin-svgo";
 const version = new CargoToml(cargoFilePath).version();
-const isTest = Deno.args.some((a) => a == "--test");
+const isTest = Deno.args.some((a) => a === "--test");
 const githubOwner = "kjanat";
 const githubRepo = pluginName;
 
@@ -35,14 +35,15 @@ for (const platform of platforms) {
     pluginName,
     platform,
   );
+  const zipFilePath = isTest
+    ? rootDir.join("target/release").join(zipFileName).toString()
+    : zipFileName;
   const zipUrl = isTest
     ? undefined
     : `https://github.com/${githubOwner}/${githubRepo}/releases/download/${version}/${zipFileName}`;
   await builder.addPlatform({
     platform,
-    zipFilePath: isTest
-      ? $.path(rootDir).join("target/release").join(zipFileName).toString()
-      : undefined,
+    zipFilePath,
     zipUrl,
   });
 }
