@@ -106,7 +106,7 @@ function setupDeno(): Step {
 function denoInstall(): Step {
   return {
     name: "Install dependencies",
-    run: "deno install",
+    run: "deno install --frozen",
     "working-directory": "js/node",
   };
 }
@@ -139,7 +139,7 @@ function setupCross(): Step[] {
     {
       name: "Build JS (cross)",
       if: "matrix.config.cross == 'true'",
-      run: "deno run -A build.ts",
+      run: "deno run --frozen -A build.ts",
       "working-directory": "js/node",
     },
     {
@@ -332,6 +332,7 @@ function draftReleaseJob() {
     if: "startsWith(github.ref, 'refs/tags/')",
     needs: "build",
     "runs-on": "ubuntu-latest",
+    permissions: { contents: "write" },
     steps: [
       { name: "Checkout", uses: "actions/checkout@v6" },
       { name: "Download artifacts", uses: "actions/download-artifact@v8" },
@@ -353,13 +354,13 @@ function draftReleaseJob() {
       },
       {
         name: "Create plugin file",
-        run: "deno run -A scripts/create_plugin_file.ts",
+        run: "deno run --frozen -A scripts/create_plugin_file.ts",
       },
       {
         name: "Get svgo version",
         id: "get_svgo_version",
         run:
-          "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
+          "echo SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
       },
       {
         name: "Get tag version",
@@ -396,6 +397,7 @@ const ci = {
     pull_request: { branches: [...BRANCHES] },
     push: { branches: [...BRANCHES], tags: ["*"] },
   },
+  permissions: { contents: "read" },
   concurrency: {
     group:
       "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",

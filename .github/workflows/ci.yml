@@ -12,6 +12,8 @@ on:
       - main
     tags:
       - "*"
+permissions:
+  contents: read
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
   cancel-in-progress: true
@@ -44,14 +46,14 @@ jobs:
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
-        run: deno install
+        run: deno install --frozen
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
         run: "rustup target add ${{matrix.config.target}}"
       - name: Build JS (cross)
         if: matrix.config.cross == 'true'
-        run: deno run -A build.ts
+        run: deno run --frozen -A build.ts
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
@@ -117,14 +119,14 @@ jobs:
           save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
       - uses: denoland/setup-deno@v2
       - name: Install dependencies
-        run: deno install
+        run: deno install --frozen
         working-directory: js/node
       - name: Setup Rust target
         if: matrix.config.target == 'x86_64-apple-darwin' || matrix.config.target == 'aarch64-apple-darwin'
         run: "rustup target add ${{matrix.config.target}}"
       - name: Build JS (cross)
         if: matrix.config.cross == 'true'
-        run: deno run -A build.ts
+        run: deno run --frozen -A build.ts
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
@@ -220,6 +222,8 @@ jobs:
     if: 'startsWith(github.ref, ''refs/tags/'')'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -241,10 +245,10 @@ jobs:
           echo "dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')"
           echo "dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')"
       - name: Create plugin file
-        run: deno run -A scripts/create_plugin_file.ts
+        run: deno run --frozen -A scripts/create_plugin_file.ts
       - name: Get svgo version
         id: get_svgo_version
-        run: echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT
+        run: echo SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT
       - name: Get tag version
         id: get_tag_version
         run: 'echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT'
