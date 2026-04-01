@@ -178,7 +178,7 @@ avg_isolate_memory_usage: 100_000  // 100MB
 ### JavaScript Bundling
 
 ```bash
-cd js/node && npm run build:script  # Uses bun build.ts
+cd js/node && npm run build:script  # Uses deno run -A build.ts
 ```
 
 Produces `js/node/dist/main.js` bundled for browser context.

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Install JS dependencies (required before Rust build)
 deno task setup
-# or: cd js/node && bun install
+# or: cd js/node && npm install
 
 # Build debug
 cargo build

@@ -48,6 +48,31 @@ const profiles = profileDataItems.map((profile) => {
   };
 });
 
+const setupSteps = [
+  { uses: "actions/checkout@v5" },
+  { uses: "dsherret/rust-toolchain-file@v1" },
+  {
+    name: "Cache cargo",
+    uses: "Swatinem/rust-cache@v2",
+    with: {
+      "prefix-key": "v3-${{matrix.config.target}}",
+      "save-if":
+        "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
+    },
+  },
+  { uses: "denoland/setup-deno@v2" },
+  {
+    uses: "actions/setup-node@v5",
+    with: {
+      "node-version": "latest",
+    },
+  },
+  {
+    name: "npm install",
+    run: "cd js/node && npm install",
+  },
+];
+
 const ci = {
   name: "CI",
   on: {
@@ -61,8 +86,56 @@ const ci = {
     "cancel-in-progress": true,
   },
   jobs: {
+    // Lightweight check on PRs: linux x86_64 only
+    check: {
+      name: "check",
+      if: "github.event_name == 'pull_request'",
+      "runs-on": "ubuntu-latest",
+      env: {
+        CARGO_INCREMENTAL: 0,
+        RUST_BACKTRACE: "full",
+      },
+      steps: [
+        { uses: "actions/checkout@v5" },
+        { uses: "dsherret/rust-toolchain-file@v1" },
+        {
+          name: "Cache cargo",
+          uses: "Swatinem/rust-cache@v2",
+          with: {
+            "prefix-key": "v3-x86_64-unknown-linux-gnu",
+            "save-if": "false",
+          },
+        },
+        { uses: "denoland/setup-deno@v2" },
+        {
+          uses: "actions/setup-node@v5",
+          with: {
+            "node-version": "latest",
+          },
+        },
+        {
+          name: "npm install",
+          run: "cd js/node && npm install",
+        },
+        {
+          name: "Build",
+          run:
+            "cargo build --locked --all-targets --target x86_64-unknown-linux-gnu",
+        },
+        {
+          name: "Lint",
+          run: "cargo clippy",
+        },
+        {
+          name: "Test",
+          run: "cargo test --locked --all-features",
+        },
+      ],
+    },
+    // Full multi-platform build on push to main and tags
     build: {
       name: "${{ matrix.config.target }}",
+      if: "github.event_name == 'push'",
       "runs-on": "${{ matrix.config.os }}",
       strategy: {
         matrix: {
@@ -87,45 +160,18 @@ const ci = {
         RUST_BACKTRACE: "full",
       },
       steps: [
-        { uses: "actions/checkout@v5" },
-        { uses: "dsherret/rust-toolchain-file@v1" },
-        {
-          name: "Cache cargo",
-          uses: "Swatinem/rust-cache@v2",
-          with: {
-            "prefix-key": "v3-${{matrix.config.target}}",
-            "save-if":
-              "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
-          },
-        },
+        ...setupSteps,
         {
           name: "Setup Rust target",
           if:
             `matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'`,
           run: "rustup target add ${{matrix.config.target}}",
         },
-        { uses: "denoland/setup-deno@v2" },
-        {
-          uses: "actions/setup-node@v4",
-          with: {
-            "node-version": "latest",
-          },
-        },
-        {
-          uses: "oven-sh/setup-bun@v2",
-          with: {
-            "bun-version": "latest",
-          },
-        },
-        {
-          name: "bun install",
-          run: "cd js/node && bun install",
-        },
         {
           name: "Setup cross",
           if: "matrix.config.cross == 'true'",
           run: [
-            "cd js/node && bun run build:script",
+            "cd js/node && npm run build:script",
             "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3",
           ].join("\n"),
         },

@@ -21,8 +21,7 @@
     "buffer": "./node_modules/buffer"
   },
   "scripts": {
-    "build:script": "bun build.ts",
-    "typecheck": "bunx @typescript/native-preview --noEmit"
+    "build:script": "deno run -A build.ts"
   },
   "dependencies": {
     "buffer": "^6.0.3",
