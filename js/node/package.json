@@ -20,9 +20,6 @@
     "process": "process/browser",
     "buffer": "./node_modules/buffer"
   },
-  "scripts": {
-    "build:script": "deno run -A build.ts"
-  },
   "dependencies": {
     "buffer": "^6.0.3",
     "process": "^0.11.10",

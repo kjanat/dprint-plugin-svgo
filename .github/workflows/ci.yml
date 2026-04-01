@@ -47,25 +47,22 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           prefix-key: "v3-${{matrix.config.target}}"
-          save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
+          save-if: "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}"
       - uses: denoland/setup-deno@v2
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-      - name: npm ci
-        run: cd js/node && npm ci
+      - name: Install dependencies
+        run: cd js/node && deno install
       - name: Setup Rust target
         if: matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'
         run: "rustup target add ${{matrix.config.target}}"
       - name: Setup cross
         if: matrix.config.cross == 'true'
         run: |-
-          cd js/node && npm run build:script
+          cd js/node && deno run -A build.ts
           cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"
-      - name: Build release
+      - name: Build (Release)
         if: 'matrix.config.cross != ''true'' && startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}} --release"
       - name: Build cross (Debug)
@@ -190,25 +187,22 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           prefix-key: "v3-${{matrix.config.target}}"
-          save-if: '${{ github.ref == ''refs/heads/master'' || github.ref == ''refs/heads/main'' }}'
+          save-if: "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}"
       - uses: denoland/setup-deno@v2
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-      - name: npm ci
-        run: cd js/node && npm ci
+      - name: Install dependencies
+        run: cd js/node && deno install
       - name: Setup Rust target
         if: matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'
         run: "rustup target add ${{matrix.config.target}}"
       - name: Setup cross
         if: matrix.config.cross == 'true'
         run: |-
-          cd js/node && npm run build:script
+          cd js/node && deno run -A build.ts
           cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"
-      - name: Build release
+      - name: Build (Release)
         if: 'matrix.config.cross != ''true'' && startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}} --release"
       - name: Build cross (Debug)

@@ -1,306 +1,222 @@
-import * as yaml from "@std/yaml";
-import $ from "dax";
+import { stringify } from "jsr:@std/yaml@^1.0.10";
+import $ from "jsr:@david/dax@^0.44.0";
 
-enum Runner {
-  Mac13 = "macos-latest",
-  MacLatest = "macos-latest",
-  Windows = "windows-latest",
-  Linux = "ubuntu-latest",
-}
+// --- Configuration ---
 
-interface ProfileData {
+const PLUGIN_NAME = "dprint-plugin-svgo";
+const BRANCHES = ["master", "main"];
+const CROSS_REV = "4090beca3cfffa44371a5bba524de3a578aa46c3";
+
+type Runner = "macos-latest" | "ubuntu-latest" | "windows-latest";
+
+interface Target {
   runner: Runner;
   target: string;
   runTests?: boolean;
-  // currently not used
   cross?: boolean;
-  /** Include this target in PR builds for cross-platform coverage */
   runOnPr?: boolean;
 }
 
-const profileDataItems: ProfileData[] = [{
-  runner: Runner.Mac13,
-  target: "x86_64-apple-darwin",
-  runTests: true,
-}, {
-  runner: Runner.MacLatest,
-  target: "aarch64-apple-darwin",
-  runTests: true,
-  runOnPr: true,
-}, {
-  runner: Runner.Windows,
-  target: "x86_64-pc-windows-msvc",
-  runTests: true,
-}, {
-  runner: Runner.Linux,
-  target: "x86_64-unknown-linux-gnu",
-  runTests: true,
-  runOnPr: true,
-}, {
-  runner: Runner.Linux,
-  target: "aarch64-unknown-linux-gnu",
-  cross: true,
-}];
-const profiles = profileDataItems.map((profile) => {
-  return {
-    ...profile,
-    artifactsName: `${profile.target}-artifacts`,
-    zipFileName: `dprint-plugin-svgo-${profile.target}.zip`,
-    zipChecksumEnvVarName: `ZIP_CHECKSUM_${
-      profile.target.toUpperCase().replaceAll("-", "_")
-    }`,
-  };
-});
+const targets: Target[] = [
+  { runner: "macos-latest", target: "x86_64-apple-darwin", runTests: true },
+  { runner: "macos-latest", target: "aarch64-apple-darwin", runTests: true, runOnPr: true },
+  { runner: "windows-latest", target: "x86_64-pc-windows-msvc", runTests: true },
+  { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", runTests: true, runOnPr: true },
+  { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", cross: true },
+];
 
-const prProfiles = profiles.filter((p) => p.runOnPr);
+// --- Derived values ---
 
-function makeSetupSteps(opts?: { cachePrefix?: string; cacheSaveIf?: string }) {
-  return [
-    { uses: "actions/checkout@v5" },
-    { uses: "dsherret/rust-toolchain-file@v1" },
-    {
-      name: "Cache cargo",
-      uses: "Swatinem/rust-cache@v2",
-      with: {
-        "prefix-key": opts?.cachePrefix ?? "v3-${{matrix.config.target}}",
-        "save-if": opts?.cacheSaveIf ??
-          "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}",
-      },
-    },
-    { uses: "denoland/setup-deno@v2" },
-    {
-      uses: "actions/setup-node@v6",
-      with: {
-        "node-version-file": ".node-version",
-      },
-    },
-    {
-      name: "npm ci",
-      run: "cd js/node && npm ci",
-    },
-  ];
+function artifactsName(t: Target) {
+  return `${t.target}-artifacts`;
 }
 
-function makeBuildJob(
-  jobProfiles: typeof profiles,
-  opts: { condition: string; name: string },
-) {
+function zipFileName(t: Target) {
+  return `${PLUGIN_NAME}-${t.target}.zip`;
+}
+
+function checksumEnvVar(t: Target) {
+  return `ZIP_CHECKSUM_${t.target.toUpperCase().replaceAll("-", "_")}`;
+}
+
+function stepId(t: Target) {
+  return `pre_release_${t.target.replaceAll("-", "_")}`;
+}
+
+// --- Step builders ---
+
+// deno-lint-ignore no-explicit-any
+type Step = Record<string, any>;
+
+function checkout(): Step {
+  return { uses: "actions/checkout@v5" };
+}
+
+function rustToolchain(): Step {
+  return { uses: "dsherret/rust-toolchain-file@v1" };
+}
+
+function cargoCache(): Step {
   return {
-    name: opts.name,
-    if: opts.condition,
-    "runs-on": "${{ matrix.config.os }}",
-    strategy: {
-      matrix: {
-        config: jobProfiles.map((profile) => ({
-          os: profile.runner,
-          run_tests: (profile.runTests ?? false).toString(),
-          cross: (profile.cross ?? false).toString(),
-          target: profile.target,
-        })),
-      },
+    name: "Cache cargo",
+    uses: "Swatinem/rust-cache@v2",
+    with: {
+      "prefix-key": "v3-${{matrix.config.target}}",
+      "save-if": `\${{ ${BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")} }}`,
     },
+  };
+}
+
+function setupDeno(): Step {
+  return { uses: "denoland/setup-deno@v2" };
+}
+
+function denoInstall(): Step {
+  return { name: "Install dependencies", run: "cd js/node && deno install" };
+}
+
+function setupSteps(): Step[] {
+  return [checkout(), rustToolchain(), cargoCache(), setupDeno(), denoInstall()];
+}
+
+function setupRustTarget(): Step {
+  const appleTargets = targets
+    .filter((t) => t.target.includes("apple"))
+    .map((t) => `matrix.config.target == '${t.target}'`);
+  return {
+    name: "Setup Rust target",
+    if: appleTargets.join(" || "),
+    run: "rustup target add ${{matrix.config.target}}",
+  };
+}
+
+function setupCross(): Step {
+  return {
+    name: "Setup cross",
+    if: "matrix.config.cross == 'true'",
+    run: [
+      "cd js/node && deno run -A build.ts",
+      `cargo install cross --locked --git https://github.com/cross-rs/cross --rev ${CROSS_REV}`,
+    ].join("\n"),
+  };
+}
+
+function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
+  const isRelease = mode === "release";
+  const cmd = cross ? "cross" : "cargo";
+  const flags = cross ? "" : " --all-targets";
+  const releaseFlag = isRelease ? " --release" : "";
+  const crossCond = cross
+    ? "matrix.config.cross == 'true'"
+    : "matrix.config.cross != 'true'";
+  const tagCond = isRelease
+    ? "startsWith(github.ref, 'refs/tags/')"
+    : "!startsWith(github.ref, 'refs/tags/')";
+  return {
+    name: `Build ${cross ? "cross " : ""}(${isRelease ? "Release" : "Debug"})`,
+    if: `${crossCond} && ${tagCond}`,
+    run: `${cmd} build --locked${flags} --target \${{matrix.config.target}}${releaseFlag}`,
+  };
+}
+
+function lint(): Step {
+  return {
+    name: "Lint",
+    if: "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
+    run: "cargo clippy",
+  };
+}
+
+function test(mode: "debug" | "release"): Step {
+  const isRelease = mode === "release";
+  const tagCond = isRelease
+    ? "startsWith(github.ref, 'refs/tags/')"
+    : "!startsWith(github.ref, 'refs/tags/')";
+  return {
+    name: `Test (${isRelease ? "Release" : "Debug"})`,
+    if: `matrix.config.run_tests == 'true' && ${tagCond}`,
+    run: `cargo test --locked --all-features${isRelease ? " --release" : ""}`,
+  };
+}
+
+function preRelease(t: Target): Step {
+  const isWindows = t.runner === "windows-latest";
+  const zip = zipFileName(t);
+  const lines = isWindows
+    ? [
+      `Compress-Archive -CompressionLevel Optimal -Force -Path target/${t.target}/release/${PLUGIN_NAME}.exe -DestinationPath target/${t.target}/release/${zip}`,
+      `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${t.target}/release/${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+    ]
+    : [
+      `cd target/${t.target}/release`,
+      `zip -r ${zip} ${PLUGIN_NAME}`,
+      `echo "ZIP_CHECKSUM=$(shasum -a 256 ${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+    ];
+  return {
+    name: `Pre-release (${t.target})`,
+    id: stepId(t),
+    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    run: lines.join("\n"),
+  };
+}
+
+function uploadArtifact(t: Target): Step {
+  return {
+    name: `Upload artifacts (${t.target})`,
+    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    uses: "actions/upload-artifact@v4",
+    with: {
+      name: artifactsName(t),
+      path: `target/${t.target}/release/${zipFileName(t)}`,
+    },
+  };
+}
+
+// --- Job builders ---
+
+function matrixConfig(items: Target[]) {
+  return {
+    config: items.map((t) => ({
+      os: t.runner,
+      run_tests: (t.runTests ?? false).toString(),
+      cross: (t.cross ?? false).toString(),
+      target: t.target,
+    })),
+  };
+}
+
+function buildJob(items: Target[], condition: string) {
+  return {
+    name: "${{ matrix.config.target }}",
+    if: condition,
+    "runs-on": "${{ matrix.config.os }}",
+    strategy: { matrix: matrixConfig(items) },
     outputs: Object.fromEntries(
-      profiles.map((profile) => [
-        profile.zipChecksumEnvVarName,
-        "${{steps.pre_release_" + profile.target.replaceAll("-", "_") +
-        ".outputs.ZIP_CHECKSUM}}",
+      targets.map((t) => [
+        checksumEnvVar(t),
+        `\${{steps.${stepId(t)}.outputs.ZIP_CHECKSUM}}`,
       ]),
     ),
-    env: {
-      CARGO_INCREMENTAL: 0,
-      RUST_BACKTRACE: "full",
-    },
+    env: { CARGO_INCREMENTAL: 0, RUST_BACKTRACE: "full" },
     steps: [
-      ...makeSetupSteps(),
-      {
-        name: "Setup Rust target",
-        if:
-          `matrix.config.target == 'aarch64-apple-darwin' || matrix.config.target == 'x86_64-apple-darwin'`,
-        run: "rustup target add ${{matrix.config.target}}",
-      },
-      {
-        name: "Setup cross",
-        if: "matrix.config.cross == 'true'",
-        run: [
-          "cd js/node && npm run build:script",
-          "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3",
-        ].join("\n"),
-      },
-      {
-        name: "Build (Debug)",
-        if:
-          "matrix.config.cross != 'true' && !startsWith(github.ref, 'refs/tags/')",
-        run:
-          "cargo build --locked --all-targets --target ${{matrix.config.target}}",
-      },
-      {
-        name: "Build release",
-        if:
-          "matrix.config.cross != 'true' && startsWith(github.ref, 'refs/tags/')",
-        run:
-          "cargo build --locked --all-targets --target ${{matrix.config.target}} --release",
-      },
-      {
-        name: "Build cross (Debug)",
-        if:
-          "matrix.config.cross == 'true' && !startsWith(github.ref, 'refs/tags/')",
-        run: [
-          "cross build --locked --target ${{matrix.config.target}}",
-        ].join("\n"),
-      },
-      {
-        name: "Build cross (Release)",
-        if:
-          "matrix.config.cross == 'true' && startsWith(github.ref, 'refs/tags/')",
-        run: [
-          "cross build --locked --target ${{matrix.config.target}} --release",
-        ].join("\n"),
-      },
-      {
-        name: "Lint",
-        if:
-          "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
-        run: "cargo clippy",
-      },
-      {
-        name: "Test (Debug)",
-        if:
-          "matrix.config.run_tests == 'true' && !startsWith(github.ref, 'refs/tags/')",
-        run: "cargo test --locked --all-features",
-      },
-      {
-        name: "Test (Release)",
-        if:
-          "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')",
-        run: "cargo test --locked --all-features --release",
-      },
-      // zip files
-      ...profiles.map((profile) => {
-        function getRunSteps() {
-          switch (profile.runner) {
-            case Runner.Mac13:
-            case Runner.MacLatest:
-              return [
-                `cd target/${profile.target}/release`,
-                `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
-                `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
-              ];
-            case Runner.Linux:
-            case Runner.LinuxArm:
-              return [
-                `cd target/${profile.target}/release`,
-                `zip -r ${profile.zipFileName} dprint-plugin-svgo`,
-                `echo \"ZIP_CHECKSUM=$(shasum -a 256 ${profile.zipFileName} | awk '{print $1}')\" >> $GITHUB_OUTPUT`,
-              ];
-            case Runner.Windows:
-              return [
-                `Compress-Archive -CompressionLevel Optimal -Force -Path target/${profile.target}/release/dprint-plugin-svgo.exe -DestinationPath target/${profile.target}/release/${profile.zipFileName}`,
-                `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${profile.target}/release/${profile.zipFileName} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
-              ];
-          }
-        }
-        return {
-          name: `Pre-release (${profile.target})`,
-          id: `pre_release_${profile.target.replaceAll("-", "_")}`,
-          if:
-            `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
-          run: getRunSteps().join("\n"),
-        };
-      }),
-      // upload artifacts
-      ...profiles.map((profile) => {
-        return {
-          name: `Upload artifacts (${profile.target})`,
-          if:
-            `matrix.config.target == '${profile.target}' && startsWith(github.ref, 'refs/tags/')`,
-          uses: "actions/upload-artifact@v4",
-          with: {
-            name: profile.artifactsName,
-            path: `target/${profile.target}/release/${profile.zipFileName}`,
-          },
-        };
-      }),
+      ...setupSteps(),
+      setupRustTarget(),
+      setupCross(),
+      cargoBuild("debug", false),
+      cargoBuild("release", false),
+      cargoBuild("debug", true),
+      cargoBuild("release", true),
+      lint(),
+      test("debug"),
+      test("release"),
+      ...targets.map(preRelease),
+      ...targets.map(uploadArtifact),
     ],
   };
 }
 
-const ci = {
-  name: "CI",
-  on: {
-    pull_request: { branches: ["master", "main"] },
-    push: { branches: ["master", "main"], tags: ["*"] },
-  },
-  concurrency: {
-    // https://stackoverflow.com/a/72408109/188246
-    group:
-      "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
-    "cancel-in-progress": true,
-  },
-  jobs: {
-    // Reduced matrix on PRs: linux + macOS for cross-platform coverage
-    check: makeBuildJob(prProfiles, {
-      name: "${{ matrix.config.target }}",
-      condition: "github.event_name == 'pull_request'",
-    }),
-    // Full multi-platform build on push to main and tags
-    build: makeBuildJob(profiles, {
-      name: "${{ matrix.config.target }}",
-      condition: "github.event_name == 'push'",
-    }),
-    draft_release: {
-      name: "draft_release",
-      if: "startsWith(github.ref, 'refs/tags/')",
-      needs: "build",
-      "runs-on": "ubuntu-latest",
-      steps: [
-        { name: "Checkout", uses: "actions/checkout@v5" },
-        { name: "Download artifacts", uses: "actions/download-artifact@v4" },
-        { uses: "denoland/setup-deno@v2" },
-        {
-          name: "Move downloaded artifacts to root directory",
-          run: profiles.map((profile) => {
-            return `mv ${profile.artifactsName}/${profile.zipFileName} .`;
-          }).join("\n"),
-        },
-        {
-          name: "Output checksums",
-          run: profiles.map((profile) => {
-            return `echo "${profile.zipFileName}: \${{needs.build.outputs.${profile.zipChecksumEnvVarName}}}"`;
-          }).join("\n"),
-        },
-        {
-          name: "Create plugin file",
-          run: "deno run -A scripts/create_plugin_file.ts",
-        },
-        {
-          name: "Get svgo version",
-          id: "get_svgo_version",
-          run:
-            "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
-        },
-        {
-          name: "Get tag version",
-          id: "get_tag_version",
-          run:
-            "echo TAG_VERSION=${GITHUB_REF/refs\\/tags\\//} >> $GITHUB_OUTPUT",
-        },
-        {
-          name: "Get plugin file checksum",
-          id: "get_plugin_file_checksum",
-          run:
-            "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
-        },
-        {
-          name: "Release",
-          uses: "softprops/action-gh-release@v2",
-          env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" },
-          with: {
-            draft: true,
-            files: [
-              ...profiles.map((profile) => profile.zipFileName),
-              "plugin.json",
-            ].join("\n"),
-            body: `SVGO \${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
+function releaseBody(): string {
+  return `SVGO \${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
 ## Install
 
 Dependencies:
@@ -309,9 +225,9 @@ Dependencies:
 
 In a dprint configuration file:
 
-1. Specify the plugin url and checksum in the ${"`"}"plugins"${"`"} array or run ${"`"}dprint config add svgo${"`"}:
+1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint config add svgo\`:
 
-   ${"```"}jsonc
+   \`\`\`jsonc
    {
      // etc...
      "plugins": [
@@ -319,11 +235,11 @@ In a dprint configuration file:
        "https://plugins.dprint.dev/svgo-\${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@\${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
      ]
    }
-   ${"```"}
+   \`\`\`
 
-2. Add a ${"`"}"svgo"${"`"} configuration property if desired.
+2. Add a \`"svgo"\` configuration property if desired.
 
-   ${"```"}jsonc
+   \`\`\`jsonc
    {
      // ...etc...
      "svgo": {
@@ -332,21 +248,87 @@ In a dprint configuration file:
        "indent": 2
      }
    }
-   ${"```"}
-`,
-          },
+   \`\`\`
+`;
+}
+
+function draftReleaseJob() {
+  return {
+    name: "draft_release",
+    if: "startsWith(github.ref, 'refs/tags/')",
+    needs: "build",
+    "runs-on": "ubuntu-latest",
+    steps: [
+      { name: "Checkout", uses: "actions/checkout@v5" },
+      { name: "Download artifacts", uses: "actions/download-artifact@v4" },
+      setupDeno(),
+      {
+        name: "Move downloaded artifacts to root directory",
+        run: targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`).join("\n"),
+      },
+      {
+        name: "Output checksums",
+        run: targets
+          .map((t) => `echo "${zipFileName(t)}: \${{needs.build.outputs.${checksumEnvVar(t)}}}"`)
+          .join("\n"),
+      },
+      { name: "Create plugin file", run: "deno run -A scripts/create_plugin_file.ts" },
+      {
+        name: "Get svgo version",
+        id: "get_svgo_version",
+        run: "echo SVGO_VERSION=$(deno run --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
+      },
+      {
+        name: "Get tag version",
+        id: "get_tag_version",
+        run: "echo TAG_VERSION=${GITHUB_REF/refs\\/tags\\//} >> $GITHUB_OUTPUT",
+      },
+      {
+        name: "Get plugin file checksum",
+        id: "get_plugin_file_checksum",
+        run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
+      },
+      {
+        name: "Release",
+        uses: "softprops/action-gh-release@v2",
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" },
+        with: {
+          draft: true,
+          files: [...targets.map(zipFileName), "plugin.json"].join("\n"),
+          body: releaseBody(),
         },
-      ],
-    },
+      },
+    ],
+  };
+}
+
+// --- Assemble and write ---
+
+const prTargets = targets.filter((t) => t.runOnPr);
+
+const ci = {
+  name: "CI",
+  on: {
+    pull_request: { branches: BRANCHES },
+    push: { branches: BRANCHES, tags: ["*"] },
+  },
+  concurrency: {
+    group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+    "cancel-in-progress": true,
+  },
+  jobs: {
+    check: buildJob(prTargets, "github.event_name == 'pull_request'"),
+    build: buildJob(targets, "github.event_name == 'push'"),
+    draft_release: draftReleaseJob(),
   },
 };
 
-let finalText = `# GENERATED BY ./ci.generate.ts -- DO NOT DIRECTLY EDIT\n\n`;
-finalText += yaml.stringify(ci, {
+let output = "# GENERATED BY ./ci.generate.ts -- DO NOT DIRECTLY EDIT\n\n";
+output += stringify(ci, {
   lineWidth: 10_000,
   compatMode: false,
   styles: { "!!str": "double" },
 });
 
-Deno.writeTextFileSync(new URL("./ci.yml", import.meta.url), finalText);
+Deno.writeTextFileSync(new URL("./ci.yml", import.meta.url), output);
 await $`dprint fmt`;
