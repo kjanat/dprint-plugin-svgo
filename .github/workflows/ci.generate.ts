@@ -38,10 +38,6 @@ function zipFileName(t: Target) {
   return `${PLUGIN_NAME}-${t.target}.zip`;
 }
 
-function checksumEnvVar(t: Target) {
-  return `ZIP_CHECKSUM_${t.target.toUpperCase().replaceAll("-", "_")}`;
-}
-
 function stepId(t: Target) {
   return `pre_release_${t.target.replaceAll("-", "_")}`;
 }
@@ -207,12 +203,6 @@ function buildJob(items: Target[], condition: string) {
     if: condition,
     "runs-on": "${{ matrix.config.os }}",
     strategy: { matrix: matrixConfig(items) },
-    outputs: Object.fromEntries(
-      targets.map((t) => [
-        checksumEnvVar(t),
-        `\${{steps.${stepId(t)}.outputs.ZIP_CHECKSUM}}`,
-      ]),
-    ),
     env: { CARGO_INCREMENTAL: 0, RUST_BACKTRACE: "full" },
     steps: [
       ...setupSteps(),
@@ -292,7 +282,7 @@ function draftReleaseJob() {
       {
         name: "Output checksums",
         run: targets
-          .map((t) => `echo "${zipFileName(t)}: \${{needs.build.outputs.${checksumEnvVar(t)}}}"`)
+          .map((t) => `echo "${zipFileName(t)}: $(shasum -a 256 ${zipFileName(t)} | awk '{print $1}')"`)
           .join("\n"),
       },
       { name: "Create plugin file", run: "deno run -A scripts/create_plugin_file.ts" },

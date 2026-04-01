@@ -31,12 +31,6 @@ jobs:
             run_tests: 'true'
             cross: 'false'
             target: x86_64-unknown-linux-gnu
-    outputs:
-      ZIP_CHECKSUM_X86_64_APPLE_DARWIN: '${{steps.pre_release_x86_64_apple_darwin.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_AARCH64_APPLE_DARWIN: '${{steps.pre_release_aarch64_apple_darwin.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_X86_64_PC_WINDOWS_MSVC: '${{steps.pre_release_x86_64_pc_windows_msvc.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_X86_64_UNKNOWN_LINUX_GNU: '${{steps.pre_release_x86_64_unknown_linux_gnu.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_AARCH64_UNKNOWN_LINUX_GNU: '${{steps.pre_release_aarch64_unknown_linux_gnu.outputs.ZIP_CHECKSUM}}'
     env:
       CARGO_INCREMENTAL: 0
       RUST_BACKTRACE: full
@@ -174,12 +168,6 @@ jobs:
             run_tests: 'false'
             cross: 'true'
             target: aarch64-unknown-linux-gnu
-    outputs:
-      ZIP_CHECKSUM_X86_64_APPLE_DARWIN: '${{steps.pre_release_x86_64_apple_darwin.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_AARCH64_APPLE_DARWIN: '${{steps.pre_release_aarch64_apple_darwin.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_X86_64_PC_WINDOWS_MSVC: '${{steps.pre_release_x86_64_pc_windows_msvc.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_X86_64_UNKNOWN_LINUX_GNU: '${{steps.pre_release_x86_64_unknown_linux_gnu.outputs.ZIP_CHECKSUM}}'
-      ZIP_CHECKSUM_AARCH64_UNKNOWN_LINUX_GNU: '${{steps.pre_release_aarch64_unknown_linux_gnu.outputs.ZIP_CHECKSUM}}'
     env:
       CARGO_INCREMENTAL: 0
       RUST_BACKTRACE: full
@@ -310,11 +298,11 @@ jobs:
           mv aarch64-unknown-linux-gnu-artifacts/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip .
       - name: Output checksums
         run: |-
-          echo "dprint-plugin-svgo-x86_64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_APPLE_DARWIN}}"
-          echo "dprint-plugin-svgo-aarch64-apple-darwin.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_APPLE_DARWIN}}"
-          echo "dprint-plugin-svgo-x86_64-pc-windows-msvc.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_PC_WINDOWS_MSVC}}"
-          echo "dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_X86_64_UNKNOWN_LINUX_GNU}}"
-          echo "dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: ${{needs.build.outputs.ZIP_CHECKSUM_AARCH64_UNKNOWN_LINUX_GNU}}"
+          echo "dprint-plugin-svgo-x86_64-apple-darwin.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')"
+          echo "dprint-plugin-svgo-aarch64-apple-darwin.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')"
+          echo "dprint-plugin-svgo-x86_64-pc-windows-msvc.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')"
+          echo "dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')"
+          echo "dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')"
       - name: Create plugin file
         run: deno run -A scripts/create_plugin_file.ts
       - name: Get svgo version

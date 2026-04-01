@@ -41,6 +41,10 @@ fn main() {
   );
   println!(
     "cargo:rerun-if-changed={}",
+    js_dir.join("node/build.ts").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
     js_dir.join("node/package.json").display()
   );
   println!(
@@ -50,6 +54,10 @@ fn main() {
   println!(
     "cargo:rerun-if-changed={}",
     js_dir.join("node/shims/url.js").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("deno.json").display()
   );
 
   let startup_code_path = js_dir.join("node/dist/main.js");
