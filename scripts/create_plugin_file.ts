@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=deno.land
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=deno.land,raw.githubusercontent.com
 import {
   CargoToml,
   processPlugin,
