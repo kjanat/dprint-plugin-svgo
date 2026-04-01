@@ -62,7 +62,7 @@ const setupSteps = [
   },
   { uses: "denoland/setup-deno@v2" },
   {
-    uses: "actions/setup-node@v5",
+    uses: "actions/setup-node@v6",
     with: {
       "node-version": "latest",
     },
@@ -108,7 +108,7 @@ const ci = {
         },
         { uses: "denoland/setup-deno@v2" },
         {
-          uses: "actions/setup-node@v5",
+          uses: "actions/setup-node@v6",
           with: {
             "node-version": "latest",
           },
