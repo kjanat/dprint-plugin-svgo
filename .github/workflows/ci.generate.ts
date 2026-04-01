@@ -154,7 +154,8 @@ function preRelease(t: Target): Step {
   const lines = isWindows
     ? [
       `Compress-Archive -CompressionLevel Optimal -Force -Path ${releaseDir}/${PLUGIN_NAME}.exe -DestinationPath ${releaseDir}/${zip}`,
-      `echo "ZIP_CHECKSUM=$(shasum -a 256 ${releaseDir}/${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+      `$hash = (Get-FileHash -Algorithm SHA256 ${releaseDir}/${zip}).Hash.ToLower()`,
+      `"ZIP_CHECKSUM=$hash" >> $env:GITHUB_OUTPUT`,
     ]
     : [
       `zip -r ${zip} ${PLUGIN_NAME}`,

@@ -96,7 +96,8 @@ jobs:
         if: 'matrix.config.target == ''x86_64-pc-windows-msvc'' && startsWith(github.ref, ''refs/tags/'')'
         run: |-
           Compress-Archive -CompressionLevel Optimal -Force -Path target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo.exe -DestinationPath target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
-          echo "ZIP_CHECKSUM=$(shasum -a 256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          $hash = (Get-FileHash -Algorithm SHA256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip).Hash.ToLower()
+          "ZIP_CHECKSUM=$hash" >> $env:GITHUB_OUTPUT
       - name: Pre-release (x86_64-unknown-linux-gnu)
         id: pre_release_x86_64_unknown_linux_gnu
         if: 'matrix.config.target == ''x86_64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
@@ -233,7 +234,8 @@ jobs:
         if: 'matrix.config.target == ''x86_64-pc-windows-msvc'' && startsWith(github.ref, ''refs/tags/'')'
         run: |-
           Compress-Archive -CompressionLevel Optimal -Force -Path target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo.exe -DestinationPath target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
-          echo "ZIP_CHECKSUM=$(shasum -a 256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
+          $hash = (Get-FileHash -Algorithm SHA256 target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip).Hash.ToLower()
+          "ZIP_CHECKSUM=$hash" >> $env:GITHUB_OUTPUT
       - name: Pre-release (x86_64-unknown-linux-gnu)
         id: pre_release_x86_64_unknown_linux_gnu
         if: 'matrix.config.target == ''x86_64-unknown-linux-gnu'' && startsWith(github.ref, ''refs/tags/'')'
