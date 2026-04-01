@@ -332,8 +332,8 @@ const prTargets = targets.filter((t) => t.runOnPr);
 const ci = {
   name: "CI",
   on: {
-    pull_request: { branches: BRANCHES },
-    push: { branches: BRANCHES, tags: ["*"] },
+    pull_request: { branches: [...BRANCHES] },
+    push: { branches: [...BRANCHES], tags: ["*"] },
   },
   concurrency: {
     group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
@@ -354,4 +354,8 @@ output += stringify(ci, {
 });
 
 Deno.writeTextFileSync(new URL("./ci.yml", import.meta.url), output);
-await $`dprint fmt`;
+try {
+  await $`dprint fmt`;
+} catch {
+  // dprint may not be installed; formatting is optional
+}
