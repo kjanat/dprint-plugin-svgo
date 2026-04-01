@@ -234,6 +234,32 @@ function uploadArtifact(t: Target): Step {
   };
 }
 
+/** Generate JSON schema from Rust types (only on linux-x86_64 release builds). */
+const SCHEMA_TARGET = "x86_64-unknown-linux-gnu";
+
+function generateSchema(): Step {
+  return {
+    name: "Generate schema",
+    if:
+      `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
+    run:
+      "cargo run --locked --features schema --bin generate-schema -- schema.json",
+  };
+}
+
+function uploadSchemaArtifact(): Step {
+  return {
+    name: "Upload schema artifact",
+    if:
+      `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
+    uses: "actions/upload-artifact@v7",
+    with: {
+      name: "schema-artifacts",
+      path: "schema.json",
+    },
+  };
+}
+
 // --- Job builders ---
 
 /** Convert target definitions into a GitHub Actions matrix configuration. */
@@ -277,6 +303,7 @@ function buildJob(
       test("release"),
       ...(includeRelease ? items.map(preRelease) : []),
       ...(includeRelease ? items.map(uploadArtifact) : []),
+      ...(includeRelease ? [generateSchema(), uploadSchemaArtifact()] : []),
     ],
   };
 }
@@ -340,8 +367,10 @@ function draftReleaseJob() {
       setupDeno(),
       {
         name: "Move downloaded artifacts to root directory",
-        run: targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`)
-          .join("\n"),
+        run: [
+          ...targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`),
+          "mv schema-artifacts/schema.json .",
+        ].join("\n"),
       },
       {
         name: "Output checksums",
@@ -356,10 +385,6 @@ function draftReleaseJob() {
       {
         name: "Create plugin file",
         run: "deno run --frozen -A scripts/create_plugin_file.ts",
-      },
-      {
-        name: "Generate schema",
-        run: "deno run --frozen -A scripts/generate_schema.ts",
       },
       {
         name: "Get svgo version",
