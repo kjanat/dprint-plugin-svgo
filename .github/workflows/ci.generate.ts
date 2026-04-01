@@ -49,7 +49,7 @@ function stepId(t: Target) {
 type Step = Record<string, any>;
 
 function checkout(): Step {
-  return { uses: "actions/checkout@v5" };
+  return { uses: "actions/checkout@v6" };
 }
 
 function rustToolchain(): Step {
@@ -164,7 +164,7 @@ function uploadArtifact(t: Target): Step {
   return {
     name: `Upload artifacts (${t.target})`,
     if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
-    uses: "actions/upload-artifact@v4",
+    uses: "actions/upload-artifact@v7",
     with: {
       name: artifactsName(t),
       path: `target/${t.target}/release/${zipFileName(t)}`,
@@ -259,8 +259,8 @@ function draftReleaseJob() {
     needs: "build",
     "runs-on": "ubuntu-latest",
     steps: [
-      { name: "Checkout", uses: "actions/checkout@v5" },
-      { name: "Download artifacts", uses: "actions/download-artifact@v4" },
+      { name: "Checkout", uses: "actions/checkout@v6" },
+      { name: "Download artifacts", uses: "actions/download-artifact@v8" },
       setupDeno(),
       {
         name: "Move downloaded artifacts to root directory",
