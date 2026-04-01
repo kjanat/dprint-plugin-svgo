@@ -2,4 +2,4 @@ js/node/dist/
 target
 node_modules
 .parcel-cache
-.vscode
+.vscode.deno_cache/
