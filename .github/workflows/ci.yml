@@ -246,6 +246,8 @@ jobs:
           echo "dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')"
       - name: Create plugin file
         run: deno run --frozen -A scripts/create_plugin_file.ts
+      - name: Generate schema
+        run: deno run --frozen -A scripts/generate_schema.ts
       - name: Get svgo version
         id: get_svgo_version
         run: echo SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT
@@ -268,6 +270,7 @@ jobs:
             dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
             dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip
             plugin.json
+            schema.json
           body: |
             SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
             ## Install

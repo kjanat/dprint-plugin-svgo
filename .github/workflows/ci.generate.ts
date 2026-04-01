@@ -358,6 +358,10 @@ function draftReleaseJob() {
         run: "deno run --frozen -A scripts/create_plugin_file.ts",
       },
       {
+        name: "Generate schema",
+        run: "deno run --frozen -A scripts/generate_schema.ts",
+      },
+      {
         name: "Get svgo version",
         id: "get_svgo_version",
         run:
@@ -380,7 +384,8 @@ function draftReleaseJob() {
         env: { GITHUB_TOKEN: "${{ github.token }}" },
         with: {
           draft: true,
-          files: [...targets.map(zipFileName), "plugin.json"].join("\n"),
+          files: [...targets.map(zipFileName), "plugin.json", "schema.json"]
+            .join("\n"),
           body: releaseBody(),
         },
       },

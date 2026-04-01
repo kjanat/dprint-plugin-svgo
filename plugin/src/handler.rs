@@ -58,7 +58,10 @@ impl AsyncPluginHandler for SvgoPluginHandler {
       version: env!("CARGO_PKG_VERSION").to_string(),
       config_key: "svgo".to_string(),
       help_url: "https://svgo.dev".to_string(),
-      config_schema_url: String::new(),
+      config_schema_url: format!(
+        "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/{}/schema.json",
+        env!("CARGO_PKG_VERSION")
+      ),
       update_url: None,
     }
   }
