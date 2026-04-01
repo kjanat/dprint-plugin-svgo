@@ -5,6 +5,7 @@ import $ from "jsr:@david/dax@^0.44.0";
 
 const PLUGIN_NAME = "dprint-plugin-svgo";
 const BRANCHES = ["master", "main"];
+// Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
 const CROSS_REV = "4090beca3cfffa44371a5bba524de3a578aa46c3";
 
 type Runner = "macos-latest" | "ubuntu-latest" | "windows-latest";
@@ -72,7 +73,11 @@ function setupDeno(): Step {
 }
 
 function denoInstall(): Step {
-  return { name: "Install dependencies", run: "cd js/node && deno install" };
+  return {
+    name: "Install dependencies",
+    run: "deno install",
+    "working-directory": "js/node",
+  };
 }
 
 function setupSteps(): Step[] {
@@ -90,15 +95,20 @@ function setupRustTarget(): Step {
   };
 }
 
-function setupCross(): Step {
-  return {
-    name: "Setup cross",
-    if: "matrix.config.cross == 'true'",
-    run: [
-      "cd js/node && deno run -A build.ts",
-      `cargo install cross --locked --git https://github.com/cross-rs/cross --rev ${CROSS_REV}`,
-    ].join("\n"),
-  };
+function setupCross(): Step[] {
+  return [
+    {
+      name: "Build JS (cross)",
+      if: "matrix.config.cross == 'true'",
+      run: "deno run -A build.ts",
+      "working-directory": "js/node",
+    },
+    {
+      name: "Install cross",
+      if: "matrix.config.cross == 'true'",
+      run: `cargo install cross --locked --git https://github.com/cross-rs/cross --rev ${CROSS_REV}`,
+    },
+  ];
 }
 
 function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
@@ -142,22 +152,26 @@ function test(mode: "debug" | "release"): Step {
 function preRelease(t: Target): Step {
   const isWindows = t.runner === "windows-latest";
   const zip = zipFileName(t);
+  const releaseDir = `target/${t.target}/release`;
   const lines = isWindows
     ? [
-      `Compress-Archive -CompressionLevel Optimal -Force -Path target/${t.target}/release/${PLUGIN_NAME}.exe -DestinationPath target/${t.target}/release/${zip}`,
-      `echo "ZIP_CHECKSUM=$(shasum -a 256 target/${t.target}/release/${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+      `Compress-Archive -CompressionLevel Optimal -Force -Path ${releaseDir}/${PLUGIN_NAME}.exe -DestinationPath ${releaseDir}/${zip}`,
+      `echo "ZIP_CHECKSUM=$(shasum -a 256 ${releaseDir}/${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
     ]
     : [
-      `cd target/${t.target}/release`,
       `zip -r ${zip} ${PLUGIN_NAME}`,
       `echo "ZIP_CHECKSUM=$(shasum -a 256 ${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
     ];
-  return {
+  const step: Step = {
     name: `Pre-release (${t.target})`,
     id: stepId(t),
     if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     run: lines.join("\n"),
   };
+  if (!isWindows) {
+    step["working-directory"] = releaseDir;
+  }
+  return step;
 }
 
 function uploadArtifact(t: Target): Step {
@@ -201,7 +215,7 @@ function buildJob(items: Target[], condition: string) {
     steps: [
       ...setupSteps(),
       setupRustTarget(),
-      setupCross(),
+      ...setupCross(),
       cargoBuild("debug", false),
       cargoBuild("release", false),
       cargoBuild("debug", true),
@@ -216,40 +230,47 @@ function buildJob(items: Target[], condition: string) {
 }
 
 function releaseBody(): string {
-  return `SVGO \${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
-## Install
+  const tag = "${{ steps.get_tag_version.outputs.TAG_VERSION }}";
+  const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
+  const version = "${{ steps.get_svgo_version.outputs.SVGO_VERSION }}";
+  const pluginUrl = `https://plugins.dprint.dev/svgo-${tag}.json@${checksum}`;
 
-Dependencies:
-
-- Install dprint's CLI >= 0.40.0
-
-In a dprint configuration file:
-
-1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint config add svgo\`:
-
-   \`\`\`jsonc
-   {
-     // etc...
-     "plugins": [
-       // ...add other dprint plugins here...
-       "https://plugins.dprint.dev/svgo-\${{ steps.get_tag_version.outputs.TAG_VERSION }}.json@\${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}"
-     ]
-   }
-   \`\`\`
-
-2. Add a \`"svgo"\` configuration property if desired.
-
-   \`\`\`jsonc
-   {
-     // ...etc...
-     "svgo": {
-       "multipass": true,
-       "pretty": true,
-       "indent": 2
-     }
-   }
-   \`\`\`
-`;
+  return [
+    `SVGO ${version}`,
+    "## Install",
+    "",
+    "Dependencies:",
+    "",
+    "- Install dprint's CLI >= 0.40.0",
+    "",
+    "In a dprint configuration file:",
+    "",
+    '1. Specify the plugin url and checksum in the `"plugins"` array or run `dprint config add svgo`:',
+    "",
+    "   ```jsonc",
+    "   {",
+    "     // etc...",
+    '     "plugins": [',
+    "       // ...add other dprint plugins here...",
+    `       "${pluginUrl}"`,
+    "     ]",
+    "   }",
+    "   ```",
+    "",
+    '2. Add a `"svgo"` configuration property if desired.',
+    "",
+    "   ```jsonc",
+    "   {",
+    "     // ...etc...",
+    '     "svgo": {',
+    '       "multipass": true,',
+    '       "pretty": true,',
+    '       "indent": 2',
+    "     }",
+    "   }",
+    "   ```",
+    "",
+  ].join("\n");
 }
 
 function draftReleaseJob() {
