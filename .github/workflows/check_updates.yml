@@ -19,6 +19,14 @@ jobs:
 
       - uses: denoland/setup-deno@v2
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install JS dependencies
+        run: cd js/node && bun install
 
       - name: Run script
         run: |
