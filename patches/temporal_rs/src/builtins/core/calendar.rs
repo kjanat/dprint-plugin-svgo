@@ -150,13 +150,8 @@ impl Calendar {
       AnyCalendarKind::Japanese => const { &AnyCalendar::Japanese(Japanese::new()) },
       AnyCalendarKind::Persian => &AnyCalendar::Persian(Persian),
       AnyCalendarKind::Roc => &AnyCalendar::Roc(Roc),
-      _ => {
-        debug_assert!(
-          false,
-          "Unreachable: match must handle all variants of `AnyCalendarKind`"
-        );
-        &AnyCalendar::Iso(Iso)
-      }
+      // JapaneseExtended merged into Japanese in icu_calendar 2.2
+      _ => const { &AnyCalendar::Japanese(Japanese::new()) },
     };
 
     Self(Ref(cal))
@@ -273,7 +268,7 @@ fn early_constrain_date_duration(duration: &IcuDateDuration) -> Result<(), Tempo
   if duration.weeks > WEEK_DURATION {
     return err;
   }
-  if duration.days > DAY_DURATION.into() {
+  if duration.days > DAY_DURATION {
     return err;
   }
 
@@ -506,10 +501,7 @@ impl Calendar {
 
     let added = self.0.until(&calendar_date1, &calendar_date2, options);
 
-    let days = added
-      .days
-      .try_into()
-      .map_err(|_| TemporalError::range().with_enum(ErrorMessage::DurationNotValid))?;
+    let days: i64 = added.days.into();
     let mut duration = DateDuration::new(
       added.years.into(),
       added.months.into(),

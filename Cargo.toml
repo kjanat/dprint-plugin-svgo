@@ -1,12 +1,34 @@
 [workspace]
 resolver = "3"
-members  = ["base", "plugin"]
+members  = ["base", "patches/*", "plugin"]
+
+[workspace.package]
+version      = "0.2.2"
+edition      = "2024"
+rust-version = "1.85.0"
+readme       = "README.md"
+homepage     = "https://github.com/kjanat/dprint-plugin-svgo#readme"
+repository   = "https://github.com/kjanat/dprint-plugin-svgo"
+license      = "MIT"
+publish      = false
 
 [workspace.dependencies]
 async-channel      = "2.5"
+core_maths         = "0.1"
 deno_core          = "0.397"
+diplomat           = { version = "0.14", default-features = false }
+diplomat-runtime   = { version = "0.14", default-features = false }
 dprint-core        = "0.67"
 dprint-development = "0.10"
+iana-time-zone     = "0.1"
+icu_calendar       = { version = "2.1", default-features = false, features = [
+  "compiled_data",
+  "unstable",
+] }
+icu_locale         = "2.1"
+ixdtf              = { version = "0.6", features = ["duration"] }
+log                = "0.4"
+num-traits         = { version = "0.2", default-features = false }
 pretty_assertions  = "1.4"
 proptest           = "1"
 schemars           = { version = "1", features = ["derive"] }
@@ -14,21 +36,28 @@ serde              = { version = "1", features = ["derive"] }
 serde_json         = { version = "1", features = ["preserve_order"] }
 sha256             = "1.6"
 sysinfo            = { version = "0.38", default-features = false, features = ["system"] }
+temporal_rs        = { version = "0.1.2", default-features = false }
 thiserror          = "2"
+timezone_provider  = { version = "0.2", features = ["zoneinfo64"] }
+tinystr            = "0.8"
 tokio              = { version = "1", features = ["macros", "rt", "time"] }
 tokio-util         = "0.7"
+web-time           = "1.1"
+writeable          = "0.6"
+zoneinfo64         = "0.2"
 zstd               = "0.13"
 
 [workspace.dependencies.dprint-plugin-deno-base]
 path     = "base"
-version  = "0.2.0"
 features = ["build"]
 
-# Patch temporal_rs to fix icu_calendar 2.2.0 incompatibility
+# Patch temporal_rs + temporal_capi for icu_calendar 2.2.0 and
+# timezone_provider 0.2 compatibility.
 # See: https://github.com/denoland/rusty_v8/issues/1952
 # Remove once v8 crate updates to temporal_capi >= 0.2.1
 [patch.crates-io]
-temporal_rs = { path = "patches/temporal_rs" }
+temporal_capi = { path = "patches/temporal_capi" }
+temporal_rs   = { path = "patches/temporal_rs" }
 
 # rusty-v8 needs at least -O1 to not miscompile
 [profile.dev.package.v8]

@@ -1,13 +1,13 @@
 [package]
-name        = "dprint-plugin-svgo"
-version = "0.2.2"
-edition     = "2024"
-description = "A dprint plugin for formatting and optimizing SVG files using SVGO"
-readme      = "../README.md"
-repository  = "https://github.com/kjanat/dprint-plugin-svgo"
-license     = "MIT"
-keywords    = ["formatter", "formatting", "svg", "svgo"]
-categories  = ["development-tools"]
+name                 = "dprint-plugin-svgo"
+version.workspace    = true
+edition.workspace    = true
+description          = "A dprint plugin for formatting and optimizing SVG files using SVGO"
+readme.workspace     = true
+repository.workspace = true
+license.workspace    = true
+keywords             = ["formatter", "formatting", "svg", "svgo"]
+categories           = ["development-tools"]
 
 [[bin]]
 name              = "generate-schema"

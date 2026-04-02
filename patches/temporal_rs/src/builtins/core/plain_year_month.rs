@@ -642,14 +642,13 @@ impl PlainYearMonth {
   /// Returns a RFC9557 IXDTF string for the current `PlainYearMonth` as a Writeable
   #[inline]
   pub fn to_ixdtf_writeable(&self, display_calendar: DisplayCalendar) -> impl Writeable + '_ {
-    let ixdtf = FormattableYearMonth {
+    FormattableYearMonth {
       date: FormattableDate(self.iso_year(), self.iso_month(), self.iso.day),
       calendar: FormattableCalendar {
         show: display_calendar,
         calendar: self.calendar().identifier(),
       },
-    };
-    ixdtf
+    }
   }
 }
 

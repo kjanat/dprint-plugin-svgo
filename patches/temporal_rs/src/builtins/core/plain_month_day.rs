@@ -377,14 +377,13 @@ impl PlainMonthDay {
 
   /// Creates a RFC9557 IXDTF [`Writeable`].
   pub fn to_ixdtf_writeable(&self, display_calendar: DisplayCalendar) -> impl Writeable + '_ {
-    let ixdtf = FormattableMonthDay {
+    FormattableMonthDay {
       date: FormattableDate(self.iso_year(), self.iso_month(), self.iso.day),
       calendar: FormattableCalendar {
         show: display_calendar,
         calendar: self.calendar().identifier(),
       },
-    };
-    ixdtf
+    }
   }
 }
 

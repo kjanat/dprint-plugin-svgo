@@ -1,0 +1,43 @@
+[package]
+name         = "temporal_capi"
+version      = "0.1.2"
+edition      = "2021"
+rust-version = "1.83.0"
+description  = "C interface to temporal_rs"
+readme       = "README.md"
+repository   = "https://github.com/boa-dev/temporal"
+license      = "MIT OR Apache-2.0"
+build        = false
+include      = ["Cargo.toml", "LICENSE-Apache", "LICENSE-MIT", "README.md", "bindings/**/*", "src/**/*", "tests/**/*"]
+autobins     = false
+autoexamples = false
+autotests    = false
+autobenches  = false
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lib]
+name = "temporal_capi"
+path = "src/lib.rs"
+
+[dependencies]
+diplomat.workspace          = true
+diplomat-runtime.workspace  = true
+icu_calendar.workspace      = true
+icu_locale.workspace        = true
+num-traits.workspace        = true
+timezone_provider.workspace = true
+writeable.workspace         = true
+
+[dependencies.temporal_rs]
+workspace        = true
+default-features = false
+
+[dependencies.zoneinfo64]
+workspace = true
+optional  = true
+
+[features]
+compiled_data = ["temporal_rs/compiled_data"]
+zoneinfo64    = ["dep:zoneinfo64", "timezone_provider/zoneinfo64"]
