@@ -432,7 +432,7 @@ const ci = {
   permissions: { contents: "read" },
   concurrency: {
     group:
-      "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+      "${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}",
     "cancel-in-progress": true,
   },
   jobs: {
