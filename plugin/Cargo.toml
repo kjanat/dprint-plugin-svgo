@@ -9,11 +9,6 @@ license.workspace    = true
 keywords             = ["formatter", "formatting", "svg", "svgo"]
 categories           = ["development-tools"]
 
-[[bin]]
-name              = "generate-schema"
-path              = "src/bin/generate-schema.rs"
-required-features = ["schema"]
-
 [dependencies]
 deno_core.workspace               = true
 dprint-plugin-deno-base.workspace = true
@@ -24,10 +19,6 @@ thiserror.workspace               = true
 [dependencies.dprint-core]
 workspace = true
 features  = ["process"]
-
-[dependencies.schemars]
-workspace = true
-optional  = true
 
 [dependencies.tokio]
 workspace = true
@@ -52,4 +43,3 @@ features  = ["build"]
 
 [features]
 default = []
-schema  = ["dep:schemars"]

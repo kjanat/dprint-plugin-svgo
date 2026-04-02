@@ -5,11 +5,18 @@
     ]
   },
   "tasks": {
+    "check": "deno check --check-js",
     "setup": "cd js/node && deno install",
-    "build-js": "cd js/node && deno run -A build.ts"
+    "generate-schema": "deno run -A scripts/generate_schema.ts",
+    "schema": "deno run -A scripts/generate_schema.ts schema.json"
   },
   "lint": {
-    "rules": { "exclude": ["no-import-prefix"] }
+    "rules": {
+      "exclude": [
+        "no-import-prefix",
+        "no-unversioned-import"
+      ]
+    }
   },
   "imports": {
     "@esbuild-plugins/node-globals-polyfill": "npm:@esbuild-plugins/node-globals-polyfill@^0.2",
@@ -27,5 +34,12 @@
     "npm:lmdb@2.8.5",
     "npm:msgpackr-extract@3.0.3"
   ],
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "exclude": [
+    "./js/node/",
+    "./vendor-tmp/",
+    "./target/",
+    "**/dist/",
+    "**/node_modules/"
+  ]
 }

@@ -221,7 +221,7 @@ jobs:
           path: "target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip"
       - name: "Generate schema"
         if: "matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
-        run: "cargo run --locked --features schema --bin generate-schema -- schema.json"
+        run: "deno run -A scripts/generate_schema.ts schema.json"
       - name: "Upload schema artifact"
         if: "matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
         uses: "actions/upload-artifact@v7"

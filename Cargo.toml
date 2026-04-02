@@ -58,10 +58,6 @@ features = ["duration"]
 version          = "0.2"
 default-features = false
 
-[workspace.dependencies.schemars]
-version  = "1"
-features = ["derive"]
-
 [workspace.dependencies.serde]
 version  = "1"
 features = ["derive"]
