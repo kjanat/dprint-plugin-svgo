@@ -12,7 +12,7 @@ pre-commit:
     - name: deno check
       root: "js/node"
       glob: "*.{ts,js}"
-      run: deno check main.ts build.ts
+      run: deno check
 
 pre-push:
   jobs:

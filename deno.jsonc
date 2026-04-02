@@ -5,7 +5,8 @@
     ]
   },
   "tasks": {
-    "setup": "cd js/node && deno install"
+    "setup": "cd js/node && deno install",
+    "build-js": "cd js/node && deno run -A build.ts"
   },
   "lint": {
     "rules": { "exclude": ["no-import-prefix"] }

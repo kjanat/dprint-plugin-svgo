@@ -1,4 +1,5 @@
 {
+  "wrap_guides": [100],
   "formatter": [{
     "external": {
       "command": "dprint",
@@ -6,14 +7,10 @@
     }
   }],
   "languages": {
-    "TypeScript": {
-      "language_servers": ["deno"],
-      "formatter": "language_server"
-    },
-    "JavaScript": {
-      "language_servers": ["deno"],
-      "formatter": "language_server"
-    }
+    "TypeScript": { "language_servers": ["deno"] },
+    "JavaScript": { "language_servers": ["deno"] },
+    "JSON": { "wrap_guides": [120] },
+    "JSONC": { "wrap_guides": [120] }
   },
   "lsp": {
     "deno": { "settings": { "deno": { "enable": true } } },
@@ -22,11 +19,19 @@
         "json": {
           "schemas": [{
             "fileMatch": ["deno.json", "deno.jsonc"],
-            "url": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json"
+            "url": "https://raw.githubusercontent.com/denoland/deno/main/cli/schemas/config-file.v1.json"
           }, {
             "fileMatch": ["package.json"],
             "url": "https://www.schemastore.org/package"
           }]
+        }
+      }
+    },
+    "rust-analyzer": {
+      "initialization_options": {
+        "cargo": {
+          "target": "wasm32-unknown-unknown",
+          "features": ["schema"]
         }
       }
     }

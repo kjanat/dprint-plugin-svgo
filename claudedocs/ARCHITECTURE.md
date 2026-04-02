@@ -2,7 +2,7 @@
 
 ## Component Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                        dprint CLI                           │
 └─────────────────────────┬───────────────────────────────────┘
@@ -40,7 +40,7 @@
 
 ## Crate Structure
 
-```tree
+```text
 dprint-plugin-svgo/
 ├── Cargo.toml              # Workspace definition
 │
@@ -107,7 +107,7 @@ Client           Handler          Channel         Runtime           JS
 
 ## Memory Management Strategy
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │        System Available Memory          │
 └─────────────────────┬───────────────────┘
@@ -143,7 +143,7 @@ if total_runtimes > 1 && pending_runtimes > 1 {
 
 ## Configuration Processing
 
-```
+```text
 ┌────────────────┐     ┌────────────────┐     ┌────────────────┐
 │   dprint.json  │     │   ConfigKeyMap │     │   SvgoConfig   │
 │                │ ──> │                │ ──> │                │
@@ -162,7 +162,7 @@ if total_runtimes > 1 && pending_runtimes > 1 {
 
 ## Build Pipeline
 
-```
+```text
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │  main.ts     │     │   deno/      │     │  dist/       │
 │  + svgo      │ ──> │   esbuild    │ ──> │  main.js     │
@@ -180,7 +180,7 @@ if total_runtimes > 1 && pending_runtimes > 1 {
 
 ## Extension System
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                     deno_core Extensions                │
 ├─────────────────┬─────────────────┬─────────────────────┤
@@ -197,7 +197,7 @@ if total_runtimes > 1 && pending_runtimes > 1 {
 
 ## Error Propagation
 
-```
+```text
 JS Error (SVGO)
       │
       ▼
@@ -215,7 +215,7 @@ FormatResult to dprint
 
 ## File Matching
 
-```
+```text
 Plugin advertises: ["svg"]
       │
       ▼
@@ -232,3 +232,5 @@ Plugin extracts extension for overrides:
 ---
 
 _Architecture documentation for dprint-plugin-svgo_
+
+<!--markdownlint-disable-file-->

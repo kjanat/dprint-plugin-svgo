@@ -381,3 +381,5 @@ Uses `dprint_plugin_deno_base::build::create_snapshot()` with:
 ---
 
 _API Reference for dprint-plugin-svgo v0.1.0_
+
+<!--markdownlint-disable-file-->

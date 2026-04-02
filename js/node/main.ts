@@ -42,9 +42,7 @@ function formatText(
     // If SVGO fails to optimize (e.g., invalid SVG), return undefined to keep original
     // Sanitize error message to avoid leaking internal paths
     const fileName = filePath.split(/[/\\]/).pop() || filePath;
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(`SVGO error for ${fileName}: ${errorMessage}`);
     return undefined;
   }

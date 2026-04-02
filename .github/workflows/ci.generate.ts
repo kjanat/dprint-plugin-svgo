@@ -93,9 +93,7 @@ function cargoCache(): Step {
     uses: "Swatinem/rust-cache@v2",
     with: {
       "prefix-key": "v3-${{matrix.config.target}}",
-      "save-if": `\${{ ${
-        BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")
-      } }}`,
+      "save-if": `\${{ ${BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")} }}`,
     },
   };
 }
@@ -160,17 +158,14 @@ function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
   // Release builds only need the binary for the artifact zip.
   const flags = cross || isRelease ? "" : " --all-targets";
   const releaseFlag = isRelease ? " --release" : "";
-  const crossCond = cross
-    ? "matrix.config.cross == 'true'"
-    : "matrix.config.cross != 'true'";
+  const crossCond = cross ? "matrix.config.cross == 'true'" : "matrix.config.cross != 'true'";
   const tagCond = isRelease
     ? "startsWith(github.ref, 'refs/tags/')"
     : "!startsWith(github.ref, 'refs/tags/')";
   return {
     name: `Build ${cross ? "cross " : ""}(${isRelease ? "Release" : "Debug"})`,
     if: `${crossCond} && ${tagCond}`,
-    run:
-      `${cmd} build --locked${flags} --target "\${{matrix.config.target}}"${releaseFlag}`,
+    run: `${cmd} build --locked${flags} --target "\${{matrix.config.target}}"${releaseFlag}`,
   };
 }
 
@@ -213,8 +208,7 @@ function preRelease(t: Target): Step {
   const step: Step = {
     name: `Pre-release (${t.target})`,
     id: stepId(t),
-    if:
-      `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     run: lines.join("\n"),
   };
   if (isWindows) {
@@ -228,8 +222,7 @@ function preRelease(t: Target): Step {
 function uploadArtifact(t: Target): Step {
   return {
     name: `Upload artifacts (${t.target})`,
-    if:
-      `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
+    if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     uses: "actions/upload-artifact@v7",
     with: {
       name: artifactsName(t),
@@ -244,18 +237,15 @@ const SCHEMA_TARGET = "x86_64-unknown-linux-gnu";
 function generateSchema(): Step {
   return {
     name: "Generate schema",
-    if:
-      `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
-    run:
-      "cargo run --locked --features schema --bin generate-schema -- schema.json",
+    if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
+    run: "cargo run --locked --features schema --bin generate-schema -- schema.json",
   };
 }
 
 function uploadSchemaArtifact(): Step {
   return {
     name: "Upload schema artifact",
-    if:
-      `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
+    if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
     uses: "actions/upload-artifact@v7",
     with: {
       name: "schema-artifacts",
@@ -381,9 +371,7 @@ function draftReleaseJob() {
         name: "Output checksums",
         run: targets
           .map((t) =>
-            `echo "${zipFileName(t)}: $(shasum -a 256 ${
-              zipFileName(t)
-            } | awk '{print $1}')"`
+            `echo "${zipFileName(t)}: $(shasum -a 256 ${zipFileName(t)} | awk '{print $1}')"`
           )
           .join("\n"),
       },
@@ -400,8 +388,7 @@ function draftReleaseJob() {
       {
         name: "Get tag version",
         id: "get_tag_version",
-        run:
-          'echo "TAG_VERSION=${GITHUB_REF/refs\\/tags\\//}" >> "$GITHUB_OUTPUT"',
+        run: 'echo "TAG_VERSION=${GITHUB_REF/refs\\/tags\\//}" >> "$GITHUB_OUTPUT"',
       },
       {
         name: "Get plugin file checksum",
@@ -436,8 +423,7 @@ const ci = {
   },
   permissions: { contents: "read" },
   concurrency: {
-    group:
-      "${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}",
+    group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}",
     "cancel-in-progress": true,
   },
   jobs: {

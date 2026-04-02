@@ -8,42 +8,42 @@ use serde::Serialize;
 #[derive(JsonSchema, Serialize)]
 #[schemars(title = "dprint-plugin-svgo configuration")]
 pub struct SvgoConfigSchema {
-  /// Number of spaces for indentation in SVG output.
+  /// # Number of spaces for indentation in SVG output.
   /// Inherited from dprint global `indentWidth` when unset.
   #[schemars(range(min = 0))]
   pub indent: Option<u32>,
 
-  /// End-of-line character for SVG output.
+  /// # End-of-line character for SVG output.
   /// Inherited from dprint global `newLineKind` when unset.
   pub eol: Option<EolConfig>,
 
-  /// Whether to pretty-print the SVG output.
+  /// # Whether to pretty-print the SVG output.
   pub pretty: Option<bool>,
 
-  /// Whether to enable multipass optimization.
+  /// # Whether to enable multipass optimization.
   /// Multiple passes may produce a smaller output.
   pub multipass: Option<bool>,
 
-  /// Array of SVGO plugin configurations.
+  /// # Array of SVGO plugin configurations.
   pub plugins: Option<Vec<SvgoPluginEntry>>,
 
-  /// Number of digits after the decimal point (0–20).
+  /// # Number of digits after the decimal point (0–20).
   #[serde(rename = "floatPrecision")]
   #[schemars(range(min = 0, max = 20))]
   pub float_precision: Option<u32>,
 
-  /// Type of Data URI encoding.
+  /// # Type of Data URI encoding.
   pub datauri: Option<DataUriConfig>,
 
-  /// Direct js2svg configuration object passed to SVGO.
+  /// # Direct js2svg configuration object passed to SVGO.
   /// Overrides `indent`, `eol`, and `pretty` when set.
   pub js2svg: Option<serde_json::Value>,
 
-  /// Path to the SVG file (used by some SVGO plugins).
+  /// # Path to the SVG file (used by some SVGO plugins).
   pub path: Option<String>,
 }
 
-/// End-of-line character.
+/// # End-of-line character.
 #[derive(JsonSchema, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EolConfig {
@@ -53,7 +53,7 @@ pub enum EolConfig {
   Crlf,
 }
 
-/// Data URI encoding mode.
+/// # Data URI encoding mode.
 #[derive(JsonSchema, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataUriConfig {
@@ -65,7 +65,9 @@ pub enum DataUriConfig {
   Unenc,
 }
 
-/// An SVGO plugin entry — either a name string or an object with parameters.
+/// # An SVGO plugin entry
+///
+/// Either a name string or an object with parameters.
 #[derive(JsonSchema, Serialize)]
 #[serde(untagged)]
 pub enum SvgoPluginEntry {

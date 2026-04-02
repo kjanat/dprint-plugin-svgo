@@ -14,7 +14,7 @@ A dprint plugin that wraps SVGO (SVG Optimizer) to provide SVG optimization as p
 
 ### High-Level Design
 
-```
+```text
 +------------------+     +------------------+     +------------------+
 |    dprint CLI    | --> | Plugin Handler   | --> |   V8 Runtime     |
 |                  |     | (Rust/Async)     |     |   (deno_core)    |
@@ -59,7 +59,7 @@ The actual dprint plugin implementation.
 
 ### Format Request Flow
 
-```
+```text
 1. dprint CLI calls plugin.format()
 2. SvgoPluginHandler receives FormatRequest
 3. Channel routes request to available JS runtime
@@ -71,7 +71,7 @@ The actual dprint plugin implementation.
 
 ### Configuration Flow
 
-```
+```text
 1. dprint.jsonc "svgo" section
 2. resolve_config() in config.rs
 3. Maps to SVGO js2svg options:
@@ -178,7 +178,7 @@ avg_isolate_memory_usage: 100_000  // 100MB
 ### JavaScript Bundling
 
 ```bash
-cd js/node && deno run -A build.ts  # Bundles main.ts via esbuild
+deno task build-js  # Bundles main.ts via esbuild
 ```
 
 Produces `js/node/dist/main.js` bundled for browser context.
@@ -307,7 +307,7 @@ Tests:
 {
   "includes": ["**/*.svg"],
   "plugins": [
-    "https://plugins.dprint.dev/svgo-<version>.json@<checksum>"
+    "https://github.com/kjanat/dprint-plugin-svgo/releases/download/<version>/plugin.json@<checksum>"
   ],
   "svgo": {
     "multipass": true,
@@ -332,7 +332,7 @@ dprint check         # Check formatting
 
 ```bash
 # Install dependencies
-cd js/node && deno install
+deno task setup
 
 # Build debug
 cargo build
@@ -414,7 +414,7 @@ pub struct SvgoPluginConfig {
 
 ```bash
 # Ensure JS is built first
-cd js/node && deno run -A build.ts
+deno task build-js
 ```
 
 ### OOM Errors
@@ -439,3 +439,5 @@ Check SVGO configuration - some plugins may produce invalid SVG for certain inpu
 ---
 
 _Generated for dprint-plugin-svgo v0.1.0_
+
+<!--markdownlint-disable-file-->
