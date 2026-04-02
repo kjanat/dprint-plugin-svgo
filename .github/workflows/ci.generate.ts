@@ -130,7 +130,7 @@ function setupRustTarget(): Step {
   return {
     name: "Setup Rust target",
     if: appleTargets.join(" || "),
-    run: "rustup target add ${{matrix.config.target}}",
+    run: `rustup target add "\${{matrix.config.target}}"`,
   };
 }
 
@@ -156,7 +156,9 @@ function setupCross(): Step[] {
 function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
   const isRelease = mode === "release";
   const cmd = cross ? "cross" : "cargo";
-  const flags = cross ? "" : " --all-targets";
+  // --all-targets only on debug (catches compile errors in tests/benches/examples).
+  // Release builds only need the binary for the artifact zip.
+  const flags = cross || isRelease ? "" : " --all-targets";
   const releaseFlag = isRelease ? " --release" : "";
   const crossCond = cross
     ? "matrix.config.cross == 'true'"
@@ -168,7 +170,7 @@ function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
     name: `Build ${cross ? "cross " : ""}(${isRelease ? "Release" : "Debug"})`,
     if: `${crossCond} && ${tagCond}`,
     run:
-      `${cmd} build --locked${flags} --target \${{matrix.config.target}}${releaseFlag}`,
+      `${cmd} build --locked${flags} --target "\${{matrix.config.target}}"${releaseFlag}`,
   };
 }
 
@@ -206,7 +208,7 @@ function preRelease(t: Target): Step {
     ]
     : [
       `zip -r ${zip} ${PLUGIN_NAME}`,
-      `echo "ZIP_CHECKSUM=$(shasum -a 256 ${zip} | awk '{print $1}')" >> $GITHUB_OUTPUT`,
+      `echo "ZIP_CHECKSUM=$(shasum -a 256 ${zip} | awk '{print $1}')" >> "\$GITHUB_OUTPUT"`,
     ];
   const step: Step = {
     name: `Pre-release (${t.target})`,
@@ -215,7 +217,9 @@ function preRelease(t: Target): Step {
       `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
     run: lines.join("\n"),
   };
-  if (!isWindows) {
+  if (isWindows) {
+    step.shell = "pwsh";
+  } else {
     step["working-directory"] = releaseDir;
   }
   return step;
@@ -391,18 +395,19 @@ function draftReleaseJob() {
         name: "Get svgo version",
         id: "get_svgo_version",
         run:
-          "echo SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts) >> $GITHUB_OUTPUT",
+          'echo "SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts)" >> "$GITHUB_OUTPUT"',
       },
       {
         name: "Get tag version",
         id: "get_tag_version",
-        run: "echo TAG_VERSION=${GITHUB_REF/refs\\/tags\\//} >> $GITHUB_OUTPUT",
+        run:
+          'echo "TAG_VERSION=${GITHUB_REF/refs\\/tags\\//}" >> "$GITHUB_OUTPUT"',
       },
       {
         name: "Get plugin file checksum",
         id: "get_plugin_file_checksum",
         run:
-          "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> $GITHUB_OUTPUT",
+          'echo "CHECKSUM=$(shasum -a 256 plugin.json | awk \'{print $1}\')" >> "$GITHUB_OUTPUT"',
       },
       {
         name: "Release",
