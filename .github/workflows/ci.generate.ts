@@ -313,7 +313,8 @@ function releaseBody(): string {
   const tag = "${{ steps.get_tag_version.outputs.TAG_VERSION }}";
   const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
   const version = "${{ steps.get_svgo_version.outputs.SVGO_VERSION }}";
-  const pluginUrl = `https://github.com/${GITHUB_OWNER}/${PLUGIN_NAME}/releases/download/${tag}/plugin.json@${checksum}`;
+  const pluginUrl =
+    `https://github.com/${GITHUB_OWNER}/${PLUGIN_NAME}/releases/download/${tag}/plugin.json@${checksum}`;
 
   return [
     `SVGO ${version}`,

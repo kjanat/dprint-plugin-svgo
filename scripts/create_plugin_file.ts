@@ -28,7 +28,10 @@ const builder = new processPlugin.PluginFileBuilder({
 
 if (isTest) {
   const platform = processPlugin.getCurrentPlatform();
-  const zipFileName = processPlugin.getStandardZipFileName(pluginName, platform);
+  const zipFileName = processPlugin.getStandardZipFileName(
+    pluginName,
+    platform,
+  );
   await builder.addPlatform({
     platform,
     zipFilePath: zipFileName,
@@ -36,8 +39,12 @@ if (isTest) {
   });
 } else {
   for (const platform of platforms) {
-    const zipFileName = processPlugin.getStandardZipFileName(pluginName, platform);
-    const zipUrl = `https://github.com/${GITHUB_OWNER}/${pluginName}/releases/download/${version}/${zipFileName}`;
+    const zipFileName = processPlugin.getStandardZipFileName(
+      pluginName,
+      platform,
+    );
+    const zipUrl =
+      `https://github.com/${GITHUB_OWNER}/${pluginName}/releases/download/${version}/${zipFileName}`;
     await builder.addPlatform({
       platform,
       zipFilePath: zipFileName,

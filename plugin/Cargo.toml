@@ -1,46 +1,42 @@
 [package]
-name = "dprint-plugin-svgo"
-version = "0.2.0"
-categories = ["development-tools"]
-edition = "2024"
-keywords = ["formatter", "formatting", "svg", "svgo"]
-license = "MIT"
-readme = "../README.md"
-repository = "https://github.com/kjanat/dprint-plugin-svgo"
+name        = "dprint-plugin-svgo"
+version     = "0.2.0"
+edition     = "2024"
 description = "A dprint plugin for formatting and optimizing SVG files using SVGO"
-
-[dependencies]
-deno_console.workspace = true
-deno_core.workspace = true
-deno_url.workspace = true
-deno_webidl.workspace = true
-dprint-core = { workspace = true, features = ["process"] }
-dprint-plugin-deno-base = { path = "../base", version = "0.2.0" }
-schemars = { workspace = true, optional = true }
-serde.workspace = true
-serde_json.workspace = true
-thiserror.workspace = true
-tokio = { version = "1", features = ["time"] }
-
-[features]
-default = []
-schema  = ["dep:schemars"]
+readme      = "../README.md"
+repository  = "https://github.com/kjanat/dprint-plugin-svgo"
+license     = "MIT"
+keywords    = ["formatter", "formatting", "svg", "svgo"]
+categories  = ["development-tools"]
 
 [[bin]]
 name              = "generate-schema"
 path              = "src/bin/generate-schema.rs"
 required-features = ["schema"]
 
+[dependencies]
+deno_core.workspace     = true
+dprint-core             = { workspace = true, features = ["process"] }
+dprint-plugin-deno-base = { workspace = true }
+schemars                = { workspace = true, optional = true }
+serde.workspace         = true
+serde_json.workspace    = true
+thiserror.workspace     = true
+tokio                   = { workspace = true, features = ["time"] }
+
 [dev-dependencies]
-dprint-development = "0.10"
-pretty_assertions = "1.4"
-proptest = "1.5"
+dprint-development.workspace = true
+pretty_assertions.workspace  = true
+proptest.workspace           = true
 
 [build-dependencies]
-deno_console.workspace = true
-deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
-deno_url.workspace = true
-deno_webidl.workspace = true
-dprint-plugin-deno-base = { path = "../base", version = "0.2.0", features = ["build"] }
-sha256 = "1.6"
-zstd.workspace = true
+deno_core               = { workspace = true, features = [
+  "include_js_files_for_snapshotting",
+] }
+dprint-plugin-deno-base = { workspace = true, features = ["build"] }
+sha256.workspace        = true
+zstd.workspace          = true
+
+[features]
+default = []
+schema  = ["dep:schemars"]

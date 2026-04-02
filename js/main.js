@@ -1,12 +1,11 @@
-import * as console from "ext:deno_console/01_console.js";
-import * as url from "ext:deno_url/00_url.js";
-import * as urlPattern from "ext:deno_url/01_urlpattern.js";
-
-globalThis.URL = url.URL;
-globalThis.URLPattern = urlPattern.URLPattern;
-globalThis.URLSearchParams = urlPattern.URLSearchParams;
+// Minimal console implementation - always prints to stderr because
+// stdout is used for dprint IPC communication.
 const core = globalThis.Deno.core;
-// always print to stderr because we use stdout for communication
-globalThis.console = new console.Console((msg, _level) =>
-  core.print(msg, true)
-);
+const print = (msg) => core.print(msg + "\n", true);
+globalThis.console = {
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+};

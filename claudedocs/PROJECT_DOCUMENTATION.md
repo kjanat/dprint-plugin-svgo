@@ -212,13 +212,13 @@ The `plugin/build.rs`:
 
 ```toml
 deno_console = "0.184.0"
-deno_core = "0.326.0"
-deno_url = "0.184.0"
-deno_webidl = "0.184.0"
-dprint-core = "0.67.4"
-serde = "1.0.228"
-serde_json = "1"
-zstd = "0.13.3"
+deno_core    = "0.326.0"
+deno_url     = "0.184.0"
+deno_webidl  = "0.184.0"
+dprint-core  = "0.67.4"
+serde        = "1.0.228"
+serde_json   = "1"
+zstd         = "0.13.3"
 ```
 
 ### JavaScript Dependencies

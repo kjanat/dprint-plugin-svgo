@@ -60,11 +60,7 @@ pub struct SvgoFormatter {
 impl Default for SvgoFormatter {
   fn default() -> Self {
     let runtime = JsRuntime::new(CreateRuntimeOptions {
-      extensions: vec![
-        deno_webidl::deno_webidl::init_ops(),
-        deno_console::deno_console::init_ops(),
-        deno_url::deno_url::init_ops(),
-      ],
+      extensions: vec![],
       startup_snapshot: Some(get_startup_snapshot()),
     });
     Self { runtime }

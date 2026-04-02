@@ -4,8 +4,9 @@ import $ from "dax";
 import { getChecksum } from "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts";
 
 await $`./scripts/create_for_testing.ts`;
+const bytes = $.path("./target/release/plugin.json").readBytesSync();
 const checksum = await getChecksum(
-  $.path("./target/release/plugin.json").readBytesSync(),
+  new Uint8Array(bytes.slice().buffer),
 );
 const dprintConfig = $.path("dprint.json");
 const data = dprintConfig.readJsonSync<{ plugins: string[] }>();

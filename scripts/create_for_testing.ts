@@ -18,4 +18,6 @@ if (Deno.build.os === "windows") {
   throw "TODO";
 }
 
-await $`cd target/release && deno run -A ../../scripts/create_plugin_file.ts --test`;
+await $`deno run -A ../../scripts/create_plugin_file.ts --test`.cwd(
+  "target/release",
+);

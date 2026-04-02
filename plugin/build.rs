@@ -84,12 +84,7 @@ fn main() {
   let tokio_runtime = create_tokio_runtime();
   JsRuntime::initialize_main_thread();
   let mut runtime = JsRuntime::new(CreateRuntimeOptions {
-    extensions: vec![
-      deno_webidl::deno_webidl::init_ops(),
-      deno_console::deno_console::init_ops(),
-      deno_url::deno_url::init_ops(),
-      main::init_ops(),
-    ],
+    extensions: vec![main::init()],
     startup_snapshot: Some(snapshot),
   });
 
@@ -147,10 +142,5 @@ deno_core::extension!(
 
 /// Deno extensions providing console, URL, and WebIDL APIs to the V8 runtime.
 fn extensions() -> Vec<Extension> {
-  vec![
-    deno_webidl::deno_webidl::init_ops_and_esm(),
-    deno_console::deno_console::init_ops_and_esm(),
-    deno_url::deno_url::init_ops_and_esm(),
-    main::init_ops_and_esm(),
-  ]
+  vec![main::init()]
 }

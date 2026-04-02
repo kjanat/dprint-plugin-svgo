@@ -2,7 +2,6 @@ use deno_core::Extension;
 use deno_core::PollEventLoopOptions;
 use deno_core::RuntimeOptions;
 use deno_core::anyhow::Error;
-use deno_core::anyhow::Result;
 use deno_core::anyhow::anyhow;
 use deno_core::serde_v8;
 use deno_core::v8;
@@ -42,7 +41,7 @@ impl JsRuntime {
 
   /// Call this once on the main thread.
   pub fn initialize_main_thread() {
-    deno_core::JsRuntime::init_platform(Some(get_platform()), false);
+    deno_core::JsRuntime::init_platform(Some(get_platform()));
   }
 
   /// Executes a format script and returns the formatted output.
@@ -57,7 +56,7 @@ impl JsRuntime {
       .inner
       .with_event_loop_promise(resolve, PollEventLoopOptions::default())
       .await?;
-    let scope = &mut self.inner.handle_scope();
+    deno_core::scope!(scope, self.inner);
     let local = v8::Local::new(scope, global);
     if local.is_undefined() {
       Ok(None)
@@ -76,7 +75,8 @@ impl JsRuntime {
   ///
   /// Returns an error if script execution fails.
   pub fn execute_script(&mut self, script_name: &'static str, code: String) -> Result<(), Error> {
-    self.inner.execute_script(script_name, code).map(|_| ())
+    self.inner.execute_script(script_name, code)?;
+    Ok(())
   }
 
   /// Executes an async function and returns the deserialized result.
@@ -89,23 +89,27 @@ impl JsRuntime {
     &mut self,
     script_name: &'static str,
     fn_name: String,
-  ) -> Result<T>
+  ) -> Result<T, Error>
   where
     T: DeserializeOwned,
   {
     let inner = &mut self.inner;
     let fn_value = inner.execute_script(script_name, fn_name)?;
-    let fn_value = inner.resolve(fn_value).await?;
-    let mut scope = inner.handle_scope();
-    let fn_func: v8::Local<v8::Function> = v8::Local::new(&mut scope, fn_value).try_into()?;
-    let fn_func = v8::Global::new(&mut scope, fn_func);
-    drop(scope);
+    let resolve = inner.resolve(fn_value);
+    let fn_value = inner
+      .with_event_loop_promise(resolve, PollEventLoopOptions::default())
+      .await?;
+    let fn_func = {
+      deno_core::scope!(scope, inner);
+      let fn_func: v8::Local<v8::Function> = v8::Local::new(scope, fn_value).try_into()?;
+      v8::Global::new(scope, fn_func)
+    };
     let call = inner.call(&fn_func);
     let result = inner
       .with_event_loop_promise(call, PollEventLoopOptions::default())
       .await?;
-    let mut scope = inner.handle_scope();
-    let local = v8::Local::new(&mut scope, result);
-    Ok(serde_v8::from_v8::<T>(&mut scope, local)?)
+    deno_core::scope!(scope, inner);
+    let local = v8::Local::new(scope, result);
+    Ok(serde_v8::from_v8::<T>(scope, local)?)
   }
 }
