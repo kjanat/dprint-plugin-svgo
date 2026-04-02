@@ -10,41 +10,22 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition      = "2021"
-rust-version = "1.83.0"
 name         = "temporal_rs"
 version      = "0.1.2"
-authors      = ["boa-dev"]
+edition      = "2024"
+rust-version = "1.85.0"
+description  = "Temporal in Rust is an implementation of the TC39 Temporal Builtin Proposal in Rust."
+readme       = "README.md"
+repository   = "https://github.com/boa-dev/temporal"
+license      = "MIT OR Apache-2.0"
+keywords     = ["calendar", "date", "duration", "time", "timezone"]
+categories   = ["date-and-time", "internationalization"]
 build        = false
-exclude      = [
-  ".github/*",
-  ".gitignore",
-  "CONTRIBUTING.md",
-  "cliff.toml",
-  "debug/",
-  "docs/*",
-  "tests/data/zoneinfo64.res",
-]
-autolib      = false
+exclude      = [".github/*", ".gitignore", "CONTRIBUTING.md", "cliff.toml", "debug/", "docs/*", "tests/data/zoneinfo64.res"]
 autobins     = false
 autoexamples = false
 autotests    = false
 autobenches  = false
-description  = "Temporal in Rust is an implementation of the TC39 Temporal Builtin Proposal in Rust."
-readme       = "README.md"
-keywords     = [
-  "calendar",
-  "date",
-  "duration",
-  "time",
-  "timezone",
-]
-categories   = [
-  "date-and-time",
-  "internationalization",
-]
-license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/boa-dev/temporal"
 
 [package.metadata.cargo-all-features]
 denylist             = ["default"]
@@ -67,10 +48,7 @@ optional = true
 [dependencies.icu_calendar]
 version          = "2.1.0"
 default-features = false
-features         = [
-  "compiled_data",
-  "unstable",
-]
+features         = ["compiled_data", "unstable"]
 
 [dependencies.icu_locale]
 version = "2.1.0"
@@ -106,13 +84,5 @@ compiled_data                   = ["tzdb"]
 float64_representable_durations = []
 log                             = ["dep:log"]
 std                             = []
-sys                             = [
-  "compiled_data",
-  "dep:iana-time-zone",
-  "dep:web-time",
-  "std",
-]
-tzdb                            = [
-  "std",
-  "timezone_provider/tzif",
-]
+sys                             = ["compiled_data", "dep:iana-time-zone", "dep:web-time", "std"]
+tzdb                            = ["std", "timezone_provider/tzif"]

@@ -658,10 +658,10 @@ enum ParseVariant {
 
 #[inline]
 fn parse_ixdtf(source: &[u8], variant: ParseVariant) -> TemporalResult<IxdtfParseRecord<'_, Utf8>> {
-  fn cast_handler<'a>(
+  fn cast_handler<'a, T: FnMut(Annotation<'a, Utf8>) -> Option<Annotation<'a, Utf8>>>(
     _: &mut IxdtfParser<'a, Utf8>,
-    handler: impl FnMut(Annotation<'a, Utf8>) -> Option<Annotation<'a, Utf8>>,
-  ) -> impl FnMut(Annotation<'a, Utf8>) -> Option<Annotation<'a, Utf8>> {
+    handler: T,
+  ) -> impl FnMut(Annotation<'a, Utf8>) -> Option<Annotation<'a, Utf8>> + use<'a, T> {
     handler
   }
 
