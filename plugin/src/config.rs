@@ -148,6 +148,18 @@ pub fn resolve_config(
     get_value(&mut config, "pretty", true, &mut diagnostics).into(),
   );
 
+  let final_newline: Option<bool> =
+    get_nullable_value(&mut config, "finalNewline", &mut diagnostics);
+  if let Some(v) = final_newline {
+    js2svg.insert("finalNewline".to_string(), v.into());
+  }
+
+  let use_short_tags: Option<bool> =
+    get_nullable_value(&mut config, "useShortTags", &mut diagnostics);
+  if let Some(v) = use_short_tags {
+    js2svg.insert("useShortTags".to_string(), v.into());
+  }
+
   main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
 
   // Handle SVGO multipass option
@@ -222,6 +234,8 @@ const KNOWN_SVGO_KEYS: &[&str] = &[
   "js2svg",
   "multipass",
   "path",
+  "finalNewline",
+  "useShortTags",
 ];
 
 /// Validates a configuration value and adds diagnostics for invalid values.
