@@ -1,20 +1,20 @@
 [package]
-name         = "temporal_rs"
-version      = "0.1.2"
-edition      = "2024"
-rust-version = "1.85.0"
-description  = "Temporal in Rust is an implementation of the TC39 Temporal Builtin Proposal in Rust."
-readme       = "README.md"
-repository   = "https://github.com/boa-dev/temporal"
-license      = "MIT OR Apache-2.0"
-keywords     = ["calendar", "date", "duration", "time", "timezone"]
-categories   = ["date-and-time", "internationalization"]
-build        = false
-exclude      = [".github/*", ".gitignore", "CONTRIBUTING.md", "cliff.toml", "debug/", "docs/*", "tests/data/zoneinfo64.res"]
-autobins     = false
-autoexamples = false
-autotests    = false
-autobenches  = false
+name                   = "temporal_rs"
+version                = "0.1.2"
+edition                = "2024"
+rust-version.workspace = true
+description            = "Temporal in Rust is an implementation of the TC39 Temporal Builtin Proposal in Rust."
+readme                 = "README.md"
+repository             = "https://github.com/boa-dev/temporal"
+license                = "MIT OR Apache-2.0"
+keywords               = ["calendar", "date", "duration", "time", "timezone"]
+categories             = ["date-and-time", "internationalization"]
+build                  = false
+exclude                = [".github/*", ".gitignore", "CONTRIBUTING.md", "cliff.toml", "debug/", "docs/*", "tests/data/zoneinfo64.res"]
+autobins               = false
+autoexamples           = false
+autotests              = false
+autobenches            = false
 
 [package.metadata.cargo-all-features]
 denylist             = ["default"]

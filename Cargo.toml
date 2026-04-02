@@ -5,7 +5,7 @@ members  = ["base", "patches/*", "plugin"]
 [workspace.package]
 version      = "0.2.2"
 edition      = "2024"
-rust-version = "1.85.0"
+rust-version = "1.86.0"
 readme       = "README.md"
 homepage     = "https://github.com/kjanat/dprint-plugin-svgo#readme"
 repository   = "https://github.com/kjanat/dprint-plugin-svgo"
@@ -16,8 +16,8 @@ publish      = false
 async-channel      = "2.5"
 core_maths         = "0.1"
 deno_core          = "0.397"
-diplomat           = { version = "0.14", default-features = false }
-diplomat-runtime   = { version = "0.14", default-features = false }
+diplomat           = { version = "0.15", default-features = false }
+diplomat-runtime   = { version = "0.15", default-features = false }
 dprint-core        = "0.67"
 dprint-development = "0.10"
 iana-time-zone     = "0.1"
