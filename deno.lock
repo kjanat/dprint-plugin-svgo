@@ -13,6 +13,7 @@
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/semver@1": "1.0.8",
+    "jsr:@std/yaml@1": "1.0.12",
     "npm:@esbuild-plugins/node-globals-polyfill@0.2": "0.2.3_esbuild@0.27.4",
     "npm:@esbuild-plugins/node-globals-polyfill@~0.2.3": "0.2.3_esbuild@0.27.4",
     "npm:@esbuild-plugins/node-modules-polyfill@0.2": "0.2.2_esbuild@0.27.4",
@@ -86,6 +87,9 @@
     },
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
+    },
+    "@std/yaml@1.0.12": {
+      "integrity": "7deabca4545bcedd07c5f69ea53acea71b8b4c67562f224e17b90d75944cb20c"
     }
   },
   "npm": {
