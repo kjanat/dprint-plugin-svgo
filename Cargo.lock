@@ -2012,7 +2012,7 @@ dependencies = [
  "diplomat",
  "diplomat-runtime",
  "icu_calendar",
- "icu_locale",
+ "icu_locale_core",
  "num-traits",
  "temporal_rs",
  "timezone_provider",
@@ -2024,10 +2024,11 @@ dependencies = [
 name = "temporal_rs"
 version = "0.1.2"
 dependencies = [
+ "calendrical_calculations",
  "core_maths",
  "iana-time-zone",
  "icu_calendar",
- "icu_locale",
+ "icu_locale_core",
  "ixdtf",
  "log",
  "num-traits",
@@ -2069,14 +2070,15 @@ dependencies = [
 
 [[package]]
 name = "timezone_provider"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7499a88796bbaa01cb5d39724c7998fcb01a41e0f6b90e4c892a1fa4000b2ca2"
+checksum = "c48f9b04628a2b813051e4dfe97c65281e49625eabd09ec343190e31e399a8c2"
 dependencies = [
  "combine",
  "jiff-tzdb",
  "tinystr",
  "tzif",
+ "zerofrom",
  "zerotrie",
  "zerovec",
  "zoneinfo64",
@@ -2695,9 +2697,9 @@ checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
 
 [[package]]
 name = "zoneinfo64"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb2e5597efbe7c421da8a7fd396b20b571704e787c21a272eecf35dfe9d386f0"
+checksum = "ed6eb2607e906160c457fd573e9297e65029669906b9ac8fb1b5cd5e055f0705"
 dependencies = [
  "calendrical_calculations",
  "icu_locale_core",

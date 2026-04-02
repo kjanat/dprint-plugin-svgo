@@ -4,6 +4,7 @@ use super::{
   Duration, PartialTime, PlainDate, PlainTime, ZonedDateTime,
   duration::normalized::InternalDurationRecord,
 };
+use crate::error::ErrorMessage;
 use crate::parsed_intermediates::ParsedDateTime;
 use crate::{
   MonthCode, TemporalError, TemporalResult, TimeZone,
@@ -19,6 +20,7 @@ use crate::{
   parsers::IxdtfStringBuilder,
   primitive::FiniteF64,
   provider::{NeverProvider, TimeZoneProvider},
+  unix_time::EpochNanoseconds,
 };
 use alloc::string::String;
 use core::{cmp::Ordering, str::FromStr};
@@ -643,9 +645,7 @@ impl PlainDateTime {
   #[inline]
   pub fn with(&self, fields: DateTimeFields, overflow: Option<Overflow>) -> TemporalResult<Self> {
     if fields.is_empty() {
-      return Err(
-        TemporalError::r#type().with_message("A PartialDateTime must have a valid field."),
-      );
+      return Err(TemporalError::r#type().with_enum(ErrorMessage::EmptyFieldsIsInvalid));
     }
     let overflow = overflow.unwrap_or(Overflow::Constrain);
 
@@ -902,6 +902,15 @@ impl PlainDateTime {
       self.calendar.clone(),
       epoch_ns.offset,
     ))
+  }
+
+  /// Gets the EpochNanoseconds represented by this PlainDateTime
+  /// (using and UTC timezone)
+  ///
+  // Useful for implementing HandleDateTimeTemporalDateTime
+  pub fn epoch_ns_for_utc(&self) -> EpochNanoseconds {
+    // 3. Let epochNs be ? GetUTCEpochNanoseconds(isoDateTime).
+    self.iso.as_nanoseconds()
   }
 
   /// Create a [`PlainDate`] from the current `PlainDateTime`.

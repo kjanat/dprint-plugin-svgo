@@ -1,5 +1,6 @@
 //! This module implements `PlainDate` and any directly related algorithms.
 
+use crate::error::ErrorMessage;
 use crate::parsed_intermediates::ParsedDate;
 use crate::{
   MonthCode, TemporalError, TemporalResult, TimeZone,
@@ -16,6 +17,7 @@ use crate::{
   },
   parsers::IxdtfStringBuilder,
   provider::{NeverProvider, TimeZoneProvider},
+  unix_time::EpochNanoseconds,
 };
 use alloc::string::String;
 use core::{cmp::Ordering, str::FromStr};
@@ -439,7 +441,7 @@ impl PlainDate {
   /// Creates a `PlainDate` with values from a [`PartialDate`].
   pub fn with(&self, fields: CalendarFields, overflow: Option<Overflow>) -> TemporalResult<Self> {
     if fields.is_empty() {
-      return Err(TemporalError::r#type().with_message("CalendarFields must have a field."));
+      return Err(TemporalError::r#type().with_enum(ErrorMessage::EmptyFieldsIsInvalid));
     }
     // 6. Let fieldsResult be ? PrepareCalendarFieldsAndFieldNames(calendarRec, temporalDate, « "day", "month", "monthCode", "year" »).
     // 7. Let partialDate be ? PrepareTemporalFields(temporalDateLike, fieldsResult.[[FieldNames]], partial).
@@ -684,6 +686,18 @@ impl PlainDate {
       epoch_ns.offset,
     )
   }
+
+  /// Gets the EpochNanoseconds represented by this PlainDate
+  /// (using noon time, and UTC timezone)
+  ///
+  // Useful for implementing HandleDateTimeTemporalYearMonth
+  pub fn epoch_ns_for_utc(&self) -> EpochNanoseconds {
+    // 2. Let isoDateTime be CombineISODateAndTimeRecord(temporalYearMonth.[[ISODate]], NoonTimeRecord()).
+    let iso = IsoDateTime::new(self.iso, IsoTime::noon());
+    debug_assert!(iso.is_ok());
+    // 3. Let epochNs be ? GetUTCEpochNanoseconds(isoDateTime).
+    iso.unwrap_or_default().as_nanoseconds()
+  }
 }
 
 // ==== Trait impls ====
@@ -705,6 +719,8 @@ impl FromStr for PlainDate {
 #[cfg(test)]
 mod tests {
   use tinystr::tinystr;
+
+  use crate::options::{RoundingIncrement, RoundingMode};
 
   use super::*;
 
@@ -979,7 +995,7 @@ mod tests {
   // test262/test/built-ins/Temporal/Calendar/prototype/month/argument-string-invalid.js
   #[test]
   fn invalid_strings() {
-    const INVALID_STRINGS: [&str; 35] = [
+    const INVALID_STRINGS: &[&str] = &[
       // invalid ISO strings:
       "",
       "invalid iso8601",
@@ -1020,9 +1036,14 @@ mod tests {
       // valid, but outside the supported range:
       "-999999-01-01",
       "+999999-01-01",
+      // built-ins/Temporal/PlainDate/from/argument-string-too-many-decimals
+      "1970-01-01T00:00:00.1234567891",
+      "1970-01-01T00:00:00.1234567890",
+      "1970-01-01T00+00:00:00.1234567891",
+      "1970-01-01T00+00:00:00.1234567890",
     ];
     for s in INVALID_STRINGS {
-      assert!(PlainDate::from_str(s).is_err())
+      assert!(PlainDate::from_str(s).is_err(), "{} should not parse", s)
     }
   }
 
@@ -1040,5 +1061,47 @@ mod tests {
     for s in INVALID_STRINGS {
       assert!(PlainDate::from_str(s).is_err())
     }
+  }
+
+  #[test]
+  fn rounding_increment_observed() {
+    let earlier = PlainDate::try_new_iso(2019, 1, 8).unwrap();
+    let later = PlainDate::try_new_iso(2021, 9, 7).unwrap();
+
+    let settings = DifferenceSettings {
+      smallest_unit: Some(Unit::Year),
+      rounding_mode: Some(RoundingMode::HalfExpand),
+      increment: Some(RoundingIncrement::try_new(4).unwrap()),
+      ..Default::default()
+    };
+    let result = later.since(&earlier, settings).unwrap();
+    assert_eq!(result.years(), 4);
+
+    let settings = DifferenceSettings {
+      smallest_unit: Some(Unit::Month),
+      rounding_mode: Some(RoundingMode::HalfExpand),
+      increment: Some(RoundingIncrement::try_new(10).unwrap()),
+      ..Default::default()
+    };
+    let result = later.since(&earlier, settings).unwrap();
+    assert_eq!(result.months(), 30);
+
+    let settings = DifferenceSettings {
+      smallest_unit: Some(Unit::Week),
+      rounding_mode: Some(RoundingMode::HalfExpand),
+      increment: Some(RoundingIncrement::try_new(12).unwrap()),
+      ..Default::default()
+    };
+    let result = later.since(&earlier, settings).unwrap();
+    assert_eq!(result.weeks(), 144);
+
+    let settings = DifferenceSettings {
+      smallest_unit: Some(Unit::Day),
+      rounding_mode: Some(RoundingMode::HalfExpand),
+      increment: Some(RoundingIncrement::try_new(100).unwrap()),
+      ..Default::default()
+    };
+    let result = later.since(&earlier, settings).unwrap();
+    assert_eq!(result.days(), 1000);
   }
 }

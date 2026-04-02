@@ -1,60 +1,32 @@
 {
-  "formatter": [
-    {
-      "external": {
-        "command": "dprint",
-        "arguments": [
-          "fmt",
-          "--config",
-          ".dprint.jsonc",
-          "--config-discovery=false",
-          "--stdin",
-          "{buffer_path}"
-        ]
-      }
+  "formatter": [{
+    "external": {
+      "command": "dprint",
+      "arguments": ["fmt", "--stdin", "{buffer_path}"]
     }
-  ],
+  }],
   "languages": {
     "TypeScript": {
-      "language_servers": [
-        "deno",
-        "!typescript-language-server",
-        "!vtsls",
-        "!eslint"
-      ],
+      "language_servers": ["deno"],
       "formatter": "language_server"
     },
     "JavaScript": {
-      "language_servers": [
-        "deno",
-        "!typescript-language-server",
-        "!vtsls",
-        "!eslint"
-      ],
+      "language_servers": ["deno"],
       "formatter": "language_server"
     }
   },
   "lsp": {
-    "deno": {
-      "settings": {
-        "deno": {
-          "enable": true
-        }
-      }
-    },
+    "deno": { "settings": { "deno": { "enable": true } } },
     "json-language-server": {
       "settings": {
         "json": {
-          "schemas": [
-            {
-              "fileMatch": ["deno.json", "deno.jsonc"],
-              "url": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json"
-            },
-            {
-              "fileMatch": ["package.json"],
-              "url": "https://www.schemastore.org/package"
-            }
-          ]
+          "schemas": [{
+            "fileMatch": ["deno.json", "deno.jsonc"],
+            "url": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json"
+          }, {
+            "fileMatch": ["package.json"],
+            "url": "https://www.schemastore.org/package"
+          }]
         }
       }
     }

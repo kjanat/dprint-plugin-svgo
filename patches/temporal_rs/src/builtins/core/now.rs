@@ -30,7 +30,9 @@ impl<H: HostHooks> Now<H> {
     let time_zone = time_zone.unwrap_or(self.host_hooks.get_system_time_zone(provider)?);
     time_zone.get_iso_datetime_for(&Instant::from(system_nanoseconds), provider)
   }
+}
 
+impl<H: HostHooks> Now<H> {
   /// Converts the current [`Now`] into a [`TimeZone`].
   pub fn time_zone_with_provider(
     self,
@@ -57,9 +59,7 @@ impl<H: HostHooks> Now<H> {
     let instant = Instant::from(system_nanoseconds);
     ZonedDateTime::new_unchecked_with_provider(instant, time_zone, Calendar::ISO, provider)
   }
-}
 
-impl<H: HostHooks> Now<H> {
   /// Converts `Now` into the current system [`PlainDateTime`] with an ISO8601 calendar.
   ///
   /// When `TimeZone` is `None`, the value will default to the
@@ -90,7 +90,21 @@ impl<H: HostHooks> Now<H> {
   ///
   /// When `TimeZone` is `None`, the value will default to the
   /// system time zone or UTC if the system zone is unavailable.
+  /// Deprecated: Use `plain_time_iso_with_provider` instead.
+  #[deprecated(since = "0.1.2", note = "Use `plain_time_iso_with_provider` instead")]
   pub fn plain_time_with_provider(
+    self,
+    time_zone: Option<TimeZone>,
+    provider: &(impl TimeZoneProvider + ?Sized),
+  ) -> TemporalResult<PlainTime> {
+    self.plain_time_iso_with_provider(time_zone, provider)
+  }
+
+  /// Converts `Now` into the current system [`PlainTime`].
+  ///
+  /// When `TimeZone` is `None`, the value will default to the
+  /// system time zone or UTC if the system zone is unavailable.
+  pub fn plain_time_iso_with_provider(
     self,
     time_zone: Option<TimeZone>,
     provider: &(impl TimeZoneProvider + ?Sized),
@@ -199,7 +213,7 @@ mod tests {
     assert_eq!(duration.milliseconds(), 0);
   }
 
-  #[cfg(all(feature = "tzdb", feature = "sys", feature = "compiled_data"))]
+  #[cfg(all(feature = "tzdb", feature = "sys-local", feature = "compiled_data"))]
   #[test]
   fn now_datetime_test() {
     use crate::Temporal;
@@ -208,9 +222,9 @@ mod tests {
 
     let sleep = 2;
 
-    let before = Temporal::now().plain_date_time_iso(None).unwrap();
+    let before = Temporal::local_now().plain_date_time_iso(None).unwrap();
     thread::sleep(StdDuration::from_secs(sleep));
-    let after = Temporal::now().plain_date_time_iso(None).unwrap();
+    let after = Temporal::local_now().plain_date_time_iso(None).unwrap();
 
     let diff = after.since(&before, DifferenceSettings::default()).unwrap();
 
