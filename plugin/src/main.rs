@@ -3,12 +3,7 @@ use dprint_core::plugins::process::handle_process_stdio_messages;
 use dprint_core::plugins::process::start_parent_process_checker_task;
 use dprint_plugin_deno_base::runtime::JsRuntime;
 use dprint_plugin_deno_base::util::create_tokio_runtime;
-use handler::SvgoPluginHandler;
-
-mod config;
-mod error;
-mod formatter;
-mod handler;
+use dprint_plugin_svgo::SvgoPluginHandler;
 
 fn main() {
   JsRuntime::initialize_main_thread();

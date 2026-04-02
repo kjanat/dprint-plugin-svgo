@@ -113,9 +113,6 @@ pub enum SvgoPluginName {
   /// Preset with the default set of plugins.
   #[serde(rename = "preset-default")]
   PresetDefault,
-  #[serde(rename = "preset-none")]
-  /// Preset with no plugins.
-  PresetNone,
   /// All individual built-in plugins.
   #[serde(untagged)]
   Plugin(SvgoBuiltinPlugin),

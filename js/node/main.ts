@@ -20,7 +20,6 @@ interface FormatTextOptions {
   filePath: string;
   fileText: string;
   config: Config;
-  pluginsConfig: Record<string, unknown>;
 }
 
 function formatText(

@@ -7,12 +7,6 @@ use dprint_core::configuration::get_nullable_value;
 use dprint_core::configuration::get_value;
 use serde::Serialize;
 
-/// Plugin-specific configuration for SVGO.
-#[derive(Clone, Serialize, Default)]
-pub struct SvgoPluginConfig {
-  // SVGO-specific plugin configuration can be added here
-}
-
 /// Configuration for the SVGO plugin.
 #[derive(Clone, Serialize, Default)]
 pub struct SvgoConfig {
@@ -20,12 +14,8 @@ pub struct SvgoConfig {
   pub main: serde_json::Map<String, serde_json::Value>,
   /// Extension-specific configuration overrides.
   pub extension_overrides: serde_json::Map<String, serde_json::Value>,
-  /// SVGO plugin configuration.
-  pub plugins: SvgoPluginConfig,
 }
 
-// These methods are public API for library consumers but not used by the binary
-#[allow(dead_code)]
 impl SvgoConfig {
   /// Get the js2svg configuration object.
   #[must_use]
@@ -103,10 +93,6 @@ pub fn resolve_config(
   let mut diagnostics = Vec::new();
   let mut main: serde_json::Map<String, serde_json::Value> = Default::default();
   let mut extension_overrides: serde_json::Map<String, serde_json::Value> = Default::default();
-
-  let plugins = SvgoPluginConfig {
-    // SVGO-specific plugin configuration
-  };
 
   // Handle SVGO js2svg configuration options
   let mut js2svg: serde_json::Map<String, serde_json::Value> = Default::default();
@@ -201,7 +187,6 @@ pub fn resolve_config(
     config: SvgoConfig {
       main,
       extension_overrides,
-      plugins,
     },
     diagnostics,
   }

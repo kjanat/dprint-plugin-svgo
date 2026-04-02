@@ -7,3 +7,4 @@ node_modules
 .deno_cache/
 /schema.json
 /plugin.json
+vendor-tmp/
