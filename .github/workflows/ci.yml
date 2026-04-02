@@ -57,7 +57,7 @@ jobs:
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
-        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3"
+        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev f86fd03bb70b4c6802847c18087e21391498b0b4"
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"
@@ -130,7 +130,7 @@ jobs:
         working-directory: js/node
       - name: Install cross
         if: matrix.config.cross == 'true'
-        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3"
+        run: "cargo install cross --locked --git https://github.com/cross-rs/cross --rev f86fd03bb70b4c6802847c18087e21391498b0b4"
       - name: Build (Debug)
         if: 'matrix.config.cross != ''true'' && !startsWith(github.ref, ''refs/tags/'')'
         run: "cargo build --locked --all-targets --target ${{matrix.config.target}}"

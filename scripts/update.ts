@@ -4,7 +4,7 @@
  * This script checks for any svgo updates and then automatically
  * publishes a new version of the plugin if so.
  */
-import * as semver from "@std/semver";
+import * as semver from "semver";
 import $ from "dax";
 
 const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();

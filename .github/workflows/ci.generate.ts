@@ -18,7 +18,7 @@ const GITHUB_OWNER = "kjanat";
 const PLUGIN_NAME = "dprint-plugin-svgo";
 const BRANCHES = ["master", "main"];
 // Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
-const CROSS_REV = "4090beca3cfffa44371a5bba524de3a578aa46c3";
+const CROSS_REV = "f86fd03bb70b4c6802847c18087e21391498b0b4";
 
 type Runner = "macos-latest" | "ubuntu-latest" | "windows-latest";
 
