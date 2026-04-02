@@ -8,7 +8,7 @@ use crate::TemporalError;
 use crate::TimeZone;
 use crate::unix_time::EpochNanoseconds;
 use timezone_provider::provider::TimeZoneProvider;
-use web_time::{SystemTime, UNIX_EPOCH};
+use web_time::SystemTime;
 
 // TODO: Look into and potentially implement a `SystemTime` struct allows
 // providing closures or trait implementations that can then
@@ -118,7 +118,7 @@ pub(crate) fn get_system_nanoseconds() -> TemporalResult<EpochNanoseconds> {
   use crate::unix_time::EpochNanoseconds;
 
   SystemTime::now()
-    .duration_since(UNIX_EPOCH)
+    .duration_since(SystemTime::UNIX_EPOCH)
     .map_err(|_| TemporalError::general("Error fetching system time"))
     .map(|d| EpochNanoseconds::from(d.as_nanos() as i128))
 }

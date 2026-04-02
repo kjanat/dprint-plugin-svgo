@@ -12,3 +12,6 @@
 
 *.jpg binary
 *.png binary
+
+patches/** linguist-vendored
+Cargo.lock linguist-generated -diff

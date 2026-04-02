@@ -1,17 +1,17 @@
 # dprint-plugin-svgo
 
-[![CI][badge:ci]][ci:CI]
+[![ci][badge]][ci]
 
-Wrapper around [SVGO][svgo] in order to use it as a dprint plugin.
+Wrapper around [SVGO] in order to use it as a dprint plugin.
 
 ## Install
 
-1. Install [dprint][dprint:install]
+1. Install [dprint]
 2. Follow instructions at [https://github.com/kjanat/dprint-plugin-svgo/releases/][release:releases]
 
 ## Configuration
 
-See SVGO's configuration [here][dprint:config].
+See [SVGO's configuration].
 
 ```jsonc
 {
@@ -49,14 +49,8 @@ Additionally it's much faster. This plugin will format files in parallel and you
 <!-- Link definitions -->
 
 [release:releases]: https://github.com/kjanat/dprint-plugin-svgo/releases
-
-<!--Badges-->
-
-[badge:ci]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml/badge.svg
-[ci:CI]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml
-
-<!--External links-->
-
-[dprint:install]: https://dprint.dev/install/
-[dprint:config]: https://svgo.dev/docs/configuration/
-[svgo]: https://svgo.dev/ "SVGO, short for SVG Optimizer, is a Node.js library and command-line application for optimizing SVG files."
+[ci]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml
+[badge]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml/badge.svg
+[dprint]: https://dprint.dev/install/
+[SVGO's configuration]: https://svgo.dev/docs/configuration/
+[SVGO]: https://svgo.dev/ "SVGO, short for SVG Optimizer, is a Node.js library and command-line application for optimizing SVG files."

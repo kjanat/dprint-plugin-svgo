@@ -17,38 +17,78 @@ async-channel            = "2.5"
 calendrical_calculations = "0.2"
 core_maths               = "0.1"
 deno_core                = "0.397"
-diplomat                 = { version = "0.15", default-features = false }
-diplomat-runtime         = { version = "0.15", default-features = false }
 dprint-core              = "0.67"
 dprint-development       = "0.10"
 iana-time-zone           = "0.1"
-icu_calendar             = { version = "2.2", default-features = false, features = ["compiled_data"] }
 icu_locale_core          = "2.1"
-ixdtf                    = { version = "0.6", features = ["duration"] }
 log                      = "0.4"
-num-traits               = { version = "0.2", default-features = false }
 pretty_assertions        = "1.4"
 proptest                 = "1"
-schemars                 = { version = "1", features = ["derive"] }
-serde                    = { version = "1", features = ["derive"] }
-serde_json               = { version = "1", features = ["preserve_order"] }
 sha256                   = "1.6"
-sysinfo                  = { version = "0.38", default-features = false, features = ["system"] }
-temporal_capi            = { path = "patches/temporal_capi/" }
-temporal_rs              = { path = "patches/temporal_rs/", default-features = false }
 thiserror                = "2"
-timezone_provider        = { version = "0.2.3", features = ["experimental_tzif", "zoneinfo64"] }
 tinystr                  = "0.8"
-tokio                    = { version = "1", features = ["macros", "rt", "time"] }
 tokio-util               = "0.7"
 web-time                 = "1.1"
 writeable                = "0.6"
 zoneinfo64               = "0.3"
 zstd                     = "0.13"
 
+[workspace.dependencies.diplomat]
+version          = "0.15"
+default-features = false
+
+[workspace.dependencies.diplomat-runtime]
+version          = "0.15"
+default-features = false
+
 [workspace.dependencies.dprint-plugin-deno-base]
 path     = "base"
 features = ["build"]
+
+[workspace.dependencies.icu_calendar]
+version          = "2.2"
+default-features = false
+features         = ["compiled_data"]
+
+[workspace.dependencies.ixdtf]
+version  = "0.6"
+features = ["duration"]
+
+[workspace.dependencies.num-traits]
+version          = "0.2"
+default-features = false
+
+[workspace.dependencies.schemars]
+version  = "1"
+features = ["derive"]
+
+[workspace.dependencies.serde]
+version  = "1"
+features = ["derive"]
+
+[workspace.dependencies.serde_json]
+version  = "1"
+features = ["preserve_order"]
+
+[workspace.dependencies.sysinfo]
+version          = "0.38"
+default-features = false
+features         = ["system"]
+
+[workspace.dependencies.temporal_capi]
+path = "patches/temporal_capi/"
+
+[workspace.dependencies.temporal_rs]
+path             = "patches/temporal_rs/"
+default-features = false
+
+[workspace.dependencies.timezone_provider]
+version  = "0.2.3"
+features = ["experimental_tzif", "zoneinfo64"]
+
+[workspace.dependencies.tokio]
+version  = "1"
+features = ["macros", "rt", "time"]
 
 # Vendor temporal_rs + temporal_capi at latest source, labelled 0.1.2
 # to satisfy v8 147's semver constraint (^0.1.2).
