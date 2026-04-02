@@ -103,7 +103,8 @@ impl Calendar {
   pub const ROC: Self = Self::new(AnyCalendarKind::Roc);
 
   /// Create a `Calendar` from an ICU [`AnyCalendarKind`].
-  #[warn(clippy::wildcard_enum_match_arm)] // Warns if the calendar kind gets out of sync.
+  // AnyCalendarKind is #[non_exhaustive] so a wildcard is required.
+  // JapaneseExtended was merged into Japanese in icu_calendar 2.2.
   pub const fn new(kind: AnyCalendarKind) -> Self {
     let cal = match kind {
       AnyCalendarKind::Buddhist => &AnyCalendar::Buddhist(Buddhist),
