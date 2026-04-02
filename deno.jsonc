@@ -15,7 +15,7 @@
     "@esbuild-plugins/node-modules-polyfill": "npm:@esbuild-plugins/node-modules-polyfill@^0.2",
     "dax": "jsr:@david/dax@^0.45",
     "semver": "jsr:@std/semver@^1",
-    "@std/yaml": "jsr:@std/yaml@^1",
+    "yaml": "jsr:@eemeli/yaml@^2",
     "esbuild": "npm:esbuild@^0.27",
     "svgo": "npm:svgo@^4"
   },

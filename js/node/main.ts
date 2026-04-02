@@ -1,12 +1,18 @@
 import { type Config, optimize } from "svgo/browser";
 
-(globalThis as any).dprint = {
+declare global {
+  var dprint: {
+    getExtensions: typeof getExtensions;
+    formatText: typeof formatText;
+  };
+}
+
+globalThis.dprint = {
   getExtensions,
   formatText,
 };
 
-async function getExtensions() {
-  // SVGO only supports SVG files
+function getExtensions() {
   return ["svg"];
 }
 
@@ -14,15 +20,11 @@ interface FormatTextOptions {
   filePath: string;
   fileText: string;
   config: Config;
-  pluginsConfig: PluginsConfig;
+  pluginsConfig: Record<string, unknown>;
 }
 
-interface PluginsConfig {
-  // SVGO-specific plugin configuration can be added here
-}
-
-async function formatText(
-  { filePath, fileText, config, pluginsConfig }: FormatTextOptions,
+function formatText(
+  { filePath, fileText, config }: FormatTextOptions,
 ) {
   try {
     const result = optimize(fileText, {
