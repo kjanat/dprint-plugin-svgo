@@ -12,21 +12,20 @@
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "jsr:@std/semver@^1.0.8": "1.0.8",
-    "jsr:@std/yaml@^1.0.12": "1.0.12",
+    "jsr:@std/semver@1": "1.0.8",
+    "npm:@esbuild-plugins/node-globals-polyfill@0.2": "0.2.3_esbuild@0.27.4",
     "npm:@esbuild-plugins/node-globals-polyfill@~0.2.3": "0.2.3_esbuild@0.27.4",
+    "npm:@esbuild-plugins/node-modules-polyfill@0.2": "0.2.2_esbuild@0.27.4",
     "npm:@esbuild-plugins/node-modules-polyfill@~0.2.2": "0.2.2_esbuild@0.27.4",
     "npm:@types/node@^24.10.1": "24.12.0",
     "npm:buffer@^6.0.3": "6.0.3",
     "npm:crypto-browserify@^3.12.1": "3.12.1",
     "npm:esbuild@0.27": "0.27.4",
-    "npm:esbuild@~0.27.4": "0.27.4",
     "npm:events@^3.3.0": "3.3.0",
     "npm:parcel@^2.16.1": "2.16.4",
     "npm:process@~0.11.10": "0.11.10",
     "npm:stream-browserify@3": "3.0.0",
     "npm:svgo@4": "4.0.1",
-    "npm:svgo@^4.0.1": "4.0.1",
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:url@~0.11.4": "0.11.4",
     "npm:util@~0.12.5": "0.12.5"
@@ -87,9 +86,6 @@
     },
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
-    },
-    "@std/yaml@1.0.12": {
-      "integrity": "7deabca4545bcedd07c5f69ea53acea71b8b4c67562f224e17b90d75944cb20c"
     }
   },
   "npm": {
@@ -2206,15 +2202,23 @@
       ]
     }
   },
+  "remote": {
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/cargo.ts": "5322d7df18581897f8791222547eade2064965d656d4d8863ef052b4ed87ed8f",
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/changelog.ts": "9691730ae1a6939bfdbaa08eb494e7898b3db50890a71cde52ba7f6b635ba4de",
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts": "d397d4e26f823bf0f6aa2b819b2ce81493ddf87e6b1cacb0f6228ab07b586df9",
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts": "3c48eb154a2ee7364a8f66d3d2c099941d8f36291994122aaf9a7aec6ef1396b",
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/process-plugin.ts": "58f0d1f812d90ba0371d02e6b691438c92b85abe407ca36f468e7395c39b1524",
+    "https://raw.githubusercontent.com/dprint/automation/0.10.3/tasks/publish-release.ts": "1945302b6b25fd0a9549e9f989f50c4dd9d6a03932886c79d941da509f9afe6d"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@david/dax@0.45",
-      "jsr:@std/semver@^1.0.8",
-      "jsr:@std/yaml@^1.0.12",
-      "npm:@esbuild-plugins/node-globals-polyfill@~0.2.3",
-      "npm:@esbuild-plugins/node-modules-polyfill@~0.2.2",
-      "npm:esbuild@~0.27.4",
-      "npm:svgo@^4.0.1"
+      "jsr:@std/semver@1",
+      "jsr:@std/yaml@1",
+      "npm:@esbuild-plugins/node-globals-polyfill@0.2",
+      "npm:@esbuild-plugins/node-modules-polyfill@0.2",
+      "npm:esbuild@0.27",
+      "npm:svgo@4"
     ],
     "members": {
       "js/node": {
