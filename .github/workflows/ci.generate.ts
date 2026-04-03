@@ -236,7 +236,7 @@ function generateSchema(): Step {
   return {
     name: "Generate schema",
     if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
-    run: "cargo run --locked --features schema --bin generate-schema -- schema.json",
+    run: "deno run -A scripts/generate_schema.ts schema.json",
   };
 }
 

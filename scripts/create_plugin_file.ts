@@ -5,7 +5,7 @@ import $ from "dax";
 const GITHUB_OWNER = "kjanat";
 
 const rootDir = $.path(import.meta.dirname!).parentOrThrow();
-const cargoFilePath = rootDir.join("plugin/Cargo.toml");
+const cargoFilePath = rootDir.join("Cargo.toml");
 const pluginName = "dprint-plugin-svgo";
 const version = new CargoToml(cargoFilePath).version();
 const isTest = Deno.args.some((a) => a === "--test");

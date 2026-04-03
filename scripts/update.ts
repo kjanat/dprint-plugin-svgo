@@ -34,17 +34,17 @@ await $`git tag ${newVersion}`;
 await $`git push origin ${newVersion}`;
 
 async function bumpMinorVersion() {
-  const projectFile = rootDirPath.join("./plugin/Cargo.toml");
+  const projectFile = rootDirPath.join("./Cargo.toml");
   const text = await projectFile.readText();
-  const versionRegex = /^version = "([0-9]+\.[0-9]+\.[0-9]+)"$/m;
-  const currentVersion = text.match(versionRegex)?.[1];
+  const versionRegex = /^(version\s*=\s*)"([0-9]+\.[0-9]+\.[0-9]+)"$/m;
+  const currentVersion = text.match(versionRegex)?.[2];
   if (currentVersion == null) {
     throw new Error("Could not find version.");
   }
   const newVersion = semver.format(
     semver.increment(semver.parse(currentVersion), "minor"),
   );
-  const newText = text.replace(versionRegex, `version = "${newVersion}"`);
+  const newText = text.replace(versionRegex, `$1"${newVersion}"`);
   await projectFile.writeText(newText);
   return newVersion;
 }
