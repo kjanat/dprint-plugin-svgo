@@ -13,10 +13,10 @@ import { stringify } from "yaml";
 import $ from "dax";
 
 // --- Configuration ---
+const REPO_OWNER = "kjanat";
+const REPO_NAME = "dprint-plugin-svgo";
+const BRANCHES = ["master"];
 
-const GITHUB_OWNER = "kjanat";
-const PLUGIN_NAME = "dprint-plugin-svgo";
-const BRANCHES = ["master", "main"];
 // Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
 const CROSS_REV = "f86fd03bb70b4c6802847c18087e21391498b0b4";
 
@@ -38,23 +38,9 @@ interface Target {
 
 const targets: Target[] = [
   { runner: "macos-latest", target: "x86_64-apple-darwin", runTests: true },
-  {
-    runner: "macos-latest",
-    target: "aarch64-apple-darwin",
-    runTests: true,
-    runOnPr: true,
-  },
-  {
-    runner: "windows-latest",
-    target: "x86_64-pc-windows-msvc",
-    runTests: true,
-  },
-  {
-    runner: "ubuntu-latest",
-    target: "x86_64-unknown-linux-gnu",
-    runTests: true,
-    runOnPr: true,
-  },
+  { runner: "macos-latest", target: "aarch64-apple-darwin", runTests: true, runOnPr: true },
+  { runner: "windows-latest", target: "x86_64-pc-windows-msvc", runTests: true },
+  { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", runTests: true, runOnPr: true },
   { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", cross: true },
 ];
 
@@ -65,7 +51,7 @@ function artifactsName(t: Target) {
 }
 
 function zipFileName(t: Target) {
-  return `${PLUGIN_NAME}-${t.target}.zip`;
+  return `${REPO_NAME}-${t.target}.zip`;
 }
 
 function stepId(t: Target) {
@@ -195,12 +181,12 @@ function preRelease(t: Target): Step {
   const releaseDir = `target/${t.target}/release`;
   const lines = isWindows
     ? [
-      `Compress-Archive -CompressionLevel Optimal -Force -Path ${releaseDir}/${PLUGIN_NAME}.exe -DestinationPath ${releaseDir}/${zip}`,
+      `Compress-Archive -CompressionLevel Optimal -Force -Path ${releaseDir}/${REPO_NAME}.exe -DestinationPath ${releaseDir}/${zip}`,
       `$hash = (Get-FileHash -Algorithm SHA256 ${releaseDir}/${zip}).Hash.ToLower()`,
       `"ZIP_CHECKSUM=$hash" >> $env:GITHUB_OUTPUT`,
     ]
     : [
-      `zip -r ${zip} ${PLUGIN_NAME}`,
+      `zip -r ${zip} ${REPO_NAME}`,
       `echo "ZIP_CHECKSUM=$(shasum -a 256 ${zip} | awk '{print $1}')" >> "\$GITHUB_OUTPUT"`,
     ];
   const step: Step = {
@@ -306,44 +292,46 @@ function releaseBody(): string {
   const checksum = "${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}";
   const version = "${{ steps.get_svgo_version.outputs.SVGO_VERSION }}";
   const pluginUrl =
-    `https://github.com/${GITHUB_OWNER}/${PLUGIN_NAME}/releases/download/${tag}/plugin.json@${checksum}`;
+    `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${tag}/plugin.json@${checksum}`;
 
-  return [
-    `SVGO ${version}`,
-    "## Install",
-    "",
-    "Dependencies:",
-    "",
-    "- Install dprint's CLI >= 0.40.0",
-    "",
-    "In a dprint configuration file:",
-    "",
-    `1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint add ${GITHUB_OWNER}/${PLUGIN_NAME}\`:`,
-    "",
-    "   ```jsonc",
-    "   {",
-    "     // etc...",
-    '     "plugins": [',
-    "       // ...add other dprint plugins here...",
-    `       "${pluginUrl}"`,
-    "     ]",
-    "   }",
-    "   ```",
-    "",
-    '2. Add a `"svgo"` configuration property if desired.',
-    "",
-    "   ```jsonc",
-    "   {",
-    "     // ...etc...",
-    '     "svgo": {',
-    '       "multipass": true,',
-    '       "pretty": true,',
-    '       "indent": 2',
-    "     }",
-    "   }",
-    "   ```",
-    "",
-  ].join("\n");
+  return `\
+# SVGO ${version}
+
+## Install
+
+Dependencies:
+
+- Install dprint's CLI >= 0.40.0
+
+In a dprint configuration file:
+
+1. Specify the plugin url and checksum in the \`"plugins"\` array or run \`dprint add ${REPO_OWNER}/${
+    REPO_NAME.replace("dprint-plugin-", "")
+  }\`:
+
+   \`\`\`jsonc
+   {
+     // etc...
+     "plugins": [
+       // ...add other dprint plugins here...
+       "${pluginUrl}"
+     ]
+   }
+   \`\`\`
+
+2. Add a \`"svgo"\` configuration property if desired.
+
+   \`\`\`jsonc
+   {
+     // ...etc...
+     "svgo": {
+       "multipass": true,
+       "pretty": true,
+       "indent": 2
+     }
+   }
+   \`\`\`
+`;
 }
 
 /** Create the draft release job that downloads artifacts, computes checksums, and publishes. */

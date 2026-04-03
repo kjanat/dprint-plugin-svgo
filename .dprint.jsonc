@@ -25,12 +25,6 @@
         "stdin": true
       },
       {
-        /** Prettifies anf minifies SVG files */
-        "command": "svgo --config /home/kjanat/.svgo.mjs --multipass --pretty -q --input - --output -",
-        "exts": ["svg"],
-        "stdin": true
-      },
-      {
         /** Formats toml files */
         "command": "tombi format --stdin-filename {{file_path}} -",
         "exts": ["toml"]

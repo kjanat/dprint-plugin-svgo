@@ -5,11 +5,9 @@ on:
   pull_request:
     branches:
       - "master"
-      - "main"
   push:
     branches:
       - "master"
-      - "main"
     tags:
       - "*"
 permissions:
@@ -43,7 +41,7 @@ jobs:
         uses: "Swatinem/rust-cache@v2"
         with:
           prefix-key: "v3-${{matrix.config.target}}"
-          save-if: "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}"
+          save-if: "${{ github.ref == 'refs/heads/master' }}"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"
         run: "deno task build"
@@ -114,7 +112,7 @@ jobs:
         uses: "Swatinem/rust-cache@v2"
         with:
           prefix-key: "v3-${{matrix.config.target}}"
-          save-if: "${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}"
+          save-if: "${{ github.ref == 'refs/heads/master' }}"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"
         run: "deno task build"
@@ -289,7 +287,8 @@ jobs:
             plugin.json
 
             schema.json"
-          body: "SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
+          body: "# SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
+
 
             ## Install
 
@@ -303,7 +302,7 @@ jobs:
             In a dprint configuration file:
 
 
-            1. Specify the plugin url and checksum in the `\"plugins\"` array or run `dprint add kjanat/dprint-plugin-svgo`:
+            1. Specify the plugin url and checksum in the `\"plugins\"` array or run `dprint add kjanat/svgo`:
 
 
             \   ```jsonc
