@@ -95,12 +95,20 @@ function denoBuildJs(): Step {
   };
 }
 
+function clearV8Cache(): Step {
+  return {
+    name: "Clear stale v8 build cache",
+    run: "rm -rf target/*/build/v8-*",
+  };
+}
+
 /** Shared setup sequence used by both check and build jobs. */
 function setupSteps(): Step[] {
   return [
     checkout(),
     rustToolchain(),
     cargoCache(),
+    clearV8Cache(),
     setupDeno(),
     denoBuildJs(),
   ];

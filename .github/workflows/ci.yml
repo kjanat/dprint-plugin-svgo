@@ -42,6 +42,8 @@ jobs:
         with:
           prefix-key: "v4-${{matrix.config.target}}"
           save-if: "${{ github.ref == 'refs/heads/master' }}"
+      - name: "Clear stale v8 build cache"
+        run: "rm -rf target/*/build/v8-*"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"
         run: "deno task build"
@@ -113,6 +115,8 @@ jobs:
         with:
           prefix-key: "v4-${{matrix.config.target}}"
           save-if: "${{ github.ref == 'refs/heads/master' }}"
+      - name: "Clear stale v8 build cache"
+        run: "rm -rf target/*/build/v8-*"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"
         run: "deno task build"
