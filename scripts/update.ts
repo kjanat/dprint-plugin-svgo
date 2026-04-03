@@ -4,6 +4,7 @@
  * This script checks for any svgo updates and then automatically
  * publishes a new version of the plugin if so.
  */
+import { parse as parseToml } from "@std/toml";
 import * as semver from "semver";
 import $ from "dax";
 
@@ -18,33 +19,40 @@ if (!await hasFileChanged("./deno.jsonc") && !await hasFileChanged("./deno.lock"
 }
 
 $.log("Found changes.");
+
+$.logStep("Rebuilding...");
+await $`deno task build`.cwd(rootDirPath);
+await $`deno task schema`.cwd(rootDirPath);
+
 $.logStep("Bumping version...");
 const newVersion = await bumpMinorVersion();
 
-// run the tests
 $.logStep("Running tests...");
 await $`cargo test`;
 
-// release
 $.logStep(`Committing and publishing ${newVersion}...`);
-await $`git add .`;
+await $`git add deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
 await $`git commit -m ${newVersion}`;
-await $`git push origin main`;
+await $`git push origin master`;
 await $`git tag ${newVersion}`;
 await $`git push origin ${newVersion}`;
 
 async function bumpMinorVersion() {
   const projectFile = rootDirPath.join("./Cargo.toml");
   const text = await projectFile.readText();
-  const versionRegex = /^(version\s*=\s*)"([0-9]+\.[0-9]+\.[0-9]+)"$/m;
-  const currentVersion = text.match(versionRegex)?.[2];
-  if (currentVersion == null) {
-    throw new Error("Could not find version.");
-  }
+  const cargo = parseToml(text) as {
+    workspace: { package: { version: string } };
+  };
+  const currentVersion = cargo.workspace.package.version;
   const newVersion = semver.format(
     semver.increment(semver.parse(currentVersion), "minor"),
   );
-  const newText = text.replace(versionRegex, `$1"${newVersion}"`);
+  const oldLiteral = `"${currentVersion}"`;
+  const newLiteral = `"${newVersion}"`;
+  if (!text.includes(oldLiteral)) {
+    throw new Error(`Version literal ${oldLiteral} not found in Cargo.toml`);
+  }
+  const newText = text.replace(oldLiteral, newLiteral);
   await projectFile.writeText(newText);
   return newVersion;
 }

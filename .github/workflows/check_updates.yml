@@ -6,6 +6,9 @@ on:
     # do this three times a week
     - cron: "0 7 * * 1,3,5"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: check updates
@@ -19,10 +22,6 @@ jobs:
 
       - uses: denoland/setup-deno@v2
       - uses: dsherret/rust-toolchain-file@v1
-      # setup-node needed for npm install --save in scripts/update.ts
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
 
       - name: Run script
         run: |
@@ -30,7 +29,7 @@ jobs:
           git config user.name "${{ github.actor }}[bot]"
           deno run -A ./scripts/update.ts
 
-  # This is necessary to prevent GH automatically dsiabling this workflow after 60 days.
+  # This is necessary to prevent GH automatically disabling this workflow after 60 days.
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
