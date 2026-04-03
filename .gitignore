@@ -1,9 +1,6 @@
-js/node/dist/
-js/node/deno.lock
+js/dist/
 target
 node_modules
-.parcel-cache
 .vscode
-.deno_cache/
 /schema.json
 /plugin.json

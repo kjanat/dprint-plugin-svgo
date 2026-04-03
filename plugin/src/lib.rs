@@ -17,8 +17,4 @@ pub mod error;
 mod formatter;
 mod handler;
 
-/// JSON Schema generation types (behind `schema` feature).
-#[cfg(feature = "schema")]
-pub mod schema;
-
 pub use handler::*;

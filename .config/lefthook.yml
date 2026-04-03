@@ -10,7 +10,6 @@ pre-commit:
       run: cargo clippy --all-targets -- -D warnings
 
     - name: deno check
-      root: "js/node"
       glob: "*.{ts,js}"
       run: deno check
 

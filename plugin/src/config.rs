@@ -7,12 +7,6 @@ use dprint_core::configuration::get_nullable_value;
 use dprint_core::configuration::get_value;
 use serde::Serialize;
 
-/// Plugin-specific configuration for SVGO.
-#[derive(Clone, Serialize, Default)]
-pub struct SvgoPluginConfig {
-  // SVGO-specific plugin configuration can be added here
-}
-
 /// Configuration for the SVGO plugin.
 #[derive(Clone, Serialize, Default)]
 pub struct SvgoConfig {
@@ -20,12 +14,8 @@ pub struct SvgoConfig {
   pub main: serde_json::Map<String, serde_json::Value>,
   /// Extension-specific configuration overrides.
   pub extension_overrides: serde_json::Map<String, serde_json::Value>,
-  /// SVGO plugin configuration.
-  pub plugins: SvgoPluginConfig,
 }
 
-// These methods are public API for library consumers but not used by the binary
-#[allow(dead_code)]
 impl SvgoConfig {
   /// Get the js2svg configuration object.
   #[must_use]
@@ -104,10 +94,6 @@ pub fn resolve_config(
   let mut main: serde_json::Map<String, serde_json::Value> = Default::default();
   let mut extension_overrides: serde_json::Map<String, serde_json::Value> = Default::default();
 
-  let plugins = SvgoPluginConfig {
-    // SVGO-specific plugin configuration
-  };
-
   // Handle SVGO js2svg configuration options
   let mut js2svg: serde_json::Map<String, serde_json::Value> = Default::default();
 
@@ -147,6 +133,18 @@ pub fn resolve_config(
     "pretty".to_string(),
     get_value(&mut config, "pretty", true, &mut diagnostics).into(),
   );
+
+  let final_newline: Option<bool> =
+    get_nullable_value(&mut config, "finalNewline", &mut diagnostics);
+  if let Some(v) = final_newline {
+    js2svg.insert("finalNewline".to_string(), v.into());
+  }
+
+  let use_short_tags: Option<bool> =
+    get_nullable_value(&mut config, "useShortTags", &mut diagnostics);
+  if let Some(v) = use_short_tags {
+    js2svg.insert("useShortTags".to_string(), v.into());
+  }
 
   main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
 
@@ -189,7 +187,6 @@ pub fn resolve_config(
     config: SvgoConfig {
       main,
       extension_overrides,
-      plugins,
     },
     diagnostics,
   }
@@ -222,6 +219,8 @@ const KNOWN_SVGO_KEYS: &[&str] = &[
   "js2svg",
   "multipass",
   "path",
+  "finalNewline",
+  "useShortTags",
 ];
 
 /// Validates a configuration value and adds diagnostics for invalid values.

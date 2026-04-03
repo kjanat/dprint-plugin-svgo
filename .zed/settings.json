@@ -10,7 +10,8 @@
     "TypeScript": { "language_servers": ["deno"] },
     "JavaScript": { "language_servers": ["deno"] },
     "JSON": { "wrap_guides": [120] },
-    "JSONC": { "wrap_guides": [120] }
+    "JSONC": { "wrap_guides": [120] },
+    "TOML": { "wrap_guides": [140] }
   },
   "lsp": {
     "deno": { "settings": { "deno": { "enable": true } } },

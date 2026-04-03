@@ -102,11 +102,10 @@ function setupDeno(): Step {
   return { uses: "denoland/setup-deno@v2" };
 }
 
-function denoInstall(): Step {
+function denoBuildJs(): Step {
   return {
-    name: "Install dependencies",
-    run: "deno install",
-    "working-directory": "js/node",
+    name: "Build JS",
+    run: "deno task build",
   };
 }
 
@@ -117,7 +116,7 @@ function setupSteps(): Step[] {
     rustToolchain(),
     cargoCache(),
     setupDeno(),
-    denoInstall(),
+    denoBuildJs(),
   ];
 }
 
@@ -138,8 +137,7 @@ function setupCross(): Step[] {
     {
       name: "Build JS (cross)",
       if: "matrix.config.cross == 'true'",
-      run: "deno run --frozen -A build.ts",
-      "working-directory": "js/node",
+      run: "deno task build",
     },
     {
       name: "Install cross",

@@ -92,11 +92,9 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     let resolved_config = resolve_config(&file_path, config)?;
     let config_json =
       serde_json::to_string(&resolved_config).map_err(SvgoError::JsonSerialization)?;
-    let plugins_json =
-      serde_json::to_string(&config.plugins).map_err(SvgoError::JsonSerialization)?;
     let code = format!(
-      "(async () => {{ return await dprint.formatText({{ ...{}, config: {}, pluginsConfig: {} }}); }})()",
-      request_value, config_json, plugins_json,
+      "(async () => {{ return await dprint.formatText({{ ...{}, config: {} }}); }})()",
+      request_value, config_json,
     );
     let result = timeout(
       Duration::from_secs(FORMAT_TIMEOUT_SECS),

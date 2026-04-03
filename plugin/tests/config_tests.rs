@@ -105,6 +105,46 @@ fn resolve_config_with_multipass() {
 }
 
 #[test]
+fn resolve_config_with_final_newline() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("finalNewline".to_string(), ConfigKeyValue::Bool(true));
+
+  let result = resolve_config(config, empty_global_config());
+
+  let js2svg = result.config.get_js2svg().unwrap();
+  assert_eq!(js2svg.get("finalNewline").unwrap().as_bool(), Some(true));
+}
+
+#[test]
+fn resolve_config_with_use_short_tags() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("useShortTags".to_string(), ConfigKeyValue::Bool(false));
+
+  let result = resolve_config(config, empty_global_config());
+
+  let js2svg = result.config.get_js2svg().unwrap();
+  assert_eq!(js2svg.get("useShortTags").unwrap().as_bool(), Some(false));
+}
+
+#[test]
+fn resolve_config_final_newline_not_set_by_default() {
+  let config = ConfigKeyMap::new();
+  let result = resolve_config(config, empty_global_config());
+
+  let js2svg = result.config.get_js2svg().unwrap();
+  assert!(js2svg.get("finalNewline").is_none());
+}
+
+#[test]
+fn resolve_config_use_short_tags_not_set_by_default() {
+  let config = ConfigKeyMap::new();
+  let result = resolve_config(config, empty_global_config());
+
+  let js2svg = result.config.get_js2svg().unwrap();
+  assert!(js2svg.get("useShortTags").is_none());
+}
+
+#[test]
 fn resolve_config_with_pretty_false() {
   let mut config = ConfigKeyMap::new();
   config.insert("pretty".to_string(), ConfigKeyValue::Bool(false));

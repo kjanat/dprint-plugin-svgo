@@ -1,8 +1,5 @@
 #!/usr/bin/env -S deno run -A
-import {
-  CargoToml,
-  processPlugin,
-} from "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts";
+import { CargoToml, processPlugin } from "dprint/automation/mod.ts";
 import $ from "dax";
 
 const GITHUB_OWNER = "kjanat";
