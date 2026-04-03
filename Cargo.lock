@@ -598,23 +598,21 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-deno-base"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-channel",
  "deno_core",
  "dprint-core",
  "pretty_assertions",
  "serde",
- "serde_json",
  "sysinfo",
  "tokio",
- "tokio-util",
  "zstd",
 ]
 
 [[package]]
 name = "dprint-plugin-svgo"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "deno_core",
  "dprint-core",

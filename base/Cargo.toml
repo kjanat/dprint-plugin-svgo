@@ -14,9 +14,7 @@ categories           = ["development-tools"]
 async-channel.workspace = true
 deno_core.workspace     = true
 serde.workspace         = true
-serde_json.workspace    = true
 sysinfo.workspace       = true
-tokio-util.workspace    = true
 zstd.workspace          = true
 
 [dependencies.dprint-core]
