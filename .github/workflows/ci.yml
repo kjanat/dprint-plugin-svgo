@@ -82,7 +82,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: "macos-latest"
+          - os: "macos-13"
             run_tests: "true"
             cross: "false"
             target: "x86_64-apple-darwin"

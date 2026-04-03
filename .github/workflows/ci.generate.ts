@@ -20,7 +20,7 @@ const BRANCHES = ["master"];
 // Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
 const CROSS_REV = "f86fd03bb70b4c6802847c18087e21391498b0b4";
 
-type Runner = "macos-latest" | "ubuntu-latest" | "windows-latest";
+type Runner = "macos-13" | "macos-latest" | "ubuntu-latest" | "windows-latest";
 
 /** A build target platform with its CI configuration. */
 interface Target {
@@ -37,7 +37,7 @@ interface Target {
 }
 
 const targets: Target[] = [
-  { runner: "macos-latest", target: "x86_64-apple-darwin", runTests: true },
+  { runner: "macos-13", target: "x86_64-apple-darwin", runTests: true },
   { runner: "macos-latest", target: "aarch64-apple-darwin", runTests: true, runOnPr: true },
   { runner: "windows-latest", target: "x86_64-pc-windows-msvc", runTests: true },
   { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", runTests: true, runOnPr: true },
