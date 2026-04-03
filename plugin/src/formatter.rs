@@ -109,6 +109,11 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
   }
 }
 
+/// Convenience keys that map to SVGO's `js2svg` configuration object.
+/// When used as extension overrides, these must be merged into `js2svg`
+/// rather than the top-level config.
+const JS2SVG_CONVENIENCE_KEYS: &[&str] = &["pretty", "indent", "eol", "finalNewline", "useShortTags"];
+
 fn resolve_config<'a>(
   file_path: &str,
   config: &'a SvgoConfig,
@@ -126,7 +131,17 @@ fn resolve_config<'a>(
         .ok_or_else(|| SvgoError::InvalidExtensionOverride(ext.clone()))?;
       let mut new_config = config.main.clone();
       for (key, value) in override_obj {
-        new_config.insert(key.to_string(), value.clone());
+        if JS2SVG_CONVENIENCE_KEYS.contains(&key.as_str()) {
+          // Route convenience keys into the js2svg sub-object
+          let js2svg = new_config
+            .entry("js2svg")
+            .or_insert_with(|| serde_json::Value::Object(Default::default()));
+          if let Some(obj) = js2svg.as_object_mut() {
+            obj.insert(key.to_string(), value.clone());
+          }
+        } else {
+          new_config.insert(key.to_string(), value.clone());
+        }
       }
       Ok(Cow::Owned(new_config))
     }
@@ -232,5 +247,119 @@ fn normalize_path_for_json(path: &str) -> String {
     path.replace('\\', "/")
   } else {
     path.to_string()
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn make_config(
+    main: serde_json::Map<String, serde_json::Value>,
+    overrides: serde_json::Map<String, serde_json::Value>,
+  ) -> SvgoConfig {
+    SvgoConfig {
+      main,
+      extension_overrides: overrides,
+    }
+  }
+
+  fn default_main_config() -> serde_json::Map<String, serde_json::Value> {
+    let mut js2svg = serde_json::Map::new();
+    js2svg.insert("indent".to_string(), 2.into());
+    js2svg.insert("eol".to_string(), "lf".into());
+    js2svg.insert("pretty".to_string(), true.into());
+
+    let mut main = serde_json::Map::new();
+    main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
+    main.insert("multipass".to_string(), false.into());
+    main
+  }
+
+  fn make_override_map(
+    ext: &str,
+    entries: Vec<(&str, serde_json::Value)>,
+  ) -> serde_json::Map<String, serde_json::Value> {
+    let mut ext_obj = serde_json::Map::new();
+    for (k, v) in entries {
+      ext_obj.insert(k.to_string(), v);
+    }
+    let mut overrides = serde_json::Map::new();
+    overrides.insert(ext.to_string(), serde_json::Value::Object(ext_obj));
+    overrides
+  }
+
+  #[test]
+  fn resolve_config_convenience_keys_merge_into_js2svg() {
+    let overrides = make_override_map("svg", vec![
+      ("pretty", false.into()),
+      ("indent", 4.into()),
+      ("eol", "crlf".into()),
+    ]);
+    let config = make_config(default_main_config(), overrides);
+
+    let result = resolve_config("test.svg", &config).unwrap();
+    let js2svg = result.get("js2svg").unwrap().as_object().unwrap();
+
+    assert_eq!(js2svg.get("pretty").unwrap(), false);
+    assert_eq!(js2svg.get("indent").unwrap(), 4);
+    assert_eq!(js2svg.get("eol").unwrap(), "crlf");
+    // Convenience keys must NOT appear at top level
+    assert!(result.get("pretty").is_none());
+    assert!(result.get("indent").is_none());
+    assert!(result.get("eol").is_none());
+  }
+
+  #[test]
+  fn resolve_config_native_keys_stay_at_top_level() {
+    let overrides = make_override_map("svg", vec![
+      ("multipass", true.into()),
+    ]);
+    let config = make_config(default_main_config(), overrides);
+
+    let result = resolve_config("test.svg", &config).unwrap();
+
+    assert_eq!(result.get("multipass").unwrap(), true);
+  }
+
+  #[test]
+  fn resolve_config_mixed_convenience_and_native_keys() {
+    let overrides = make_override_map("svg", vec![
+      ("pretty", false.into()),
+      ("multipass", true.into()),
+      ("finalNewline", false.into()),
+    ]);
+    let config = make_config(default_main_config(), overrides);
+
+    let result = resolve_config("test.svg", &config).unwrap();
+    let js2svg = result.get("js2svg").unwrap().as_object().unwrap();
+
+    // Convenience keys in js2svg
+    assert_eq!(js2svg.get("pretty").unwrap(), false);
+    assert_eq!(js2svg.get("finalNewline").unwrap(), false);
+    // Native key at top level
+    assert_eq!(result.get("multipass").unwrap(), true);
+    // Convenience keys NOT at top level
+    assert!(result.get("pretty").is_none());
+    assert!(result.get("finalNewline").is_none());
+  }
+
+  #[test]
+  fn resolve_config_no_override_returns_main() {
+    let config = make_config(default_main_config(), Default::default());
+
+    let result = resolve_config("test.svg", &config).unwrap();
+
+    assert_eq!(result.as_ref(), &config.main);
+  }
+
+  #[test]
+  fn resolve_config_no_extension_returns_main() {
+    let overrides = make_override_map("svg", vec![("pretty", false.into())]);
+    let config = make_config(default_main_config(), overrides);
+
+    let result = resolve_config("Makefile", &config).unwrap();
+
+    assert_eq!(result.as_ref(), &config.main);
   }
 }

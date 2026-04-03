@@ -281,8 +281,9 @@ fn validate_config_value(
         });
       }
     }
-    "multipass" | "path" => {
+    "multipass" | "path" | "pretty" | "indent" | "eol" | "finalNewline" | "useShortTags" => {
       // Known keys with no additional validation
+      // pretty, indent, eol, finalNewline, useShortTags are convenience aliases for js2svg options
     }
     _ => {
       // Warn about unknown keys that might be typos

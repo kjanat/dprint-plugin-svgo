@@ -278,6 +278,49 @@ fn resolve_config_extension_case_insensitive() {
   assert!(!result.config.has_extension_override("SVG"));
 }
 
+#[test]
+fn resolve_config_extension_override_convenience_keys_no_warning() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
+  config.insert("svg.indent".to_string(), ConfigKeyValue::Number(4));
+  config.insert("svg.eol".to_string(), ConfigKeyValue::String("crlf".to_string()));
+
+  let result = resolve_config(config, empty_global_config());
+
+  // Convenience keys used as extension overrides must NOT produce diagnostics
+  assert!(
+    result.diagnostics.is_empty(),
+    "Expected no diagnostics but got: {:?}",
+    result.diagnostics,
+  );
+
+  // They should be stored in the extension overrides
+  let svg_override = result
+    .config
+    .get_extension_override("svg")
+    .unwrap()
+    .as_object()
+    .unwrap();
+  assert_eq!(svg_override.get("pretty").unwrap().as_bool().unwrap(), false);
+  assert_eq!(svg_override.get("indent").unwrap().as_i64().unwrap(), 4);
+  assert_eq!(svg_override.get("eol").unwrap().as_str().unwrap(), "crlf");
+}
+
+#[test]
+fn resolve_config_extension_override_final_newline_and_short_tags_no_warning() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("svg.finalNewline".to_string(), ConfigKeyValue::Bool(false));
+  config.insert("svg.useShortTags".to_string(), ConfigKeyValue::Bool(true));
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert!(
+    result.diagnostics.is_empty(),
+    "Expected no diagnostics but got: {:?}",
+    result.diagnostics,
+  );
+}
+
 // Tests for config_key_value_to_json recursive cases
 
 #[test]
