@@ -4,8 +4,12 @@ interface SchemaWithId {
   $id?: string;
 }
 
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function highlight(json: string): string {
-  return json
+  return esc(json)
     .replace(
       /("(?:\\.|[^"\\])*")\s*:/g,
       '<span class="json-key">$1</span>:',

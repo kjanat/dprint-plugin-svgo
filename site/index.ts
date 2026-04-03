@@ -46,7 +46,7 @@ function heading(text: string, id: string): HTMLHeadingElement {
 // --- JSON syntax highlighting ---
 
 function highlightJson(json: string): string {
-  return json
+  return json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"([^"]+)"(?=\s*:)/g, '<span class="json-key">"$1"</span>')
     .replace(/:\s*"([^"]*)"/g, ': <span class="json-string">"$1"</span>')
     .replace(/:\s*(\d+)/g, ': <span class="json-number">$1</span>')
