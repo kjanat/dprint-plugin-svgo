@@ -5,11 +5,35 @@ on:
   pull_request:
     branches:
       - "master"
+    paths-ignore:
+      - "site/**"
+      - "*.md"
+      - "LICENSE"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/check_updates.yml"
+      - ".github/workflows/release.yml"
+      - ".github/dependabot.yml"
+      - ".config/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - ".zed/**"
   push:
     branches:
       - "master"
     tags:
       - "*"
+    paths-ignore:
+      - "site/**"
+      - "*.md"
+      - "LICENSE"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/check_updates.yml"
+      - ".github/workflows/release.yml"
+      - ".github/dependabot.yml"
+      - ".config/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - ".zed/**"
 permissions:
   contents: "read"
 concurrency:

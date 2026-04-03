@@ -28,7 +28,7 @@ $.logStep("Bumping version...");
 const newVersion = await bumpMinorVersion();
 
 $.logStep("Running tests...");
-await $`cargo test`;
+await $`deno task test`;
 
 $.logStep(`Committing and publishing ${newVersion}...`);
 await $`git add deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;

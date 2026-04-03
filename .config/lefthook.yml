@@ -7,16 +7,16 @@ pre-commit:
 
     - name: cargo clippy
       glob: "*.rs"
-      run: cargo clippy --all-targets -- -D warnings
+      run: deno task check:clippy
 
     - name: deno check
       glob: "*.{ts,js}"
-      run: deno check
+      run: deno task check:deno
 
 pre-push:
   jobs:
-    - name: cargo test
-      run: cargo test --all
+    - name: test
+      run: deno task test
 
     - name: cargo build release
       run: cargo build --release

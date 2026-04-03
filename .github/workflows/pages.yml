@@ -18,7 +18,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Build site
-        env: { TAG: "${{ github.event.release.tag_name }}" }
+        env: { TAG: "${{ github.event.release.tag_name }}", GH_TOKEN: "${{ github.token }}" }
         working-directory: site
         run: bun install
 

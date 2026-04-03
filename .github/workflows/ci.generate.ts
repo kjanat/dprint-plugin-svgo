@@ -16,6 +16,19 @@ import $ from "dax";
 const REPO_OWNER = "kjanat";
 const REPO_NAME = "dprint-plugin-svgo";
 const BRANCHES = ["master"];
+const IGNORED_PATHS = [
+  "site/**",
+  "*.md",
+  "LICENSE",
+  ".github/workflows/pages.yml",
+  ".github/workflows/check_updates.yml",
+  ".github/workflows/release.yml",
+  ".github/dependabot.yml",
+  ".config/**",
+  ".gitignore",
+  ".gitattributes",
+  ".zed/**",
+];
 
 // Pinned cross-rs/cross commit for aarch64-linux cross-compilation (not published to crates.io)
 const CROSS_REV = "f86fd03bb70b4c6802847c18087e21391498b0b4";
@@ -413,8 +426,8 @@ const prTargets = targets.filter((t) => t.runOnPr);
 const ci = {
   name: "CI",
   on: {
-    pull_request: { branches: [...BRANCHES] },
-    push: { branches: [...BRANCHES], tags: ["*"] },
+    pull_request: { branches: [...BRANCHES], "paths-ignore": [...IGNORED_PATHS] },
+    push: { branches: [...BRANCHES], tags: ["*"], "paths-ignore": [...IGNORED_PATHS] },
   },
   permissions: { contents: "read" },
   concurrency: {

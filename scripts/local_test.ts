@@ -13,4 +13,4 @@ const data = dprintConfig.readJsonSync<{ plugins: string[] }>();
 const index = data.plugins.findIndex((d) => d.startsWith("./target") || d.includes("svgo"));
 data.plugins[index] = `./target/release/plugin.json@${checksum}`;
 dprintConfig.writeJsonPrettySync(data);
-await $`dprint fmt`;
+await $`deno task fmt`;

@@ -5,26 +5,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-# Bundle JS (required before Rust build)
-deno task build
+deno task build          # Bundle SVGO wrapper for V8
+deno task test           # Build + run all tests
+deno task check          # Type-check TS + cargo clippy
+deno task fmt            # Format everything (dprint)
+deno task schema         # Generate JSON Schema
+deno task ci             # Regenerate CI workflow YAML
+deno task local-test     # Build release + test with dprint
+deno task update         # Check for SVGO updates + release
 
-# Build debug
-cargo build
-
-# Build release
-cargo build --release --target <target>
-
-# Run tests
-cargo test --all-features
-
-# Lint
-cargo clippy
-
-# Format check
-cargo fmt --check
-
-# Generate JSON Schema from SVGO
-deno task generate-schema schema.json
+cargo build              # Build debug
+cargo build --release    # Build release
 ```
 
 ## Architecture
