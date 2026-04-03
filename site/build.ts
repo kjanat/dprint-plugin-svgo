@@ -27,5 +27,7 @@ if (!result.success) {
   process.exit(1);
 }
 
+await Bun.write(`${outdir}/schema.json`, schema);
+
 const outfiles = result.outputs.map((o) => `    ${o.path} (${(o.size / 1024).toFixed(1)}KB)`);
 console.log(`\nSite built:\t${outfiles.join("\n")}`);
