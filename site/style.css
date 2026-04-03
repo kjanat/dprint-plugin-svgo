@@ -5,6 +5,8 @@
   --border: #d0d7de;
   --accent: #0969da;
   --surface: #f6f8fa;
+  --chip-bg: #ddf4ff;
+  --chip-fg: #0969da;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,6 +17,8 @@
     --border: #30363d;
     --accent: #58a6ff;
     --surface: #161b22;
+    --chip-bg: #1a3a52;
+    --chip-fg: #58a6ff;
   }
 }
 
@@ -46,6 +50,20 @@ h2 {
   color: var(--accent);
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.25rem;
+}
+
+h2 a.anchor {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 0.3em;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+h2:hover a.anchor {
+  opacity: 1;
+}
+h2 a.anchor:hover {
+  color: var(--accent);
 }
 
 h3 {
@@ -100,6 +118,46 @@ pre code {
   padding: 0;
 }
 
+/* JSON syntax highlighting */
+.json-key {
+  color: #0550ae;
+}
+.json-string {
+  color: #0a3069;
+}
+.json-number {
+  color: #0550ae;
+}
+.json-bool {
+  color: #cf222e;
+}
+@media (prefers-color-scheme: dark) {
+  .json-key {
+    color: #79c0ff;
+  }
+  .json-string {
+    color: #a5d6ff;
+  }
+  .json-number {
+    color: #79c0ff;
+  }
+  .json-bool {
+    color: #ff7b72;
+  }
+}
+
+/* Enum chips */
+.chip {
+  display: inline-block;
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  padding: 0.1em 0.5em;
+  border-radius: 10px;
+  font-size: 0.85em;
+  font-family: monospace;
+  margin: 0.15em 0.2em;
+}
+
 ul.plugins {
   list-style: none;
 }
@@ -111,15 +169,54 @@ ul.plugins li:last-child {
   border-bottom: none;
 }
 
+/* Plugin search */
+.search-box {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  outline: none;
+}
+.search-box:focus {
+  border-color: var(--accent);
+}
+.search-box::placeholder {
+  color: var(--muted);
+}
+
+/* Install box */
 .install {
   background: var(--surface);
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 6px;
   margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .install code {
   background: none;
   padding: 0;
+  flex: 1;
+}
+
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  padding: 0.25em 0.6em;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+.copy-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 a {
@@ -132,4 +229,33 @@ a:hover {
 
 #loading {
   color: var(--muted);
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+footer a {
+  color: var(--muted);
+}
+footer a:hover {
+  color: var(--accent);
+}
+
+/* js2svg collapsible */
+details {
+  margin: 1rem 0;
+}
+details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+details summary:hover {
+  text-decoration: underline;
 }

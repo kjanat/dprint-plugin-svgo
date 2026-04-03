@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Configuration reference for dprint-plugin-svgo — SVG optimization plugin for dprint powered by SVGO."
+    >
     <title>dprint-plugin-svgo</title>
     <link rel="icon" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
@@ -13,8 +17,12 @@
       <a href="https://github.com/kjanat/dprint-plugin-svgo">GitHub</a> &middot;
       <a href="https://svgo.dev">SVGO</a>
     </p>
-    <div class="install"><code>dprint add kjanat/svgo</code></div>
+    <div class="install" id="install">
+      <code>dprint add kjanat/svgo</code>
+      <button class="copy-btn" id="copy-btn" title="Copy to clipboard">Copy</button>
+    </div>
     <div id="content"><p id="loading">Loading schema...</p></div>
+    <footer id="footer"></footer>
     <script type="module" src="index.ts"></script>
   </body>
 </html>
