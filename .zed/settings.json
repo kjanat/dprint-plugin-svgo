@@ -7,7 +7,7 @@
     }
   }],
   "languages": {
-    "TypeScript": { "language_servers": ["deno"] },
+    "TypeScript": { "language_servers": ["deno", "vtsls"] },
     "JavaScript": { "language_servers": ["deno"] },
     "JSON": { "wrap_guides": [120] },
     "JSONC": { "wrap_guides": [120] },

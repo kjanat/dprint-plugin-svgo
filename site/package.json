@@ -1,0 +1,16 @@
+{
+  "name": "site",
+  "private": true,
+  "type": "module",
+  "module": "index.html",
+  "scripts": {
+    "prepare": "bun build.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.2"
+  }
+}

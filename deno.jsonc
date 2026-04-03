@@ -16,6 +16,8 @@
     "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts"
   },
   "exclude": [
+    "./js/",
+    "./site/",
     "**/target/",
     "**/dist/",
     "**/node_modules/"

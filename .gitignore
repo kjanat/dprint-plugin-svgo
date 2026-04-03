@@ -1,6 +1,10 @@
-js/dist/
 target
 node_modules
+
 .vscode
-/schema.json
-/plugin.json
+
+bun.lock
+
+schema.json
+plugin.json
+dist
