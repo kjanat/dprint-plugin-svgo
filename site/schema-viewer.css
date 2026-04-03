@@ -1,0 +1,111 @@
+:root {
+  --bg: #fff;
+  --fg: #1f2328;
+  --muted: #656d76;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --surface: #f6f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #7d8590;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --surface: #161b22;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  padding: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+h1 a {
+  color: var(--accent);
+  text-decoration: none;
+}
+h1 a:hover {
+  text-decoration: underline;
+}
+.sep {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.json-key {
+  color: #0550ae;
+}
+.json-string {
+  color: #0a3069;
+}
+.json-number {
+  color: #0550ae;
+}
+.json-bool {
+  color: #cf222e;
+}
+.json-null {
+  color: #cf222e;
+}
+.json-bracket {
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .json-key {
+    color: #79c0ff;
+  }
+  .json-string {
+    color: #a5d6ff;
+  }
+  .json-number {
+    color: #79c0ff;
+  }
+  .json-bool {
+    color: #ff7b72;
+  }
+  .json-null {
+    color: #ff7b72;
+  }
+}

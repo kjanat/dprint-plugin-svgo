@@ -217,6 +217,6 @@ if (footer) {
   footer.innerHTML = [
     version ? `v${version}` : "",
     'Powered by <a href="https://svgo.dev">SVGO</a>',
-    '<a href="https://plugins.dprint.dev/kjanat/svgo/latest/schema.json">schema.json</a>',
+    '<a href="schema-viewer.html" target="_blank">schema.json</a>',
   ].filter(Boolean).join(" \u00b7 ");
 }

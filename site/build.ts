@@ -12,7 +12,7 @@ if (!(await schema.exists())) {
 }
 
 const result = await build({
-  entrypoints: [`${import.meta.dir}/index.html`],
+  entrypoints: [`${import.meta.dir}/index.html`, `${import.meta.dir}/schema-viewer.html`],
   outdir,
   minify: true,
   compile: true,
