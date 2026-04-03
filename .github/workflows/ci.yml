@@ -40,7 +40,7 @@ jobs:
       - name: "Cache cargo"
         uses: "Swatinem/rust-cache@v2"
         with:
-          prefix-key: "v3-${{matrix.config.target}}"
+          prefix-key: "v4-${{matrix.config.target}}"
           save-if: "${{ github.ref == 'refs/heads/master' }}"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"
@@ -111,7 +111,7 @@ jobs:
       - name: "Cache cargo"
         uses: "Swatinem/rust-cache@v2"
         with:
-          prefix-key: "v3-${{matrix.config.target}}"
+          prefix-key: "v4-${{matrix.config.target}}"
           save-if: "${{ github.ref == 'refs/heads/master' }}"
       - uses: "denoland/setup-deno@v2"
       - name: "Build JS"

@@ -78,7 +78,7 @@ function cargoCache(): Step {
     name: "Cache cargo",
     uses: "Swatinem/rust-cache@v2",
     with: {
-      "prefix-key": "v3-${{matrix.config.target}}",
+      "prefix-key": "v4-${{matrix.config.target}}",
       "save-if": `\${{ ${BRANCHES.map((b) => `github.ref == 'refs/heads/${b}'`).join(" || ")} }}`,
     },
   };
