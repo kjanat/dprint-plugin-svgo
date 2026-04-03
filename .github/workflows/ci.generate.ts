@@ -98,6 +98,7 @@ function denoBuildJs(): Step {
 function clearV8Cache(): Step {
   return {
     name: "Clear stale v8 build cache",
+    shell: "bash",
     run: "rm -rf target/*/build/v8-*",
   };
 }
