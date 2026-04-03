@@ -10,11 +10,9 @@ import $ from "dax";
 const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();
 
 $.logStep("Upgrading svgo...");
-const jsNodePath = rootDirPath.join("./js/node");
-await $`npm install`.cwd(jsNodePath);
-await $`npm install --save svgo`.cwd(jsNodePath);
+await $`deno add npm:svgo`.cwd(rootDirPath);
 
-if (!await hasFileChanged("./js/node/package.json")) {
+if (!await hasFileChanged("./deno.jsonc") && !await hasFileChanged("./deno.lock")) {
   $.log("No changes.");
   Deno.exit(0);
 }

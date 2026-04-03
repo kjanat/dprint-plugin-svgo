@@ -35,15 +35,3 @@ updates:
       all-dependencies:
         patterns:
           - "*"
-
-  # npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/js/node"
-    schedule:
-      interval: "monthly"
-    commit-message:
-      prefix: "chore(deps)"
-    groups:
-      all-dependencies:
-        patterns:
-          - "*"

@@ -1,45 +1,26 @@
 {
-  "workspace": {
-    "members": [
-      "js/node"
-    ]
-  },
   "tasks": {
     "check": "deno check --check-js",
-    "setup": "cd js/node && deno install",
+    "build": "deno bundle --format iife --platform browser --minify -o js/dist/svgo.js js/svgo.ts",
     "generate-schema": "deno run -A scripts/generate_schema.ts",
     "schema": "deno run -A scripts/generate_schema.ts schema.json"
   },
-  "lint": {
-    "rules": {
-      "exclude": [
-        "no-import-prefix",
-        "no-unversioned-import"
-      ]
-    }
-  },
   "imports": {
-    "@esbuild-plugins/node-globals-polyfill": "npm:@esbuild-plugins/node-globals-polyfill@^0.2",
-    "@esbuild-plugins/node-modules-polyfill": "npm:@esbuild-plugins/node-modules-polyfill@^0.2",
+    "@std/path": "jsr:@std/path@^1",
+    "@std/toml": "jsr:@std/toml@^1",
     "dax": "jsr:@david/dax@^0.45",
     "semver": "jsr:@std/semver@^1",
+    "svgo": "npm:svgo@^4",
     "yaml": "jsr:@eemeli/yaml@^2",
-    "esbuild": "npm:esbuild@^0.27",
-    "svgo": "npm:svgo@^4"
+    "dprint/automation/hash.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts",
+    "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts"
   },
-  "allowScripts": [
-    "npm:@parcel/watcher@2.5.6",
-    "npm:@swc/core@1.15.21",
-    "npm:esbuild@0.27.4",
-    "npm:lmdb@2.8.5",
-    "npm:msgpackr-extract@3.0.3"
-  ],
-  "nodeModulesDir": "auto",
   "exclude": [
-    "./js/node/",
-    "./vendor-tmp/",
-    "./target/",
+    "**/target/",
     "**/dist/",
     "**/node_modules/"
-  ]
+  ],
+  "compilerOptions": {
+    "checkJs": false
+  }
 }

@@ -5,9 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-# Install JS dependencies (required before Rust build)
-deno task setup
-# or: cd js/node && deno install
+# Bundle JS (required before Rust build)
+deno task build
 
 # Build debug
 cargo build
@@ -23,6 +22,9 @@ cargo clippy
 
 # Format check
 cargo fmt --check
+
+# Generate JSON Schema from SVGO
+deno task generate-schema schema.json
 ```
 
 ## Architecture
@@ -52,11 +54,15 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 **Config** (`plugin/src/config.rs`): Maps dprint config to SVGO js2svg options (indent, eol, pretty, multipass)
 
-**JS Bridge** (`js/node/main.ts`): Exposes `formatText()` and `getExtensions()` to Rust via globalThis.dprint
+**JS Bridge** (`js/svgo.ts`): Exposes `formatText()` and `getExtensions()` to Rust via globalThis.dprint
+
+**Console Shim** (`js/console.js`): Wires console methods to stderr (stdout reserved for dprint IPC)
 
 ### Build Process
 
-`plugin/build.rs` runs `deno run -A build.ts` to bundle JS via esbuild, creates V8 snapshot, extracts supported extensions (["svg"])
+`deno task build` bundles `js/svgo.ts` + SVGO via `deno bundle` into a single IIFE. `plugin/build.rs` creates a V8 snapshot from the bundle and extracts supported extensions (["svg"]).
+
+No node_modules — Deno resolves npm packages on the fly.
 
 ## Configuration
 
@@ -86,8 +92,10 @@ Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
 ## Scripts
 
+- `scripts/generate_schema.ts` - Generate JSON Schema from SVGO's plugin registry
 - `scripts/create_plugin_file.ts` - Generate release plugin.json
 - `scripts/output_svgo_version.ts` - Get SVGO version for release notes
+- `scripts/update.ts` - Check for SVGO updates, bump version, tag release
 
 ## CI/Release
 

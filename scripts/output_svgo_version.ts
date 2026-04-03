@@ -1,9 +1,10 @@
 #!/usr/bin/env -S deno run -A
 
-import $ from "dax";
+import { dirname, join } from "@std/path";
 
-const rootDir = $.path(import.meta.dirname!).parentOrThrow();
-const packageJson = rootDir.join("js/node/package.json").readJsonSync<
-  { dependencies: Record<string, string> }
->();
-console.log(packageJson.dependencies["svgo"].replace("^", ""));
+const svgoBrowserUrl = import.meta.resolve("npm:svgo/browser");
+const svgoDir = dirname(dirname(new URL(svgoBrowserUrl).pathname));
+const svgoPkg = JSON.parse(
+  await Deno.readTextFile(join(svgoDir, "package.json")),
+);
+console.log(svgoPkg.version);

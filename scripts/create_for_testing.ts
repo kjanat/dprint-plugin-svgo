@@ -8,7 +8,7 @@
 
 import $ from "dax";
 
-await $`deno run -A build.ts`.cwd("js/node");
+await $`deno task build`;
 await $`cargo build --release`;
 if (Deno.build.os === "windows") {
   await $`powershell -Command ${"Compress-Archive -Force -Path target/release/dprint-plugin-svgo.exe -DestinationPath target/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip"}`;

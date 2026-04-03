@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
 import $ from "dax";
-import { getChecksum } from "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts";
+import { getChecksum } from "dprint/automation/hash.ts";
 
 await $`./scripts/create_for_testing.ts`;
 const bytes = $.path("./target/release/plugin.json").readBytesSync();

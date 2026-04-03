@@ -28,8 +28,8 @@ fn main() {
 
   eprintln!("Running JS build...");
   let build_result = Command::new("deno")
-    .args(["run", "-A", "build.ts"])
-    .current_dir(js_dir.join("node"))
+    .args(["task", "build"])
+    .current_dir(root_dir)
     .status();
   match build_result {
     Ok(status) => {
@@ -44,38 +44,19 @@ fn main() {
   // ensure the build is invalidated if any of these files change
   println!(
     "cargo:rerun-if-changed={}",
-    js_dir.join("node/main.ts").display()
+    js_dir.join("svgo.ts").display()
   );
   println!(
     "cargo:rerun-if-changed={}",
-    js_dir.join("node/build.ts").display()
-  );
-  println!(
-    "cargo:rerun-if-changed={}",
-    js_dir.join("node/package.json").display()
-  );
-  println!(
-    "cargo:rerun-if-changed={}",
-    js_dir.join("node/package-lock.json").display()
-  );
-  println!(
-    "cargo:rerun-if-changed={}",
-    js_dir.join("node/shims/url.js").display()
-  );
-  println!(
-    "cargo:rerun-if-changed={}",
-    root_dir.join("deno.json").display()
+    root_dir.join("deno.jsonc").display()
   );
   println!(
     "cargo:rerun-if-changed={}",
     root_dir.join("deno.lock").display()
   );
 
-  let startup_code_path = js_dir.join("node/dist/main.js");
-  assert!(
-    startup_code_path.exists(),
-    "Run `cd js/node && deno run -A build.ts` first."
-  );
+  let startup_code_path = js_dir.join("dist/svgo.js");
+  assert!(startup_code_path.exists(), "Run `deno task build` first.");
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
 
@@ -133,10 +114,10 @@ fn get_startup_text(startup_code_path: &Path) -> String {
 
 deno_core::extension!(
   main,
-  esm_entry_point = "ext:main/main.js",
+  esm_entry_point = "ext:main/console.js",
   esm = [
     dir "../js",
-    "main.js",
+    "console.js",
   ]
 );
 

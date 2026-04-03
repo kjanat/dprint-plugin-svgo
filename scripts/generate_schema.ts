@@ -1,18 +1,21 @@
 #!/usr/bin/env -S deno run -A
 /**
- * Approach B: Generate JSON Schema directly from SVGO's source files.
+ * Generate JSON Schema directly from SVGO's source files.
  *
- * Statically parses the installed SVGO package (no dynamic imports) to
- * extract plugin names, descriptions, and preset-default membership, then
- * outputs a complete JSON Schema. Replaces the `generate-schema` Rust binary.
+ * Resolves SVGO via Deno's npm resolution, then statically parses plugin
+ * files to extract names, descriptions, and preset-default membership.
  *
- * Run: deno run -A scripts/sync_schema_b.ts [output-path]
+ * Run: deno task generate-schema [output-path]
  */
 
-import { join } from "jsr:@std/path";
+import { dirname, join } from "@std/path";
+import { parse as parseToml } from "@std/toml";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const SVGO_DIR = join(ROOT, "js/node/node_modules/svgo");
+
+// Deno resolves + downloads svgo on the fly — derive package root from resolved path
+const svgoBrowserUrl = import.meta.resolve("npm:svgo@^4/browser");
+const SVGO_DIR = dirname(dirname(new URL(svgoBrowserUrl).pathname));
 
 // ---------------------------------------------------------------------------
 // 1. Statically extract plugin info (same parsing as approach A)
@@ -75,8 +78,10 @@ for (
 // 2. Read versions
 // ---------------------------------------------------------------------------
 
-const cargoToml = await Deno.readTextFile(join(ROOT, "Cargo.toml"));
-const pluginVersion = cargoToml.match(/^version\s*=\s*"([^"]+)"/m)?.[1] ?? "0.0.0";
+const cargo = parseToml(await Deno.readTextFile(join(ROOT, "Cargo.toml"))) as {
+  workspace: { package: { version: string } };
+};
+const pluginVersion = cargo.workspace.package.version;
 
 const svgoPackageJson = JSON.parse(
   await Deno.readTextFile(join(SVGO_DIR, "package.json")),
