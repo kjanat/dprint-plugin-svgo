@@ -1,42 +1,6 @@
 {
-  "tasks": {
-    "build": {
-      "description": "Bundle SVGO wrapper for V8",
-      "command": "deno bundle --format iife --platform browser --minify -o js/dist/svgo.js js/svgo.ts"
-    },
-    "check:deno": "deno check --check-js",
-    "check:clippy": "cargo clippy --all-targets -- -D warnings",
-    "check": {
-      "description": "Type-check scripts and lint Rust",
-      "dependencies": ["check:deno", "check:clippy"]
-    },
-    "test": {
-      "description": "Run all tests",
-      "dependencies": ["build"],
-      "command": "cargo test --all-features"
-    },
-    "fmt": {
-      "description": "Format everything",
-      "command": "dprint fmt"
-    },
-    "schema": {
-      "description": "Generate JSON Schema from SVGO plugins",
-      "command": "deno run -A scripts/generate_schema.ts schema.json"
-    },
-    "ci": {
-      "description": "Regenerate CI workflow YAML",
-      "command": "deno run -A .github/workflows/ci.generate.ts"
-    },
-    "local-test": {
-      "description": "Build release plugin and test with dprint",
-      "command": "deno run -A scripts/local_test.ts"
-    },
-    "update": {
-      "description": "Check for SVGO updates and release if changed",
-      "command": "deno run -A scripts/update.ts"
-    }
-  },
   "imports": {
+    "@std/jsonc": "jsr:@std/jsonc@^1",
     "@std/path": "jsr:@std/path@^1",
     "@std/toml": "jsr:@std/toml@^1",
     "dax": "jsr:@david/dax@^0.45",

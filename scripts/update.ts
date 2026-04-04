@@ -7,8 +7,8 @@
 import { parse as parseToml } from "@std/toml";
 import * as semver from "semver";
 import $ from "dax";
-
-const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();
+import { buildJsBundle, cargoTestAllFeatures, rootDirPath } from "./lib.ts";
+import { generateSchema } from "./generate_schema.ts";
 
 $.logStep("Upgrading svgo...");
 await $`deno add npm:svgo`.cwd(rootDirPath);
@@ -21,14 +21,14 @@ if (!await hasFileChanged("./deno.jsonc") && !await hasFileChanged("./deno.lock"
 $.log("Found changes.");
 
 $.logStep("Rebuilding...");
-await $`deno task build`.cwd(rootDirPath);
-await $`deno task schema`.cwd(rootDirPath);
+await buildJsBundle();
+await generateSchema(rootDirPath.join("schema.json").toString());
 
 $.logStep("Bumping version...");
 const newVersion = await bumpMinorVersion();
 
 $.logStep("Running tests...");
-await $`deno task test`;
+await cargoTestAllFeatures();
 
 $.logStep(`Committing and publishing ${newVersion}...`);
 await $`git add deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;

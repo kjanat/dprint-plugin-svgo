@@ -1,10 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
-import { dirname, join } from "@std/path";
+import { getSvgoVersion } from "./lib.ts";
 
-const svgoBrowserUrl = import.meta.resolve("npm:svgo/browser");
-const svgoDir = dirname(dirname(new URL(svgoBrowserUrl).pathname));
-const svgoPkg = JSON.parse(
-  await Deno.readTextFile(join(svgoDir, "package.json")),
-);
-console.log(svgoPkg.version);
+if (import.meta.main) {
+  console.log(await getSvgoVersion());
+}

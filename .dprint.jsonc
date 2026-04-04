@@ -39,6 +39,10 @@
         "command": "deno fmt --no-config --indent-width {{indent_width}} --line-width {{line_width}} --use-tabs={{use_tabs}} -",
         "exts": ["ts", "js", "mts", "mjs", "cts", "cjs", "css", "html"],
         "stdin": true
+      },
+      {
+        "command": "just --dump --justfile {{file_path}}",
+        "fileNames": ["justfile"]
       }
     ]
   },

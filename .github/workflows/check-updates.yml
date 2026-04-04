@@ -21,13 +21,14 @@ jobs:
         uses: actions/checkout@v6
 
       - uses: denoland/setup-deno@v2
+      - uses: extractions/setup-just@v3
       - uses: dsherret/rust-toolchain-file@v1
 
       - name: Run script
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}[bot]"
-          deno run -A ./scripts/update.ts
+          just update
 
   # This is necessary to prevent GH automatically disabling this workflow after 60 days.
   workflow-keepalive:

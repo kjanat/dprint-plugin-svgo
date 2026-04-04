@@ -1,7 +1,7 @@
 //! Build script for the SVGO dprint plugin.
 //!
 //! Performs three steps at compile time:
-//! 1. Bundles JS (main.ts + SVGO) via esbuild, invoked through `deno run -A build.ts`
+//! 1. Bundles JS (svgo.ts + SVGO) via `deno bundle`
 //! 2. Creates a V8 heap snapshot from the bundled JS for fast runtime startup
 //! 3. Extracts supported file extensions (["svg"]) by calling into the JS
 //!
@@ -28,7 +28,18 @@ fn main() {
 
   eprintln!("Running JS build...");
   let build_result = Command::new("deno")
-    .args(["task", "build"])
+    .args([
+      "bundle",
+      "--frozen",
+      "--format",
+      "iife",
+      "--platform",
+      "browser",
+      "--minify",
+      "-o",
+      "js/dist/svgo.js",
+      "js/svgo.ts",
+    ])
     .current_dir(root_dir)
     .status();
   match build_result {
@@ -56,7 +67,7 @@ fn main() {
   );
 
   let startup_code_path = js_dir.join("dist/svgo.js");
-  assert!(startup_code_path.exists(), "Run `deno task build` first.");
+  assert!(startup_code_path.exists(), "Run `just build` first.");
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
 

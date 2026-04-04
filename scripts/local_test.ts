@@ -1,16 +1,14 @@
 #!/usr/bin/env -S deno run -A
 
-import $ from "dax";
-import { getChecksum } from "dprint/automation/hash.ts";
+import { createLocalTestWorkspace, prepareLocalTestArtifacts, runDprintFormat } from "./lib.ts";
 
-await $`./scripts/create_for_testing.ts`;
-const bytes = $.path("./target/release/plugin.json").readBytesSync();
-const checksum = await getChecksum(
-  new Uint8Array(bytes.slice().buffer),
+const { checksum, pluginFilePath } = await prepareLocalTestArtifacts();
+const { configPath, tempDirPath } = await createLocalTestWorkspace(
+  `${pluginFilePath}@${checksum}`,
 );
-const dprintConfig = $.path("dprint.json");
-const data = dprintConfig.readJsonSync<{ plugins: string[] }>();
-const index = data.plugins.findIndex((d) => d.startsWith("./target") || d.includes("svgo"));
-data.plugins[index] = `./target/release/plugin.json@${checksum}`;
-dprintConfig.writeJsonPrettySync(data);
-await $`deno task fmt`;
+
+try {
+  await runDprintFormat(configPath);
+} finally {
+  await Deno.remove(tempDirPath, { recursive: true });
+}

@@ -1,49 +1,113 @@
 # https://just.systems
 
 # List available recipes in justfile order.
+[default]
 [group('project')]
 default:
-    just --justfile {{ justfile() }} --list --unsorted
+    @just --justfile {{ justfile() }} --list --unsorted
+
+# Run the standard verification suite.
+[group('project')]
+verify: fmt check test site-typecheck
+
+# Type-check the Deno scripts.
+[private]
+check-deno:
+    deno check --frozen --check-js
+
+# Lint the Rust crates with clippy.
+[private]
+check-clippy:
+    cargo clippy --all-targets -- -D warnings
+
+# Lint the Rust crates in CI.
+[private]
+ci-lint: check-clippy
 
 # Bundle the SVGO wrapper for V8.
 [group('plugin')]
 build:
-    deno task build
+    deno bundle --frozen --format iife --platform browser --minify -o js/dist/svgo.js js/svgo.ts
 
 # Build and run the full test suite.
 [group('plugin')]
-test:
-    deno task test
+test: build
+    cargo test --all-features
+
+# Build a locked debug target in CI.
+[private]
+ci-build-debug target:
+    cargo build --locked --all-targets --target {{ target }}
+
+# Build a locked release target in CI.
+[private]
+ci-build-release target:
+    cargo build --locked --target {{ target }} --release
+
+# Build a locked cross-compiled debug target in CI.
+[private]
+ci-cross-build-debug target:
+    cross build --locked --target {{ target }}
+
+# Build a locked cross-compiled release target in CI.
+[private]
+ci-cross-build-release target:
+    cross build --locked --target {{ target }} --release
+
+# Run the locked debug test suite in CI.
+[private]
+ci-test-debug:
+    cargo test --locked --all-features
+
+# Run the locked release test suite in CI.
+[private]
+ci-test-release:
+    cargo test --locked --all-features --release
 
 # Type-check TypeScript and run cargo clippy.
 [group('plugin')]
-check:
-    deno task check
+[parallel]
+check: check-deno check-clippy
 
 # Format the repository with dprint.
 [group('plugin')]
 fmt:
-    deno task fmt
+    dprint fmt
 
 # Regenerate the JSON Schema.
 [group('maintenance')]
 schema:
-    deno task schema
+    deno run --frozen -A scripts/generate_schema.ts schema.json
+
+# Run the pre-release checks.
+[group('maintenance')]
+release-check: schema ci local-test
 
 # Regenerate the CI workflow YAML.
 [group('maintenance')]
 ci:
-    deno task ci
+    deno run --frozen -A .github/workflows/ci.generate.ts
 
-# Build a release binary and test it with dprint.
+# Build a release binary and format a disposable workspace with dprint.
 [group('plugin')]
 local-test:
-    deno task local-test
+    deno run --frozen -A scripts/local_test.ts
+
+# Generate the release plugin manifest in CI.
+[private]
+ci-create-plugin-file:
+    deno run --frozen -A scripts/create_plugin_file.ts
+
+# Print the resolved SVGO version in CI.
+[private]
+ci-output-svgo-version:
+    deno run --frozen --allow-read scripts/output_svgo_version.ts
 
 # Check for SVGO updates and prepare a release.
+[confirm("Run update and prepare a release?")]
 [group('maintenance')]
 update:
-    deno task update
+    deno run -A scripts/update.ts
 
 # Build the Rust crates in debug mode.
 [group('rust')]
@@ -57,10 +121,12 @@ cargo-release:
 
 # Build the site with Bun.
 [group('site')]
+[working-directory('site')]
 site-build:
-    bun --cwd site build.ts
+    bun build.ts
 
 # Type-check the site with Bun.
 [group('site')]
+[working-directory('site')]
 site-typecheck:
-    bun --cwd site run typecheck
+    bun typecheck

@@ -21,7 +21,7 @@ const IGNORED_PATHS = [
   "*.md",
   "LICENSE",
   ".github/workflows/pages.yml",
-  ".github/workflows/check_updates.yml",
+  ".github/workflows/check-updates.yml",
   ".github/workflows/release.yml",
   ".github/dependabot.yml",
   ".config/**",
@@ -101,10 +101,18 @@ function setupDeno(): Step {
   return { uses: "denoland/setup-deno@v2" };
 }
 
+function setupJust(): Step {
+  return { uses: "extractions/setup-just@v3" };
+}
+
+function justCommand(...args: string[]) {
+  return ["just", ...args].join(" ");
+}
+
 function denoBuildJs(): Step {
   return {
     name: "Build JS",
-    run: "deno task build",
+    run: justCommand("build"),
   };
 }
 
@@ -124,6 +132,7 @@ function setupSteps(): Step[] {
     cargoCache(),
     clearV8Cache(),
     setupDeno(),
+    setupJust(),
     denoBuildJs(),
   ];
 }
@@ -143,11 +152,6 @@ function setupRustTarget(): Step {
 function setupCross(): Step[] {
   return [
     {
-      name: "Build JS (cross)",
-      if: "matrix.config.cross == 'true'",
-      run: "deno task build",
-    },
-    {
       name: "Install cross",
       if: "matrix.config.cross == 'true'",
       run:
@@ -159,19 +163,19 @@ function setupCross(): Step[] {
 /** Generate a cargo/cross build step with appropriate conditionals for mode and cross-compilation. */
 function cargoBuild(mode: "debug" | "release", cross: boolean): Step {
   const isRelease = mode === "release";
-  const cmd = cross ? "cross" : "cargo";
-  // --all-targets only on debug (catches compile errors in tests/benches/examples).
-  // Release builds only need the binary for the artifact zip.
-  const flags = cross || isRelease ? "" : " --all-targets";
-  const releaseFlag = isRelease ? " --release" : "";
   const crossCond = cross ? "matrix.config.cross == 'true'" : "matrix.config.cross != 'true'";
   const tagCond = isRelease
     ? "startsWith(github.ref, 'refs/tags/')"
     : "!startsWith(github.ref, 'refs/tags/')";
+  const recipe = cross
+    ? isRelease ? "ci-cross-build-release" : "ci-cross-build-debug"
+    : isRelease
+    ? "ci-build-release"
+    : "ci-build-debug";
   return {
     name: `Build ${cross ? "cross " : ""}(${isRelease ? "Release" : "Debug"})`,
     if: `${crossCond} && ${tagCond}`,
-    run: `${cmd} build --locked${flags} --target "\${{matrix.config.target}}"${releaseFlag}`,
+    run: justCommand(recipe, "${{matrix.config.target}}"),
   };
 }
 
@@ -180,7 +184,7 @@ function lint(): Step {
     name: "Lint",
     if:
       "!startsWith(github.ref, 'refs/tags/') && matrix.config.target == 'x86_64-unknown-linux-gnu'",
-    run: "cargo clippy",
+    run: justCommand("ci-lint"),
   };
 }
 
@@ -192,7 +196,7 @@ function test(mode: "debug" | "release"): Step {
   return {
     name: `Test (${isRelease ? "Release" : "Debug"})`,
     if: `matrix.config.run_tests == 'true' && ${tagCond}`,
-    run: `cargo test --locked --all-features${isRelease ? " --release" : ""}`,
+    run: justCommand(isRelease ? "ci-test-release" : "ci-test-debug"),
   };
 }
 
@@ -244,7 +248,7 @@ function generateSchema(): Step {
   return {
     name: "Generate schema",
     if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
-    run: "deno run -A scripts/generate_schema.ts schema.json",
+    run: justCommand("schema"),
   };
 }
 
@@ -368,6 +372,7 @@ function draftReleaseJob() {
       { name: "Checkout", uses: "actions/checkout@v6" },
       { name: "Download artifacts", uses: "actions/download-artifact@v8" },
       setupDeno(),
+      setupJust(),
       {
         name: "Move downloaded artifacts to root directory",
         run: [
@@ -385,13 +390,12 @@ function draftReleaseJob() {
       },
       {
         name: "Create plugin file",
-        run: "deno run --frozen -A scripts/create_plugin_file.ts",
+        run: justCommand("ci-create-plugin-file"),
       },
       {
         name: "Get svgo version",
         id: "get_svgo_version",
-        run:
-          'echo "SVGO_VERSION=$(deno run --frozen --allow-read scripts/output_svgo_version.ts)" >> "$GITHUB_OUTPUT"',
+        run: 'echo "SVGO_VERSION=$(just ci-output-svgo-version)" >> "$GITHUB_OUTPUT"',
       },
       {
         name: "Get tag version",

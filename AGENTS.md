@@ -5,14 +5,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-deno task build          # Bundle SVGO wrapper for V8
-deno task test           # Build + run all tests
-deno task check          # Type-check TS + cargo clippy
-deno task fmt            # Format everything (dprint)
-deno task schema         # Generate JSON Schema
-deno task ci             # Regenerate CI workflow YAML
-deno task local-test     # Build release + test with dprint
-deno task update         # Check for SVGO updates + release
+just build               # Bundle SVGO wrapper for V8
+just test                # Build + run all tests
+just check               # Type-check TS + cargo clippy
+just fmt                 # Format everything (dprint)
+just schema              # Generate JSON Schema
+just ci                  # Regenerate CI workflow YAML
+just local-test          # Build release + format a disposable workspace with dprint
+just update              # Check for SVGO updates + release
+just verify              # Run the standard verification suite
 
 cargo build              # Build debug
 cargo build --release    # Build release
@@ -51,7 +52,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 ### Build Process
 
-`deno task build` bundles `js/svgo.ts` + SVGO via `deno bundle` into a single IIFE. `plugin/build.rs` creates a V8 snapshot from the bundle and extracts supported extensions (["svg"]).
+`just build` bundles `js/svgo.ts` + SVGO via `deno bundle` into a single IIFE. `plugin/build.rs` creates a V8 snapshot from the bundle and extracts supported extensions (["svg"]).
 
 No node_modules — Deno resolves npm packages on the fly.
 
@@ -83,6 +84,8 @@ Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
 ## Scripts
 
+- `scripts/lib.ts` - Shared automation helpers used by repo scripts
+- `scripts/schema_types.ts` - JSON-safe SVGO type shim used for schema generation
 - `scripts/generate_schema.ts` - Generate JSON Schema from SVGO's plugin registry
 - `scripts/create_plugin_file.ts` - Generate release plugin.json
 - `scripts/output_svgo_version.ts` - Get SVGO version for release notes
