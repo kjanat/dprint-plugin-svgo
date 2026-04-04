@@ -26,6 +26,11 @@ interface PluginInfo {
   description: string;
 }
 
+interface TypeProperty {
+  name: string;
+  value: string;
+}
+
 function parsePluginFile(source: string): { name: string; description: string } {
   const nameMatch = source.match(/export\s+const\s+name\s*=\s*['"]([^'"]+)['"]/);
   const descMatch = source.match(/export\s+const\s+description\s*=\s*\n?\s*['"]([^'"]+)['"]/);
@@ -42,6 +47,93 @@ function parseBuiltinImports(source: string): string[] {
     if (!filename.startsWith("_")) imports.push(filename);
   }
   return imports;
+}
+
+function extractTypeBody(source: string, typeName: string): string {
+  const typeStart = source.indexOf(`export type ${typeName} =`);
+  if (typeStart === -1) {
+    throw new Error(`Could not find type ${typeName} in SVGO lib/types.ts`);
+  }
+
+  const bodyStart = source.indexOf("{", typeStart);
+  if (bodyStart === -1) {
+    throw new Error(`Could not find body for type ${typeName} in SVGO lib/types.ts`);
+  }
+
+  let depth = 0;
+  for (let i = bodyStart; i < source.length; i++) {
+    const char = source[i];
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    if (depth === 0) return source.slice(bodyStart + 1, i);
+  }
+
+  throw new Error(`Unterminated body for type ${typeName} in SVGO lib/types.ts`);
+}
+
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+}
+
+function parseTypeProperties(typeBody: string): TypeProperty[] {
+  const sanitized = stripComments(typeBody);
+  const properties: TypeProperty[] = [];
+  let depth = 0;
+  let segmentStart = 0;
+
+  for (let i = 0; i < sanitized.length; i++) {
+    const char = sanitized[i];
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    if (char !== ";" || depth !== 0) continue;
+
+    const segment = sanitized.slice(segmentStart, i).trim();
+    segmentStart = i + 1;
+    if (!segment) continue;
+
+    const match = segment.match(/^(?:'([^']+)'|([A-Za-z0-9_-]+))\??:\s*([\s\S]+)$/);
+    if (match) {
+      properties.push({
+        name: match[1] ?? match[2],
+        value: match[3].trim(),
+      });
+    }
+  }
+
+  return properties;
+}
+
+function classifyPluginParams(properties: TypeProperty[]): Map<string, "null" | "object"> {
+  return new Map(
+    properties.map((property) => [
+      property.name,
+      property.value === "null" ? "null" : "object",
+    ]),
+  );
+}
+
+function assertSameNames(actual: Iterable<string>, expected: Iterable<string>, label: string) {
+  const actualSet = new Set(actual);
+  const expectedSet = new Set(expected);
+  const missing = [...expectedSet].filter((name) => !actualSet.has(name));
+  const extra = [...actualSet].filter((name) => !expectedSet.has(name));
+
+  if (missing.length === 0 && extra.length === 0) return;
+
+  throw new Error(
+    `${label} mismatch. Missing: ${missing.join(", ") || "none"}. ` +
+      `Extra: ${extra.join(", ") || "none"}.`,
+  );
+}
+
+function createObjectParamsSchema(description: string) {
+  return {
+    type: "object" as const,
+    additionalProperties: true,
+    description,
+  };
 }
 
 const builtinSource = await Deno.readTextFile(join(SVGO_DIR, "lib/builtin.js"));
@@ -74,6 +166,46 @@ for (
   defaultImportNames.add(match[1]);
 }
 
+const typesSource = await Deno.readTextFile(join(SVGO_DIR, "lib/types.ts"));
+const defaultPluginProperties = parseTypeProperties(extractTypeBody(typesSource, "DefaultPlugins"));
+const optionalExtraProperties = parseTypeProperties(
+  extractTypeBody(typesSource, "BuiltinsWithOptionalParams"),
+);
+const requiredPluginProperties = parseTypeProperties(
+  extractTypeBody(typesSource, "BuiltinsWithRequiredParams"),
+);
+
+const defaultPluginParamKinds = classifyPluginParams(defaultPluginProperties);
+const optionalPluginParamKinds = new Map<string, "null" | "object">([
+  ...classifyPluginParams(defaultPluginProperties),
+  ...classifyPluginParams(optionalExtraProperties),
+]);
+const requiredPluginNameSet = new Set(requiredPluginProperties.map((property) => property.name));
+
+const builtinPluginNames = allPlugins.map((plugin) => plugin.name);
+const optionalPluginNames = [
+  ...presetNames.filter((name) => optionalPluginParamKinds.has(name)),
+  ...builtinPluginNames.filter((name) => optionalPluginParamKinds.has(name)),
+];
+const requiredPluginNames = builtinPluginNames.filter((name) => requiredPluginNameSet.has(name));
+const nullParamPluginNames = builtinPluginNames.filter((name) =>
+  optionalPluginParamKinds.get(name) === "null"
+);
+const optionalObjectParamPluginNames = builtinPluginNames.filter(
+  (name) => optionalPluginParamKinds.get(name) === "object",
+);
+
+assertSameNames(
+  [...optionalPluginNames, ...requiredPluginNames],
+  [...presetNames, ...builtinPluginNames],
+  "SVGO plugin classification",
+);
+assertSameNames(
+  defaultPluginProperties.map((property) => property.name),
+  defaultImportNames,
+  "SVGO preset-default plugins",
+);
+
 // ---------------------------------------------------------------------------
 // 2. Read versions
 // ---------------------------------------------------------------------------
@@ -92,17 +224,61 @@ const svgoVersion: string = svgoPackageJson.version;
 // 3. Build JSON Schema
 // ---------------------------------------------------------------------------
 
-const pluginNameEnum = [...presetNames, ...allPlugins.map((p) => p.name)];
 const pluginDescriptions = Object.fromEntries(
   allPlugins.map((p) => [p.name, p.description]),
 );
+
+const genericPluginParamsSchema = createObjectParamsSchema(
+  "Plugin parameters. Exact keys depend on the plugin.",
+);
+
+const presetDefaultOverrideSchemas = Object.fromEntries(
+  defaultPluginProperties.map((property) => {
+    const schema = defaultPluginParamKinds.get(property.name) === "null"
+      ? {
+        oneOf: [
+          { type: "null" as const },
+          { const: false },
+        ],
+      }
+      : {
+        oneOf: [
+          createObjectParamsSchema(`Override parameters for ${property.name}.`),
+          { const: false },
+        ],
+      };
+    return [property.name, schema];
+  }),
+);
+
+const presetDefaultParamsSchema = {
+  type: "object" as const,
+  properties: {
+    floatPrecision: {
+      type: "integer" as const,
+      minimum: 0,
+      maximum: 20,
+      description: "Number of digits after the decimal point (0-20).",
+    },
+    overrides: {
+      type: "object" as const,
+      description: "Override or disable plugins included by preset-default.",
+      properties: presetDefaultOverrideSchemas,
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+  description:
+    "Preset parameters. Use `overrides` to disable or configure plugins included in preset-default.",
+};
 
 const pluginEntrySchema = {
   oneOf: [
     {
       type: "string" as const,
-      enum: pluginNameEnum,
-      description: "Plugin or preset referenced by name.",
+      enum: optionalPluginNames,
+      description:
+        "Built-in plugin or preset referenced by name. Only valid when params are optional.",
     },
     {
       type: "object" as const,
@@ -110,12 +286,56 @@ const pluginEntrySchema = {
       properties: {
         name: {
           type: "string" as const,
-          enum: pluginNameEnum,
-          description: "Plugin or preset name.",
+          enum: ["preset-default"],
+          description: "Preset name.",
         },
         params: {
-          description: "Plugin parameters. Structure depends on the plugin. " +
-            "For preset-default, use `overrides` to disable/configure individual plugins.",
+          ...presetDefaultParamsSchema,
+        },
+      },
+      additionalProperties: false,
+    },
+    {
+      type: "object" as const,
+      required: ["name"],
+      properties: {
+        name: {
+          type: "string" as const,
+          enum: nullParamPluginNames,
+          description: "Plugin name.",
+        },
+        params: {
+          type: "null" as const,
+          description: "Param-less plugin. Omit `params` or set it to `null`.",
+        },
+      },
+      additionalProperties: false,
+    },
+    {
+      type: "object" as const,
+      required: ["name"],
+      properties: {
+        name: {
+          type: "string" as const,
+          enum: optionalObjectParamPluginNames,
+          description: "Plugin name.",
+        },
+        params: genericPluginParamsSchema,
+      },
+      additionalProperties: false,
+    },
+    {
+      type: "object" as const,
+      required: ["name", "params"],
+      properties: {
+        name: {
+          type: "string" as const,
+          enum: requiredPluginNames,
+          description: "Plugin name.",
+        },
+        params: {
+          ...genericPluginParamsSchema,
+          description: "Plugin parameters. This plugin requires a params object.",
         },
       },
       additionalProperties: false,
@@ -190,7 +410,8 @@ const schema = {
     },
     plugins: {
       type: "array",
-      description: "Array of SVGO plugin configurations.",
+      description:
+        "Array of SVGO built-in plugin configurations. Custom JavaScript plugins are not supported in dprint config.",
       items: pluginEntrySchema,
     },
     floatPrecision: {

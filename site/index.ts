@@ -160,9 +160,11 @@ if (props.js2svg?.properties) {
 }
 
 // Plugins with search
-const plugins = props.plugins?.items?.oneOf?.[0]?.enum || [];
 const defaults = new Set(s._meta?.presetDefault || []);
 const descriptions = s._meta?.pluginDescriptions || {};
+const plugins = Object.keys(descriptions).length === 0
+  ? props.plugins?.items?.oneOf?.[0]?.enum || []
+  : ["preset-default", ...Object.keys(descriptions)];
 const defaultPlugins = plugins.filter((p) => defaults.has(p) || p === "preset-default");
 const extraPlugins = plugins.filter((p) => !defaults.has(p) && p !== "preset-default");
 
@@ -200,7 +202,7 @@ codeEl.innerHTML = highlightJson(JSON.stringify(
       indent: 2,
       plugins: [
         "preset-default",
-        { name: "removeViewBox", params: {} },
+        "removeViewBox",
         { name: "prefixIds", params: { prefix: "icon" } },
       ],
     },
