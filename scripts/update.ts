@@ -31,7 +31,7 @@ $.logStep("Running tests...");
 await cargoTestAllFeatures();
 
 $.logStep(`Committing and publishing ${newVersion}...`);
-await $`git add deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
+await $`git add -f deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
 await $`git commit -m ${newVersion}`;
 await $`git push origin master`;
 await $`git tag ${newVersion}`;
