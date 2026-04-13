@@ -5,7 +5,7 @@
     "@std/toml": "jsr:@std/toml@^1",
     "dax": "jsr:@david/dax@^0.45",
     "semver": "jsr:@std/semver@^1",
-    "svgo": "npm:svgo@^4",
+    "svgo": "npm:svgo@^4.0.1",
     "yaml": "jsr:@eemeli/yaml@^2",
     "dprint/automation/hash.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts",
     "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts",

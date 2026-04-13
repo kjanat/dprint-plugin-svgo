@@ -598,7 +598,7 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-deno-base"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "async-channel",
  "deno_core",
@@ -612,7 +612,7 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-svgo"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "deno_core",
  "dprint-core",

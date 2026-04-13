@@ -1,0 +1,2718 @@
+{
+  "description": "dprint-plugin-svgo configuration.",
+  "type": "object",
+  "additionalProperties": {},
+  "properties": {
+    "path": {
+      "description": "Can be used by plugins, for example prefixIds.",
+      "type": "string"
+    },
+    "multipass": {
+      "description": "Pass over SVGs multiple times to ensure all optimizations are applied.",
+      "type": "boolean"
+    },
+    "floatPrecision": {
+      "description": "Precision of floating point numbers passed to supporting plugins.",
+      "type": "number"
+    },
+    "plugins": {
+      "description": "Plugins configuration. Custom JavaScript plugins are not supported in dprint config.",
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "cleanupAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "newlines": {
+                    "type": "boolean"
+                  },
+                  "trim": {
+                    "type": "boolean"
+                  },
+                  "spaces": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "cleanupIds"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "remove": {
+                    "type": "boolean"
+                  },
+                  "minify": {
+                    "type": "boolean"
+                  },
+                  "preserve": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "preservePrefixes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "force": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "cleanupListOfValues"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "floatPrecision": {
+                    "type": "number"
+                  },
+                  "leadingZero": {
+                    "type": "boolean"
+                  },
+                  "defaultPx": {
+                    "type": "boolean"
+                  },
+                  "convertToPx": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "cleanupNumericValues"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "floatPrecision": {
+                    "type": "number"
+                  },
+                  "leadingZero": {
+                    "type": "boolean"
+                  },
+                  "defaultPx": {
+                    "type": "boolean"
+                  },
+                  "convertToPx": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertColors"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "names2hex": {
+                    "type": "boolean"
+                  },
+                  "rgb2hex": {
+                    "type": "boolean"
+                  },
+                  "convertCase": {
+                    "enum": [
+                      false,
+                      "lower",
+                      "upper"
+                    ]
+                  },
+                  "shorthex": {
+                    "type": "boolean"
+                  },
+                  "shortname": {
+                    "type": "boolean"
+                  },
+                  "currentColor": {
+                    "description": "Current-color matcher. RegExp values are not supported in JSON config.",
+                    "type": [
+                      "string",
+                      "boolean"
+                    ]
+                  }
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertPathData"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "applyTransforms": {
+                    "type": "boolean"
+                  },
+                  "applyTransformsStroked": {
+                    "type": "boolean"
+                  },
+                  "makeArcs": {
+                    "type": "object",
+                    "properties": {
+                      "threshold": {
+                        "type": "number"
+                      },
+                      "tolerance": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "threshold",
+                      "tolerance"
+                    ]
+                  },
+                  "straightCurves": {
+                    "type": "boolean"
+                  },
+                  "convertToQ": {
+                    "type": "boolean"
+                  },
+                  "lineShorthands": {
+                    "type": "boolean"
+                  },
+                  "convertToZ": {
+                    "type": "boolean"
+                  },
+                  "curveSmoothShorthands": {
+                    "type": "boolean"
+                  },
+                  "floatPrecision": {
+                    "anyOf": [
+                      {
+                        "const": false,
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "transformPrecision": {
+                    "type": "number"
+                  },
+                  "smartArcRounding": {
+                    "type": "boolean"
+                  },
+                  "removeUseless": {
+                    "type": "boolean"
+                  },
+                  "collapseRepeated": {
+                    "type": "boolean"
+                  },
+                  "utilizeAbsolute": {
+                    "type": "boolean"
+                  },
+                  "leadingZero": {
+                    "type": "boolean"
+                  },
+                  "negativeExtraSpace": {
+                    "type": "boolean"
+                  },
+                  "noSpaceAfterFlags": {
+                    "type": "boolean"
+                  },
+                  "forceAbsolutePath": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertShapeToPath"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "convertArcs": {
+                    "type": "boolean"
+                  },
+                  "floatPrecision": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertStyleToAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "keepImportant": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertTransform"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "convertToShorts": {
+                    "type": "boolean"
+                  },
+                  "degPrecision": {
+                    "type": "number"
+                  },
+                  "floatPrecision": {
+                    "type": "number"
+                  },
+                  "transformPrecision": {
+                    "type": "number"
+                  },
+                  "matrixToTransform": {
+                    "type": "boolean"
+                  },
+                  "shortTranslate": {
+                    "type": "boolean"
+                  },
+                  "shortScale": {
+                    "type": "boolean"
+                  },
+                  "shortRotate": {
+                    "type": "boolean"
+                  },
+                  "removeUseless": {
+                    "type": "boolean"
+                  },
+                  "collapseIntoOne": {
+                    "type": "boolean"
+                  },
+                  "leadingZero": {
+                    "type": "boolean"
+                  },
+                  "negativeExtraSpace": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "inlineStyles"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "onlyMatchedOnce": {
+                    "description": "Inlines selectors that match once only.",
+                    "type": "boolean"
+                  },
+                  "removeMatchedSelectors": {
+                    "description": "Clean up matched selectors. Unused selects are left as-is.",
+                    "type": "boolean"
+                  },
+                  "useMqs": {
+                    "description": "Media queries to use. An empty string indicates all selectors outside of\nmedia queries.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "usePseudos": {
+                    "description": "Pseudo-classes and elements to use. An empty string indicates all\nnon-pseudo-classes and elements.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "mergePaths"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean"
+                  },
+                  "floatPrecision": {
+                    "type": "number"
+                  },
+                  "noSpaceAfterFlags": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "minifyStyles"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "restructure": {
+                    "description": "Disable or enable a structure optimizations.",
+                    "type": "boolean"
+                  },
+                  "forceMediaMerge": {
+                    "description": "Enables merging of `@media` rules with the same media query split by other\nrules. Unsafe in general, but should work fine in most cases. Use it on\nyour own risk.",
+                    "type": "boolean"
+                  },
+                  "comments": {
+                    "description": "Specify what comments to leave:\n- `'exclamation'` or `true` — leave all exclamation comments\n- `'first-exclamation'` — remove every comment except first one\n- `false` — remove all comments",
+                    "enum": [
+                      "exclamation",
+                      false,
+                      "first-exclamation",
+                      true
+                    ]
+                  },
+                  "usage": {
+                    "description": "Advanced optimizations.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "force": {
+                            "type": "boolean"
+                          },
+                          "ids": {
+                            "type": "boolean"
+                          },
+                          "classes": {
+                            "type": "boolean"
+                          },
+                          "tags": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "prefixIds"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "prefixIds": {
+                    "type": "boolean"
+                  },
+                  "delim": {
+                    "type": "string"
+                  },
+                  "prefixClassNames": {
+                    "type": "boolean"
+                  },
+                  "prefix": {
+                    "description": "String or boolean prefix. Function prefixes are not supported in JSON config.",
+                    "type": [
+                      "string",
+                      "boolean"
+                    ]
+                  }
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeComments"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "preservePatterns": {
+                    "description": "Comment patterns to preserve. Regular expressions should be written as strings.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "const": false,
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeDeprecatedAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "removeUnsafe": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeDesc"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "removeAny": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeEditorsNSData"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "additionalNamespaces": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeEmptyText"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "boolean"
+                  },
+                  "tspan": {
+                    "type": "boolean"
+                  },
+                  "tref": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeHiddenElems"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "isHidden": {
+                    "type": "boolean"
+                  },
+                  "displayNone": {
+                    "type": "boolean"
+                  },
+                  "opacity0": {
+                    "type": "boolean"
+                  },
+                  "circleR0": {
+                    "type": "boolean"
+                  },
+                  "ellipseRX0": {
+                    "type": "boolean"
+                  },
+                  "ellipseRY0": {
+                    "type": "boolean"
+                  },
+                  "rectWidth0": {
+                    "type": "boolean"
+                  },
+                  "rectHeight0": {
+                    "type": "boolean"
+                  },
+                  "patternWidth0": {
+                    "type": "boolean"
+                  },
+                  "patternHeight0": {
+                    "type": "boolean"
+                  },
+                  "imageWidth0": {
+                    "type": "boolean"
+                  },
+                  "imageHeight0": {
+                    "type": "boolean"
+                  },
+                  "pathEmptyD": {
+                    "type": "boolean"
+                  },
+                  "polylineEmptyPoints": {
+                    "type": "boolean"
+                  },
+                  "polygonEmptyPoints": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeUnknownsAndDefaults"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "unknownContent": {
+                    "type": "boolean"
+                  },
+                  "unknownAttrs": {
+                    "type": "boolean"
+                  },
+                  "defaultAttrs": {
+                    "type": "boolean"
+                  },
+                  "defaultMarkupDeclarations": {
+                    "description": "If to remove XML declarations that are assigned their default value. XML\ndeclarations are the properties in the `<?xml … ?>` block at the top of the\ndocument.",
+                    "type": "boolean"
+                  },
+                  "uselessOverrides": {
+                    "type": "boolean"
+                  },
+                  "keepDataAttrs": {
+                    "type": "boolean"
+                  },
+                  "keepAriaAttrs": {
+                    "type": "boolean"
+                  },
+                  "keepRoleAttr": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeUselessStrokeAndFill"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "stroke": {
+                    "type": "boolean"
+                  },
+                  "fill": {
+                    "type": "boolean"
+                  },
+                  "removeNone": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeXlink"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "includeLegacy": {
+                    "description": "By default this plugin ignores legacy elements that were deprecated or\nremoved in SVG 2. Set to true to force performing operations on those too.",
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "sortAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "xmlnsOrder": {
+                    "enum": [
+                      "alphabetical",
+                      "front"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "cleanupEnableBackground"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "collapseGroups"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertEllipseToCircle"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "mergeStyles"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "moveElemsAttrsToGroup"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "moveGroupAttrsToElems"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeDoctype"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeEmptyAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeEmptyContainers"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeMetadata"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeNonInheritableGroupAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeUnusedNS"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeUselessDefs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeXMLProcInst"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "sortDefsChildren"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "preset-default"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "floatPrecision": {
+                    "type": "number"
+                  },
+                  "overrides": {
+                    "description": "All default plugins can be customized or disabled here\nfor example\n{\n  sortAttrs: { xmlnsOrder: \"alphabetical\" },\n  cleanupAttrs: false,\n}",
+                    "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/PresetDefaultOverrides"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "convertOneStopGradients"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeDimensions"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeOffCanvasPaths"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeRasterImages"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeScripts"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeStyleElement"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeTitle"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeViewBox"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeXMLNS"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "reusePaths"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "null"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "addAttributesToSVGElement"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "attribute": {
+                    "anyOf": [
+                      {
+                        "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/Record%3Cstring%2Cstring%7Cnull%3E"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "attributes": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/Record%3Cstring%2Cstring%7Cnull%3E"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "addClassesToSVGElement"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "className": {
+                    "description": "Single class name to add. Dynamic class callbacks are not supported in JSON config.",
+                    "type": "string"
+                  },
+                  "classNames": {
+                    "description": "Multiple class names to add. Dynamic class callbacks are not supported in JSON config.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeAttrs"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "elemSeparator": {
+                    "type": "string"
+                  },
+                  "preserveCurrentColor": {
+                    "type": "boolean"
+                  },
+                  "attrs": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "attrs"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeElementsByAttr"
+              },
+              "params": {
+                "description": "Plugin params.",
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "class": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Built-in plugin name.",
+                "type": "string",
+                "const": "removeAttributesBySelector"
+              },
+              "params": {
+                "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/RemoveAttributesBySelectorParams",
+                "description": "Plugin params."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ]
+          },
+          {
+            "enum": [
+              "cleanupAttrs",
+              "cleanupEnableBackground",
+              "cleanupIds",
+              "cleanupListOfValues",
+              "cleanupNumericValues",
+              "collapseGroups",
+              "convertColors",
+              "convertEllipseToCircle",
+              "convertOneStopGradients",
+              "convertPathData",
+              "convertShapeToPath",
+              "convertStyleToAttrs",
+              "convertTransform",
+              "inlineStyles",
+              "mergePaths",
+              "mergeStyles",
+              "minifyStyles",
+              "moveElemsAttrsToGroup",
+              "moveGroupAttrsToElems",
+              "prefixIds",
+              "preset-default",
+              "removeComments",
+              "removeDeprecatedAttrs",
+              "removeDesc",
+              "removeDimensions",
+              "removeDoctype",
+              "removeEditorsNSData",
+              "removeEmptyAttrs",
+              "removeEmptyContainers",
+              "removeEmptyText",
+              "removeHiddenElems",
+              "removeMetadata",
+              "removeNonInheritableGroupAttrs",
+              "removeOffCanvasPaths",
+              "removeRasterImages",
+              "removeScripts",
+              "removeStyleElement",
+              "removeTitle",
+              "removeUnknownsAndDefaults",
+              "removeUnusedNS",
+              "removeUselessDefs",
+              "removeUselessStrokeAndFill",
+              "removeViewBox",
+              "removeXMLNS",
+              "removeXMLProcInst",
+              "removeXlink",
+              "reusePaths",
+              "sortAttrs",
+              "sortDefsChildren"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "js2svg": {
+      "description": "Options for rendering optimized SVG from AST.",
+      "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/DprintStringifyOptions"
+    },
+    "datauri": {
+      "description": "Output as Data URI string.",
+      "enum": [
+        "base64",
+        "enc",
+        "unenc"
+      ],
+      "type": "string"
+    },
+    "indent": {
+      "description": "Number of spaces for indentation in SVG output.",
+      "type": "number"
+    },
+    "eol": {
+      "description": "End-of-line character for SVG output.",
+      "enum": [
+        "crlf",
+        "lf"
+      ],
+      "type": "string"
+    },
+    "pretty": {
+      "description": "Whether to pretty-print the SVG output.",
+      "type": "boolean"
+    },
+    "finalNewline": {
+      "description": "Whether to add a final newline at the end of the output.",
+      "type": "boolean"
+    },
+    "useShortTags": {
+      "description": "Whether to use short self-closing tags.",
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+    "PresetDefaultOverrides": {
+      "type": "object",
+      "properties": {
+        "cleanupAttrs": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "newlines": {
+                  "type": "boolean"
+                },
+                "trim": {
+                  "type": "boolean"
+                },
+                "spaces": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "cleanupEnableBackground": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cleanupIds": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "remove": {
+                  "type": "boolean"
+                },
+                "minify": {
+                  "type": "boolean"
+                },
+                "preserve": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "preservePrefixes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "force": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "cleanupNumericValues": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "floatPrecision": {
+                  "type": "number"
+                },
+                "leadingZero": {
+                  "type": "boolean"
+                },
+                "defaultPx": {
+                  "type": "boolean"
+                },
+                "convertToPx": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "collapseGroups": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "convertColors": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "currentColor": {
+                  "anyOf": [
+                    {
+                      "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/RegExp"
+                    },
+                    {
+                      "type": [
+                        "string",
+                        "boolean"
+                      ]
+                    }
+                  ]
+                },
+                "names2hex": {
+                  "type": "boolean"
+                },
+                "rgb2hex": {
+                  "type": "boolean"
+                },
+                "convertCase": {
+                  "enum": [
+                    false,
+                    "lower",
+                    "upper"
+                  ]
+                },
+                "shorthex": {
+                  "type": "boolean"
+                },
+                "shortname": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "convertEllipseToCircle": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "convertPathData": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "applyTransforms": {
+                  "type": "boolean"
+                },
+                "applyTransformsStroked": {
+                  "type": "boolean"
+                },
+                "makeArcs": {
+                  "type": "object",
+                  "properties": {
+                    "threshold": {
+                      "type": "number"
+                    },
+                    "tolerance": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "threshold",
+                    "tolerance"
+                  ]
+                },
+                "straightCurves": {
+                  "type": "boolean"
+                },
+                "convertToQ": {
+                  "type": "boolean"
+                },
+                "lineShorthands": {
+                  "type": "boolean"
+                },
+                "convertToZ": {
+                  "type": "boolean"
+                },
+                "curveSmoothShorthands": {
+                  "type": "boolean"
+                },
+                "floatPrecision": {
+                  "anyOf": [
+                    {
+                      "const": false,
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "transformPrecision": {
+                  "type": "number"
+                },
+                "smartArcRounding": {
+                  "type": "boolean"
+                },
+                "removeUseless": {
+                  "type": "boolean"
+                },
+                "collapseRepeated": {
+                  "type": "boolean"
+                },
+                "utilizeAbsolute": {
+                  "type": "boolean"
+                },
+                "leadingZero": {
+                  "type": "boolean"
+                },
+                "negativeExtraSpace": {
+                  "type": "boolean"
+                },
+                "noSpaceAfterFlags": {
+                  "type": "boolean"
+                },
+                "forceAbsolutePath": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "convertShapeToPath": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "convertArcs": {
+                  "type": "boolean"
+                },
+                "floatPrecision": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "convertTransform": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "convertToShorts": {
+                  "type": "boolean"
+                },
+                "degPrecision": {
+                  "type": "number"
+                },
+                "floatPrecision": {
+                  "type": "number"
+                },
+                "transformPrecision": {
+                  "type": "number"
+                },
+                "matrixToTransform": {
+                  "type": "boolean"
+                },
+                "shortTranslate": {
+                  "type": "boolean"
+                },
+                "shortScale": {
+                  "type": "boolean"
+                },
+                "shortRotate": {
+                  "type": "boolean"
+                },
+                "removeUseless": {
+                  "type": "boolean"
+                },
+                "collapseIntoOne": {
+                  "type": "boolean"
+                },
+                "leadingZero": {
+                  "type": "boolean"
+                },
+                "negativeExtraSpace": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "mergeStyles": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inlineStyles": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "onlyMatchedOnce": {
+                  "description": "Inlines selectors that match once only.",
+                  "type": "boolean"
+                },
+                "removeMatchedSelectors": {
+                  "description": "Clean up matched selectors. Unused selects are left as-is.",
+                  "type": "boolean"
+                },
+                "useMqs": {
+                  "description": "Media queries to use. An empty string indicates all selectors outside of\nmedia queries.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "usePseudos": {
+                  "description": "Pseudo-classes and elements to use. An empty string indicates all\nnon-pseudo-classes and elements.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "mergePaths": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "force": {
+                  "type": "boolean"
+                },
+                "floatPrecision": {
+                  "type": "number"
+                },
+                "noSpaceAfterFlags": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "minifyStyles": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "restructure": {
+                  "description": "Disable or enable a structure optimizations.",
+                  "type": "boolean"
+                },
+                "forceMediaMerge": {
+                  "description": "Enables merging of `@media` rules with the same media query split by other\nrules. Unsafe in general, but should work fine in most cases. Use it on\nyour own risk.",
+                  "type": "boolean"
+                },
+                "comments": {
+                  "description": "Specify what comments to leave:\n- `'exclamation'` or `true` — leave all exclamation comments\n- `'first-exclamation'` — remove every comment except first one\n- `false` — remove all comments",
+                  "enum": [
+                    "exclamation",
+                    false,
+                    "first-exclamation",
+                    true
+                  ]
+                },
+                "usage": {
+                  "description": "Advanced optimizations.",
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "force": {
+                          "type": "boolean"
+                        },
+                        "ids": {
+                          "type": "boolean"
+                        },
+                        "classes": {
+                          "type": "boolean"
+                        },
+                        "tags": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "moveElemsAttrsToGroup": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "moveGroupAttrsToElems": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeComments": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "preservePatterns": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/RegExp"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeDeprecatedAttrs": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "removeUnsafe": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeDesc": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "removeAny": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeDoctype": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeEditorsNSData": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "additionalNamespaces": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeEmptyAttrs": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeEmptyContainers": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeEmptyText": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "boolean"
+                },
+                "tspan": {
+                  "type": "boolean"
+                },
+                "tref": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeHiddenElems": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "isHidden": {
+                  "type": "boolean"
+                },
+                "displayNone": {
+                  "type": "boolean"
+                },
+                "opacity0": {
+                  "type": "boolean"
+                },
+                "circleR0": {
+                  "type": "boolean"
+                },
+                "ellipseRX0": {
+                  "type": "boolean"
+                },
+                "ellipseRY0": {
+                  "type": "boolean"
+                },
+                "rectWidth0": {
+                  "type": "boolean"
+                },
+                "rectHeight0": {
+                  "type": "boolean"
+                },
+                "patternWidth0": {
+                  "type": "boolean"
+                },
+                "patternHeight0": {
+                  "type": "boolean"
+                },
+                "imageWidth0": {
+                  "type": "boolean"
+                },
+                "imageHeight0": {
+                  "type": "boolean"
+                },
+                "pathEmptyD": {
+                  "type": "boolean"
+                },
+                "polylineEmptyPoints": {
+                  "type": "boolean"
+                },
+                "polygonEmptyPoints": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeMetadata": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeNonInheritableGroupAttrs": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeUnknownsAndDefaults": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "unknownContent": {
+                  "type": "boolean"
+                },
+                "unknownAttrs": {
+                  "type": "boolean"
+                },
+                "defaultAttrs": {
+                  "type": "boolean"
+                },
+                "defaultMarkupDeclarations": {
+                  "description": "If to remove XML declarations that are assigned their default value. XML\ndeclarations are the properties in the `<?xml … ?>` block at the top of the\ndocument.",
+                  "type": "boolean"
+                },
+                "uselessOverrides": {
+                  "type": "boolean"
+                },
+                "keepDataAttrs": {
+                  "type": "boolean"
+                },
+                "keepAriaAttrs": {
+                  "type": "boolean"
+                },
+                "keepRoleAttr": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeUnusedNS": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeUselessDefs": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removeUselessStrokeAndFill": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "stroke": {
+                  "type": "boolean"
+                },
+                "fill": {
+                  "type": "boolean"
+                },
+                "removeNone": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "removeXMLProcInst": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sortAttrs": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "order": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "xmlnsOrder": {
+                  "enum": [
+                    "alphabetical",
+                    "front"
+                  ],
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "sortDefsChildren": {
+          "anyOf": [
+            {
+              "const": false,
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RegExp": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "global": {
+          "type": "boolean"
+        },
+        "ignoreCase": {
+          "type": "boolean"
+        },
+        "multiline": {
+          "type": "boolean"
+        },
+        "lastIndex": {
+          "type": "number"
+        },
+        "flags": {
+          "type": "string"
+        },
+        "sticky": {
+          "type": "boolean"
+        },
+        "unicode": {
+          "type": "boolean"
+        },
+        "dotAll": {
+          "type": "boolean"
+        },
+        "hasIndices": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dotAll",
+        "flags",
+        "global",
+        "hasIndices",
+        "ignoreCase",
+        "lastIndex",
+        "multiline",
+        "source",
+        "sticky",
+        "unicode"
+      ]
+    },
+    "Record<string,string|null>": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "RemoveAttributesBySelectorParams": {
+      "description": "JSON-safe params for removeAttributesBySelector.",
+      "anyOf": [
+        {
+          "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/RemoveAttributesBySelectorRule"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "description": "Multiple selector rules to apply.",
+              "type": "array",
+              "items": {
+                "$ref": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json#/definitions/RemoveAttributesBySelectorRule"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "selectors"
+          ]
+        }
+      ]
+    },
+    "RemoveAttributesBySelectorRule": {
+      "description": "A selector rule for the removeAttributesBySelector plugin.",
+      "type": "object",
+      "properties": {
+        "selector": {
+          "description": "CSS selector used to find matching SVG elements.",
+          "type": "string"
+        },
+        "attributes": {
+          "description": "One or more attribute names to remove from each matched element.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "attributes",
+        "selector"
+      ]
+    },
+    "DprintStringifyOptions": {
+      "description": "JSON-safe js2svg options supported by dprint-plugin-svgo.",
+      "type": "object",
+      "properties": {
+        "doctypeStart": {
+          "type": "string"
+        },
+        "doctypeEnd": {
+          "type": "string"
+        },
+        "procInstStart": {
+          "type": "string"
+        },
+        "procInstEnd": {
+          "type": "string"
+        },
+        "tagOpenStart": {
+          "type": "string"
+        },
+        "tagOpenEnd": {
+          "type": "string"
+        },
+        "tagCloseStart": {
+          "type": "string"
+        },
+        "tagCloseEnd": {
+          "type": "string"
+        },
+        "tagShortStart": {
+          "type": "string"
+        },
+        "tagShortEnd": {
+          "type": "string"
+        },
+        "attrStart": {
+          "type": "string"
+        },
+        "attrEnd": {
+          "type": "string"
+        },
+        "commentStart": {
+          "type": "string"
+        },
+        "commentEnd": {
+          "type": "string"
+        },
+        "cdataStart": {
+          "type": "string"
+        },
+        "cdataEnd": {
+          "type": "string"
+        },
+        "textStart": {
+          "type": "string"
+        },
+        "textEnd": {
+          "type": "string"
+        },
+        "indent": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "pretty": {
+          "type": "boolean"
+        },
+        "useShortTags": {
+          "type": "boolean"
+        },
+        "eol": {
+          "enum": [
+            "crlf",
+            "lf"
+          ],
+          "type": "string"
+        },
+        "finalNewline": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://plugins.dprint.dev/kjanat/dprint-plugin-svgo/0.3.1/schema.json"
+}
