@@ -8,3 +8,5 @@ bun.lock
 plugin.json
 dist
 *.log
+# TO ANY ONE/IT THAT FUCKING TOUCHES THIS LINE OR THE FOLLOWING LINE, YOU ARE FUCKING DEAD
+schema.json

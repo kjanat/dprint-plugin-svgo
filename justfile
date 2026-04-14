@@ -8,7 +8,7 @@ default:
 
 # Run the standard verification suite.
 [group('project')]
-verify: fmt check test schema-check site-typecheck site-build
+verify: fmt check test site-typecheck site-build
 
 # Type-check the Deno scripts.
 [private]
@@ -84,19 +84,14 @@ check: check-deno check-clippy
 fmt:
     dprint fmt
 
-# Regenerate the JSON Schema.
+# Generate site/schema.json for site builds.
 [group('maintenance')]
 schema:
-    deno run --frozen -A scripts/generate_schema.ts schema.json
-
-# Verify the committed schema matches generator output.
-[group('maintenance')]
-schema-check:
-    tmp=$(mktemp) && trap 'rm -f "$tmp"' EXIT && deno run --frozen -A scripts/generate_schema.ts "$tmp" && { cmp -s schema.json "$tmp" || diff -u schema.json "$tmp"; }
+    deno run --frozen -A scripts/generate_schema.ts site/schema.json
 
 # Run the pre-release checks.
 [group('maintenance')]
-release-check: verify schema ci local-test
+release-check: verify ci local-test
 
 # Regenerate the CI workflow YAML.
 [group('maintenance')]
@@ -115,7 +110,7 @@ ci-create-plugin-file:
 
 # Verify committed schema and site build in CI.
 [private]
-ci-verify-schema-site: schema-check site-typecheck site-build
+ci-verify-schema-site: site-typecheck site-build
 
 # Install the site dependencies.
 [group('site')]
@@ -147,11 +142,16 @@ cargo-release:
 # Build the site with Bun.
 [group('site')]
 [working-directory('site')]
-site-build: site-install
+site-build: site-install site-schema
     bun run build
 
 # Type-check the site with Bun.
 [group('site')]
 [working-directory('site')]
-site-typecheck: site-install
+site-typecheck: site-install site-schema
     bun run typecheck
+
+# Generate site schema from current repository state.
+[private]
+site-schema:
+    deno run --frozen -A scripts/generate_schema.ts site/schema.json

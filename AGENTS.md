@@ -11,11 +11,11 @@ just build               # Bundle SVGO wrapper for V8
 just test                # Build + run all tests
 just check               # Type-check TS + cargo clippy
 just fmt                 # Format everything (dprint)
-just schema              # Generate canonical root schema.json
+just schema              # Generate site/schema.json
 just ci                  # Regenerate CI workflow YAML
 just local-test          # Build release + format a disposable workspace with dprint
 just update              # Check for SVGO updates + release
-just verify              # Run fmt/check/test + schema/site verification
+just verify              # Run fmt/check/test + site verification
 
 cargo build              # Build debug
 cargo build --release    # Build release
@@ -56,7 +56,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 `just build` bundles `js/svgo.ts` against the vendored `vendor/svgo` sources pinned by the submodule. `plugin/build.rs` creates a V8 snapshot from the final bundle and extracts supported extensions (["svg"]).
 
-The canonical generated schema is the tracked root `schema.json`. The site imports that file directly and copies it to `dist/schema.json` during the site build.
+The schema is generated from `scripts/schema_types.ts` and written to `site/schema.json` for site builds. Release CI generates root `schema.json` as an artifact.
 
 Initialize the vendored SVGO submodule after cloning with `git submodule update --init --recursive`.
 
@@ -91,15 +91,15 @@ Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
 - `scripts/lib.ts` - Shared automation helpers used by repo scripts
 - `scripts/schema_types.ts` - JSON-safe SVGO type shim used for schema generation
-- `scripts/generate_schema.ts` - Generate the canonical root `schema.json` from the vendored SVGO type surface and attach stable site metadata
+- `scripts/generate_schema.ts` - Generate schema from the vendored SVGO type surface and attach stable site metadata
 - `scripts/create_plugin_file.ts` - Generate release plugin.json
 - `scripts/output_svgo_version.ts` - Get SVGO version for release notes
-- `scripts/update.ts` - Advance the SVGO submodule tag, sync Deno imports, bump version, regenerate schema, tag release
+- `scripts/update.ts` - Advance the SVGO submodule tag, sync Deno imports, bump version, tag release
 
 ## CI/Release
 
 Multi-platform builds: macOS (x86_64, aarch64), Windows (x86_64), Linux (x86_64, aarch64)
 
-Normal CI verifies schema drift and the real site build on Linux. Pages builds the site explicitly with Bun and ships `dist/`.
+Normal CI verifies the real site build on Linux. Pages builds the site explicitly with Bun and ships `dist/`.
 
 Tag triggers release workflow that builds, creates checksums, and generates plugin.json with download URLs.

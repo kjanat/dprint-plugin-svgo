@@ -70,7 +70,7 @@ jobs:
         shell: "bash"
         run: "rm -rf target/*/build/v8-*"
       - uses: "denoland/setup-deno@v2"
-      - uses: "extractions/setup-just@v3"
+      - uses: "extractions/setup-just@v4"
       - name: "Build JS"
         run: "just build"
       - uses: "oven-sh/setup-bun@v2"
@@ -149,7 +149,7 @@ jobs:
         shell: "bash"
         run: "rm -rf target/*/build/v8-*"
       - uses: "denoland/setup-deno@v2"
-      - uses: "extractions/setup-just@v3"
+      - uses: "extractions/setup-just@v4"
       - name: "Build JS"
         run: "just build"
       - uses: "oven-sh/setup-bun@v2"
@@ -266,7 +266,9 @@ jobs:
       - name: "Download artifacts"
         uses: "actions/download-artifact@v8"
       - uses: "denoland/setup-deno@v2"
-      - uses: "extractions/setup-just@v3"
+      - uses: "extractions/setup-just@v4"
+      - name: "Generate schema"
+        run: "deno run --frozen -A scripts/generate_schema.ts schema.json"
       - name: "Move downloaded artifacts to root directory"
         run: "mv x86_64-apple-darwin-artifacts/dprint-plugin-svgo-x86_64-apple-darwin.zip .
 

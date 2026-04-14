@@ -16,7 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with: { submodules: recursive }
+      - uses: denoland/setup-deno@v2
       - uses: oven-sh/setup-bun@v2
+
+      - name: Generate site schema
+        run: deno run --frozen -A scripts/generate_schema.ts site/schema.json
 
       - name: Install site dependencies
         working-directory: site

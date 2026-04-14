@@ -1,4 +1,4 @@
-import schema from "../schema.json" with { type: "json" };
+import schema from "./schema.json" with { type: "json" };
 
 interface SchemaProperty {
   type?: string;

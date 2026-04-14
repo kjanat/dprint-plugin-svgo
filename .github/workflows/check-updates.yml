@@ -22,7 +22,7 @@ jobs:
         with: { submodules: recursive }
 
       - uses: denoland/setup-deno@v2
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
       - uses: dsherret/rust-toolchain-file@v1
 
       - name: Run script

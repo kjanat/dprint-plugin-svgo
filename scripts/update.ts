@@ -15,7 +15,6 @@ import {
   syncSvgoDenoImports,
   vendorSvgoDirPath,
 } from "./lib.ts";
-import { generateSchema } from "./generate_schema.ts";
 
 $.logStep("Fetching svgo tags...");
 await $`git fetch --tags origin`.cwd(vendorSvgoDirPath);
@@ -40,13 +39,12 @@ const newVersion = await bumpMinorVersion();
 
 $.logStep("Rebuilding...");
 await buildJsBundle();
-await generateSchema(rootDirPath.join("schema.json").toString());
 
 $.logStep("Running tests...");
 await cargoTestAllFeatures();
 
 $.logStep(`Committing and publishing ${newVersion}...`);
-await $`git add -f .gitmodules vendor/svgo deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
+await $`git add -f .gitmodules vendor/svgo deno.jsonc deno.lock Cargo.toml Cargo.lock`;
 await $`git commit -m ${newVersion}`;
 await $`git push origin HEAD:master`;
 await $`git tag ${newVersion}`;

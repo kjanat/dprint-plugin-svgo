@@ -25,6 +25,7 @@ jobs:
         with: { token: "${{ secrets.DPRINT_PAT }}", submodules: recursive }
 
       - uses: denoland/setup-deno@v2
+      - uses: extractions/setup-just@v4
       - uses: dsherret/rust-toolchain-file@v1
 
       - name: Bump version and tag

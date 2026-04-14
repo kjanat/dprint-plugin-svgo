@@ -3,7 +3,7 @@ import { access, copyFile, mkdir } from "node:fs/promises";
 import { join, normalize } from "node:path";
 
 const rootDir = normalize(`${import.meta.dir}/..`);
-const schemaPath = join(rootDir, "schema.json");
+const schemaPath = join(import.meta.dir, "schema.json");
 const outdir = join(rootDir, "dist");
 
 try {
@@ -11,7 +11,7 @@ try {
 } catch (error) {
   const suffix = error instanceof Error ? ` (${error.message})` : "";
   console.error(`schema.json not found at ${schemaPath}${suffix}`);
-  console.error("Run `just schema` first.");
+  console.error("Run `just site-schema` first.");
   process.exit(1);
 }
 

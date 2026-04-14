@@ -112,7 +112,7 @@ function setupBun(): Step {
 }
 
 function setupJust(): Step {
-  return { uses: "extractions/setup-just@v3" };
+  return { uses: "extractions/setup-just@v4" };
 }
 
 function justCommand(...args: string[]) {
@@ -372,6 +372,10 @@ function draftReleaseJob() {
       { name: "Download artifacts", uses: "actions/download-artifact@v8" },
       setupDeno(),
       setupJust(),
+      {
+        name: "Generate schema",
+        run: "deno run --frozen -A scripts/generate_schema.ts schema.json",
+      },
       {
         name: "Move downloaded artifacts to root directory",
         run: [
