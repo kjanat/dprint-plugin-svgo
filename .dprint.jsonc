@@ -47,7 +47,7 @@
     ]
   },
   /** File inclusions/exclusions */
-  "excludes": ["**/node_modules", "**/*lock*", "vendor/**", "samples-tmp/**"],
+  "excludes": ["**/node_modules", "**/*lock*", "vendor/**", "samples-tmp/**", "samples/validity-vs-reliability.svg"],
   /** Plugins */
   "plugins": [
     "https://plugins.dprint.dev/json-0.21.3.wasm",
