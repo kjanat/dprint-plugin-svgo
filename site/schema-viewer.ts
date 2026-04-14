@@ -1,7 +1,10 @@
-import schema from "./schema.json" with { type: "json" };
+import schema from "../schema.json" with { type: "json" };
 
 interface SchemaWithId {
   $id?: string;
+  _meta?: {
+    pluginVersion?: string;
+  };
 }
 
 function esc(s: string): string {
@@ -36,7 +39,9 @@ function highlight(json: string): string {
     );
 }
 
-const version = (schema as SchemaWithId).$id?.match(/\/(\d+\.\d+\.\d+)\//)?.[1];
+const schemaWithId = schema as SchemaWithId;
+const version = schemaWithId._meta?.pluginVersion ??
+  schemaWithId.$id?.match(/\/(\d+\.\d+\.\d+)\//)?.[1];
 const meta = document.getElementById("meta");
 const output = document.getElementById("json");
 

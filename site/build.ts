@@ -1,14 +1,18 @@
-import { $, build, file } from "bun";
-import { normalize } from "path";
+import { build } from "bun";
+import { access, copyFile, mkdir } from "node:fs/promises";
+import { join, normalize } from "node:path";
 
-const tag = process.env.TAG;
-const schema = file(`${import.meta.dir}/schema.json`);
+const rootDir = normalize(`${import.meta.dir}/..`);
+const schemaPath = join(rootDir, "schema.json");
+const outdir = join(rootDir, "dist");
 
-const outdir = normalize(`${import.meta.dir}/../dist`);
-
-if (!(await schema.exists())) {
-  if (tag) await $`gh release download ${tag} -p schema.json -O ${schema.name}`;
-  else await $`gh release download -p schema.json -O ${schema.name}`;
+try {
+  await access(schemaPath);
+} catch (error) {
+  const suffix = error instanceof Error ? ` (${error.message})` : "";
+  console.error(`schema.json not found at ${schemaPath}${suffix}`);
+  console.error("Run `just schema` first.");
+  process.exit(1);
 }
 
 const result = await build({
@@ -27,5 +31,12 @@ if (!result.success) {
   process.exit(1);
 }
 
-const outfiles = result.outputs.map((o) => `    ${o.path} (${(o.size / 1024).toFixed(1)}KB)`);
+await mkdir(outdir, { recursive: true });
+const outputSchemaPath = join(outdir, "schema.json");
+await copyFile(schemaPath, outputSchemaPath);
+
+const outfiles = [
+  ...result.outputs.map((o) => `    ${o.path} (${(o.size / 1024).toFixed(1)}KB)`),
+  `    ${outputSchemaPath}`,
+];
 console.log(`\nSite built:\t${outfiles.join("\n")}`);

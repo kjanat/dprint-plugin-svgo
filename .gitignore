@@ -5,6 +5,5 @@ node_modules
 
 bun.lock
 
-schema.json
 plugin.json
 dist

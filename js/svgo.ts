@@ -1,4 +1,5 @@
-import { type Config, optimize } from "svgo/browser";
+import { optimize } from "svgo/browser";
+import type { Config } from "../vendor/svgo/lib/types.ts";
 
 declare global {
   var dprint: {
@@ -38,8 +39,6 @@ function formatText(
       return formattedText;
     }
   } catch (error) {
-    // If SVGO fails to optimize (e.g., invalid SVG), return undefined to keep original
-    // Sanitize error message to avoid leaking internal paths
     const fileName = filePath.split(/[/\\]/).pop() || filePath;
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(`SVGO error for ${fileName}: ${errorMessage}`);

@@ -1,4 +1,4 @@
-import schema from "./schema.json" with { type: "json" };
+import schema from "../schema.json" with { type: "json" };
 
 interface SchemaProperty {
   type?: string;
@@ -7,16 +7,20 @@ interface SchemaProperty {
   minimum?: number;
   maximum?: number;
   properties?: Record<string, SchemaProperty>;
-  items?: { oneOf?: Array<{ enum?: string[] }> };
+}
+
+interface SchemaMeta {
+  pluginVersion?: string;
+  svgoVersion?: string;
+  pluginNames?: string[];
+  presetDefault?: string[];
+  pluginDescriptions?: Record<string, string>;
 }
 
 interface Schema {
   $id?: string;
   properties?: Record<string, SchemaProperty>;
-  _meta?: {
-    presetDefault?: string[];
-    pluginDescriptions?: Record<string, string>;
-  };
+  _meta?: SchemaMeta;
 }
 
 const s = schema as Schema;
@@ -131,7 +135,8 @@ copyBtn?.addEventListener("click", () => {
 
 // --- Render ---
 
-const version = s.$id?.match(/\/(\d+\.\d+\.\d+)\//)?.[1];
+const version = s._meta?.pluginVersion ?? s.$id?.match(/\/(\d+\.\d+\.\d+)\//)?.[1];
+const svgoVersion = s._meta?.svgoVersion;
 if (version) {
   const vEl = document.getElementById("version");
   vEl?.insertBefore(document.createTextNode(`v${version} \u00b7 `), vEl.firstChild);
@@ -162,9 +167,8 @@ if (props.js2svg?.properties) {
 // Plugins with search
 const defaults = new Set(s._meta?.presetDefault || []);
 const descriptions = s._meta?.pluginDescriptions || {};
-const plugins = Object.keys(descriptions).length === 0
-  ? props.plugins?.items?.oneOf?.[0]?.enum || []
-  : ["preset-default", ...Object.keys(descriptions)];
+const plugins = s._meta?.pluginNames ??
+  (Object.keys(descriptions).length === 0 ? [] : ["preset-default", ...Object.keys(descriptions)]);
 const defaultPlugins = plugins.filter((p) => defaults.has(p) || p === "preset-default");
 const extraPlugins = plugins.filter((p) => !defaults.has(p) && p !== "preset-default");
 
@@ -218,7 +222,7 @@ const footer = document.getElementById("footer");
 if (footer) {
   footer.innerHTML = [
     version ? `v${version}` : "",
-    'Powered by <a href="https://svgo.dev">SVGO</a>',
+    `Powered by <a href="https://svgo.dev">SVGO</a>${svgoVersion ? ` v${svgoVersion}` : ""}`,
     '<a href="schema-viewer.html">schema.json</a>',
   ].filter(Boolean).join(" \u00b7 ");
 }

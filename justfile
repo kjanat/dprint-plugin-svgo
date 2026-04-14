@@ -8,12 +8,12 @@ default:
 
 # Run the standard verification suite.
 [group('project')]
-verify: fmt check test site-typecheck
+verify: fmt check test schema-check site-typecheck site-build
 
 # Type-check the Deno scripts.
 [private]
 check-deno:
-    deno check --frozen --check-js
+    deno check --frozen --check-js scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/lib.ts scripts/local_test.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts
 
 # Lint the Rust crates with clippy.
 [private]
@@ -79,9 +79,14 @@ fmt:
 schema:
     deno run --frozen -A scripts/generate_schema.ts schema.json
 
+# Verify the committed schema matches generator output.
+[group('maintenance')]
+schema-check:
+    tmp=$(mktemp) && trap 'rm -f "$tmp"' EXIT && deno run --frozen -A scripts/generate_schema.ts "$tmp" && { cmp -s schema.json "$tmp" || diff -u schema.json "$tmp"; }
+
 # Run the pre-release checks.
 [group('maintenance')]
-release-check: schema ci local-test
+release-check: verify schema ci local-test
 
 # Regenerate the CI workflow YAML.
 [group('maintenance')]
@@ -97,6 +102,16 @@ local-test:
 [private]
 ci-create-plugin-file:
     deno run --frozen -A scripts/create_plugin_file.ts
+
+# Verify committed schema and site build in CI.
+[private]
+ci-verify-schema-site: schema-check site-typecheck site-build
+
+# Install the site dependencies.
+[group('site')]
+[working-directory('site')]
+site-install:
+    bun install
 
 # Print the resolved SVGO version in CI.
 [private]
@@ -122,11 +137,11 @@ cargo-release:
 # Build the site with Bun.
 [group('site')]
 [working-directory('site')]
-site-build:
-    bun build.ts
+site-build: site-install
+    bun run build
 
 # Type-check the site with Bun.
 [group('site')]
 [working-directory('site')]
-site-typecheck:
-    bun typecheck
+site-typecheck: site-install
+    bun run typecheck

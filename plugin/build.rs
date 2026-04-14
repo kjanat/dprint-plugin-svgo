@@ -52,10 +52,13 @@ fn main() {
     Err(err) => panic!("Error building to script: {err}"),
   }
 
-  // ensure the build is invalidated if any of these files change
   println!(
     "cargo:rerun-if-changed={}",
     js_dir.join("svgo.ts").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("vendor/svgo").display()
   );
   println!(
     "cargo:rerun-if-changed={}",
@@ -71,7 +74,6 @@ fn main() {
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);
 
-  // serialize the supported extensions
   eprintln!("Creating runtime...");
   let tokio_runtime = create_tokio_runtime();
   JsRuntime::initialize_main_thread();
@@ -99,8 +101,6 @@ fn main() {
   eprintln!("Done");
 }
 
-/// Create a V8 snapshot with the bundled SVGO JS pre-loaded and executed.
-/// The snapshot is compressed with zstd in release builds.
 fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]> {
   let startup_text = get_startup_text(startup_code_path);
   dprint_plugin_deno_base::build::create_snapshot(
@@ -118,7 +118,6 @@ fn create_snapshot(snapshot_path: PathBuf, startup_code_path: &Path) -> Box<[u8]
   )
 }
 
-/// Read the bundled JS source from `dist/main.js`.
 fn get_startup_text(startup_code_path: &Path) -> String {
   std::fs::read_to_string(startup_code_path).unwrap()
 }
@@ -132,7 +131,6 @@ deno_core::extension!(
   ]
 );
 
-/// Deno extensions providing console, URL, and WebIDL APIs to the V8 runtime.
 fn extensions() -> Vec<Extension> {
   vec![main::init()]
 }

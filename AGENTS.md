@@ -5,6 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
+git submodule update --init --recursive
+
 just build               # Bundle SVGO wrapper for V8
 just test                # Build + run all tests
 just check               # Type-check TS + cargo clippy
@@ -52,9 +54,11 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 ### Build Process
 
-`just build` bundles `js/svgo.ts` + SVGO via `deno bundle` into a single IIFE. `plugin/build.rs` creates a V8 snapshot from the bundle and extracts supported extensions (["svg"]).
+`just build` bundles `js/svgo.ts` against the published `svgo/browser` build pinned to the vendored `vendor/svgo` version. `plugin/build.rs` creates a V8 snapshot from the final bundle and extracts supported extensions (["svg"]).
 
-No node_modules — Deno resolves npm packages on the fly.
+Initialize the vendored SVGO submodule after cloning with `git submodule update --init --recursive`.
+
+No node_modules — Deno resolves SVGO's runtime npm dependencies via `deno.jsonc`.
 
 ## Configuration
 
@@ -86,10 +90,10 @@ Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
 - `scripts/lib.ts` - Shared automation helpers used by repo scripts
 - `scripts/schema_types.ts` - JSON-safe SVGO type shim used for schema generation
-- `scripts/generate_schema.ts` - Generate JSON Schema from SVGO's plugin registry
+- `scripts/generate_schema.ts` - Generate JSON Schema from the vendored SVGO type surface
 - `scripts/create_plugin_file.ts` - Generate release plugin.json
 - `scripts/output_svgo_version.ts` - Get SVGO version for release notes
-- `scripts/update.ts` - Check for SVGO updates, bump version, tag release
+- `scripts/update.ts` - Advance the SVGO submodule tag, sync Deno imports, bump version, tag release
 
 ## CI/Release
 

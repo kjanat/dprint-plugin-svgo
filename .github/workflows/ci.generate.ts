@@ -17,7 +17,6 @@ const REPO_OWNER = "kjanat";
 const REPO_NAME = "dprint-plugin-svgo";
 const BRANCHES = ["master"];
 const IGNORED_PATHS = [
-  "site/**",
   "*.md",
   "LICENSE",
   ".github/workflows/pages.yml",
@@ -56,6 +55,7 @@ const targets: Target[] = [
   { runner: "ubuntu-latest", target: "x86_64-unknown-linux-gnu", runTests: true, runOnPr: true },
   { runner: "ubuntu-latest", target: "aarch64-unknown-linux-gnu", cross: true },
 ];
+const SITE_VERIFY_TARGET = "x86_64-unknown-linux-gnu";
 
 // --- Derived values ---
 
@@ -79,7 +79,10 @@ function stepId(t: Target) {
 type Step = Record<string, any>;
 
 function checkout(): Step {
-  return { uses: "actions/checkout@v6" };
+  return {
+    uses: "actions/checkout@v6",
+    with: { submodules: "recursive" },
+  };
 }
 
 function rustToolchain(): Step {
@@ -99,6 +102,13 @@ function cargoCache(): Step {
 
 function setupDeno(): Step {
   return { uses: "denoland/setup-deno@v2" };
+}
+
+function setupBun(): Step {
+  return {
+    uses: "oven-sh/setup-bun@v2",
+    if: `matrix.config.target == '${SITE_VERIFY_TARGET}'`,
+  };
 }
 
 function setupJust(): Step {
@@ -241,26 +251,11 @@ function uploadArtifact(t: Target): Step {
   };
 }
 
-/** Generate JSON schema from Rust types (only on linux-x86_64 release builds). */
-const SCHEMA_TARGET = "x86_64-unknown-linux-gnu";
-
-function generateSchema(): Step {
+function verifySchemaAndSite(): Step {
   return {
-    name: "Generate schema",
-    if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
-    run: justCommand("schema"),
-  };
-}
-
-function uploadSchemaArtifact(): Step {
-  return {
-    name: "Upload schema artifact",
-    if: `matrix.config.target == '${SCHEMA_TARGET}' && startsWith(github.ref, 'refs/tags/')`,
-    uses: "actions/upload-artifact@v7",
-    with: {
-      name: "schema-artifacts",
-      path: "schema.json",
-    },
+    name: "Verify schema and site",
+    if: `matrix.config.target == '${SITE_VERIFY_TARGET}'`,
+    run: justCommand("ci-verify-schema-site"),
   };
 }
 
@@ -296,6 +291,7 @@ function buildJob(
     env: { CARGO_INCREMENTAL: 0, RUST_BACKTRACE: "full" },
     steps: [
       ...setupSteps(),
+      setupBun(),
       setupRustTarget(),
       ...setupCross(),
       cargoBuild("debug", false),
@@ -303,11 +299,11 @@ function buildJob(
       cargoBuild("debug", true),
       cargoBuild("release", true),
       lint(),
+      verifySchemaAndSite(),
       test("debug"),
       test("release"),
       ...(includeRelease ? items.map(preRelease) : []),
       ...(includeRelease ? items.map(uploadArtifact) : []),
-      ...(includeRelease ? [generateSchema(), uploadSchemaArtifact()] : []),
     ],
   };
 }
@@ -369,7 +365,11 @@ function draftReleaseJob() {
     "runs-on": "ubuntu-latest",
     permissions: { contents: "write" },
     steps: [
-      { name: "Checkout", uses: "actions/checkout@v6" },
+      {
+        name: "Checkout",
+        uses: "actions/checkout@v6",
+        with: { submodules: "recursive" },
+      },
       { name: "Download artifacts", uses: "actions/download-artifact@v8" },
       setupDeno(),
       setupJust(),
@@ -377,7 +377,6 @@ function draftReleaseJob() {
         name: "Move downloaded artifacts to root directory",
         run: [
           ...targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`),
-          "mv schema-artifacts/schema.json .",
         ].join("\n"),
       },
       {

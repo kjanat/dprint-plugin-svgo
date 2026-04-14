@@ -1,0 +1,3 @@
+[submodule "vendor/svgo"]
+	path = vendor/svgo
+	url = https://github.com/svg/svgo.git

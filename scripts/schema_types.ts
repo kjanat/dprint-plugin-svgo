@@ -4,7 +4,7 @@ import type {
   Config as SvgoConfig,
   DataUri,
   StringifyOptions as SvgoStringifyOptions,
-} from "svgo/browser";
+} from "../vendor/svgo/lib/types.ts";
 
 /** A selector rule for the removeAttributesBySelector plugin. */
 interface RemoveAttributesBySelectorRule {

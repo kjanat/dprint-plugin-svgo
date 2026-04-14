@@ -7,38 +7,53 @@
 import { parse as parseToml } from "@std/toml";
 import * as semver from "semver";
 import $ from "dax";
-import { buildJsBundle, cargoTestAllFeatures, rootDirPath } from "./lib.ts";
+import {
+  buildJsBundle,
+  cargoTestAllFeatures,
+  refreshDenoLock,
+  rootDirPath,
+  syncSvgoDenoImports,
+  vendorSvgoDirPath,
+} from "./lib.ts";
 import { generateSchema } from "./generate_schema.ts";
 
-$.logStep("Upgrading svgo...");
-await $`deno add npm:svgo`.cwd(rootDirPath);
+$.logStep("Fetching svgo tags...");
+await $`git fetch --tags origin`.cwd(vendorSvgoDirPath);
 
-if (!await hasFileChanged("./deno.jsonc") && !await hasFileChanged("./deno.lock")) {
-  $.log("No changes.");
+const currentTag = await getCurrentSvgoTag();
+const latestTag = await getLatestSvgoTag();
+
+if (currentTag === latestTag) {
+  $.log(`SVGO already at ${currentTag}.`);
   Deno.exit(0);
 }
 
-$.log("Found changes.");
+$.logStep(`Upgrading svgo from ${currentTag} to ${latestTag}...`);
+await $`git checkout ${latestTag}`.cwd(vendorSvgoDirPath);
+
+$.logStep("Syncing Deno imports and lockfile...");
+await syncSvgoDenoImports();
+await refreshDenoLock();
+
+$.logStep("Bumping version...");
+const newVersion = await bumpMinorVersion();
 
 $.logStep("Rebuilding...");
 await buildJsBundle();
 await generateSchema(rootDirPath.join("schema.json").toString());
 
-$.logStep("Bumping version...");
-const newVersion = await bumpMinorVersion();
-
 $.logStep("Running tests...");
 await cargoTestAllFeatures();
 
 $.logStep(`Committing and publishing ${newVersion}...`);
-await $`git add -f deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
+await $`git add -f .gitmodules vendor/svgo deno.jsonc deno.lock Cargo.toml Cargo.lock schema.json`;
 await $`git commit -m ${newVersion}`;
-await $`git push origin master`;
+await $`git push origin HEAD:master`;
 await $`git tag ${newVersion}`;
 await $`git push origin ${newVersion}`;
 
 async function bumpMinorVersion() {
-  const projectFile = rootDirPath.join("./Cargo.toml");
+  const projectFile = rootDirPath.join("Cargo.toml");
   const text = await projectFile.readText();
   const cargo = parseToml(text) as {
     workspace: { package: { version: string } };
@@ -57,11 +72,37 @@ async function bumpMinorVersion() {
   return newVersion;
 }
 
-async function hasFileChanged(file: string) {
-  try {
-    await $`git diff --exit-code ${file}`;
-    return false;
-  } catch {
-    return true;
+async function getCurrentSvgoTag() {
+  const lines = await $`git tag --points-at HEAD`.cwd(vendorSvgoDirPath).text();
+  const tags = lines
+    .split(/\r?\n/)
+    .map((line: string) => line.trim())
+    .filter((line: string) => /^v\d/.test(line));
+  if (tags.length === 0) {
+    throw new Error("Expected vendor/svgo HEAD to point at an SVGO version tag.");
   }
+  return sortSemverTags(tags).at(-1)!;
+}
+
+async function getLatestSvgoTag() {
+  const lines = await $`git tag --list v*`.cwd(vendorSvgoDirPath).text();
+  const tags = lines
+    .split(/\r?\n/)
+    .map((line: string) => line.trim())
+    .filter((line: string) => /^v\d/.test(line));
+  if (tags.length === 0) {
+    throw new Error("Could not find any SVGO version tags.");
+  }
+  return sortSemverTags(tags).at(-1)!;
+}
+
+function sortSemverTags(tags: string[]) {
+  return tags.toSorted((a, b) => {
+    const left = semver.parse(a.replace(/^v/, ""));
+    const right = semver.parse(b.replace(/^v/, ""));
+    if (left == null || right == null) {
+      throw new Error(`Expected valid semver tags, got ${a} and ${b}.`);
+    }
+    return semver.compare(left, right);
+  });
 }

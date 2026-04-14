@@ -4,7 +4,7 @@
   "type": "module",
   "module": "index.html",
   "scripts": {
-    "prepare": "bun build.ts",
+    "build": "bun build.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
