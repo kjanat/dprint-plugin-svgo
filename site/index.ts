@@ -201,7 +201,6 @@ const codeEl = el("code");
 codeEl.innerHTML = highlightJson(JSON.stringify(
   {
     svgo: {
-      multipass: true,
       pretty: true,
       indent: 2,
       plugins: [

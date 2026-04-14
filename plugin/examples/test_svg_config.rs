@@ -68,8 +68,8 @@ fn main() {
       println!("Output:\n{}\n", String::from_utf8(formatted).unwrap());
     }
 
-    // Test 3: Multipass optimization
-    println!("=== Test 3: Multipass Optimization ===");
+    // Test 3: Complex SVG with explicit formatting settings
+    println!("=== Test 3: Complex SVG Formatting ===");
     let complex_svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
   <g transform="translate(0,0)">
     <g transform="translate(10,10)">
@@ -81,7 +81,6 @@ fn main() {
     println!("Input:\n{complex_svg}\n");
 
     let mut config_map = ConfigKeyMap::new();
-    config_map.insert("multipass".to_string(), "true".into());
     config_map.insert("pretty".to_string(), "true".into());
 
     let config_result = resolve_config(config_map, Default::default());

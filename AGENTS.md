@@ -46,7 +46,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 **Formatter** (`plugin/src/formatter.rs`): Constructs JS code with config, executes via V8, returns formatted SVG
 
-**Config** (`plugin/src/config.rs`): Maps dprint config to SVGO js2svg options (indent, eol, pretty, multipass)
+**Config** (`plugin/src/config.rs`): Maps dprint config to SVGO js2svg options (indent, eol, pretty)
 
 **JS Bridge** (`js/svgo.ts`): Exposes `formatText()` and `getExtensions()` to Rust via globalThis.dprint
 
@@ -54,7 +54,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 ### Build Process
 
-`just build` bundles `js/svgo.ts` against the published `svgo/browser` build pinned to the vendored `vendor/svgo` version. `plugin/build.rs` creates a V8 snapshot from the final bundle and extracts supported extensions (["svg"]).
+`just build` bundles `js/svgo.ts` against the vendored `vendor/svgo` sources pinned by the submodule. `plugin/build.rs` creates a V8 snapshot from the final bundle and extracts supported extensions (["svg"]).
 
 The canonical generated schema is the tracked root `schema.json`. The site imports that file directly and copies it to `dist/schema.json` during the site build.
 
@@ -69,7 +69,6 @@ Plugin uses `"svgo"` config key in dprint.jsonc:
 ```jsonc
 {
   "svgo": {
-    "multipass": true,
     "pretty": true,
     "indent": 2,
     "eol": "lf"
@@ -77,7 +76,7 @@ Plugin uses `"svgo"` config key in dprint.jsonc:
 }
 ```
 
-Extension overrides: `"svg.multipass": false`
+Extension overrides: `"svg.pretty": false`
 
 Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 

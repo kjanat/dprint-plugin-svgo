@@ -45,7 +45,7 @@ export async function syncSvgoDenoImports() {
   }
 
   const imports = config.imports;
-  const managedImportNames = new Set(["svgo", ...Object.keys(dependencies)]);
+  const managedImportNames = new Set([...Object.keys(dependencies), "svgo/browser"]);
 
   // SVGO owns the npm import aliases in deno.jsonc, so drop any stale ones first.
   for (const [name, value] of Object.entries(imports)) {
@@ -54,13 +54,13 @@ export async function syncSvgoDenoImports() {
     }
   }
 
-  imports.svgo = `npm:svgo@${packageJson.version}`;
+  imports["svgo/browser"] = "./vendor/svgo/lib/svgo.js";
 
   for (const [name, version] of Object.entries(dependencies)) {
     if (typeof version !== "string") {
       throw new Error(`Expected dependency version for ${name} to be a string.`);
     }
-    imports[name] = `npm:${name}@${version}`;
+    imports[name] = getSvgoDependencyImportSpecifier(name, version);
   }
 
   await Deno.writeTextFile(
@@ -357,6 +357,17 @@ function getRegistryHost(registryUrl?: string) {
 
   const url = new URL(registryUrl);
   return url.host;
+}
+
+function getSvgoDependencyImportSpecifier(name: string, version: string) {
+  switch (name) {
+    case "css-tree":
+      return `npm:${name}@${version}/dist/csstree.esm`;
+    case "csso":
+      return `npm:${name}@${version}/dist/csso.esm`;
+    default:
+      return `npm:${name}@${version}`;
+  }
 }
 
 async function pathExists(filePath: string) {

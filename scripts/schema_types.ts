@@ -101,8 +101,6 @@ type RequiredPluginConfig = {
 export interface DprintPluginSvgoConfig {
   /** Can be used by plugins, for example prefixIds. */
   path?: SvgoConfig["path"];
-  /** Pass over SVGs multiple times to ensure all optimizations are applied. */
-  multipass?: SvgoConfig["multipass"];
   /** Precision of floating point numbers passed to supporting plugins. */
   floatPrecision?: SvgoConfig["floatPrecision"];
   /** Plugins configuration. Custom JavaScript plugins are not supported in dprint config. */
@@ -123,6 +121,6 @@ export interface DprintPluginSvgoConfig {
   /** Whether to use short self-closing tags. */
   useShortTags?: boolean;
 
-  /** Extension-specific overrides like `svg.multipass`. */
+  /** Extension-specific overrides like `svg.pretty`. */
   [key: string]: unknown;
 }

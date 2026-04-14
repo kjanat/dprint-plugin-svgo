@@ -365,13 +365,11 @@ jobs:
 
             \     \"svgo\": {
 
-            \       \"multipass\": true,
+            \        \"pretty\": true,
 
-            \       \"pretty\": true,
+            \        \"indent\": 2
 
-            \       \"indent\": 2
-
-            \     }
+            \      }
 
             \   }
 

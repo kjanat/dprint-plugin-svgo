@@ -7,3 +7,4 @@ bun.lock
 
 plugin.json
 dist
+*.log

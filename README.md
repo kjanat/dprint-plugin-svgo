@@ -17,7 +17,6 @@ See [SVGO's configuration].
 {
   // ...etc...
   "svgo": {
-    "multipass": true,
     "pretty": true,
     "indent": 2,
     "eol": "lf"
@@ -33,9 +32,8 @@ Add the file extension to the start of the configuration option. For example:
 {
   // ...etc...
   "svgo": {
-    "multipass": true,
     // use different settings for specific svg files
-    "svg.multipass": false
+    "svg.pretty": false
   }
 }
 ```

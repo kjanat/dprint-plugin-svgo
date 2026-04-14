@@ -347,10 +347,9 @@ In a dprint configuration file:
    {
      // ...etc...
      "svgo": {
-       "multipass": true,
-       "pretty": true,
-       "indent": 2
-     }
+        "pretty": true,
+        "indent": 2
+      }
    }
    \`\`\`
 `;

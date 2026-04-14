@@ -7,10 +7,6 @@
       "description": "Can be used by plugins, for example prefixIds.",
       "type": "string"
     },
-    "multipass": {
-      "description": "Pass over SVGs multiple times to ensure all optimizations are applied.",
-      "type": "boolean"
-    },
     "floatPrecision": {
       "description": "Precision of floating point numbers passed to supporting plugins.",
       "type": "number"

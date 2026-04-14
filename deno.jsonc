@@ -5,18 +5,18 @@
     "@std/toml": "jsr:@std/toml@^1",
     "commander": "npm:commander@^11.1.0",
     "css-select": "npm:css-select@^5.1.0",
-    "css-tree": "npm:css-tree@^3.0.1",
+    "css-tree": "npm:css-tree@^3.0.1/dist/csstree.esm",
     "css-what": "npm:css-what@^6.1.0",
-    "csso": "npm:csso@^5.0.5",
+    "csso": "npm:csso@^5.0.5/dist/csso.esm",
     "dax": "jsr:@david/dax@^0.45",
     "picocolors": "npm:picocolors@^1.1.1",
     "sax": "npm:sax@^1.5.0",
     "semver": "jsr:@std/semver@^1",
-    "svgo": "npm:svgo@4.0.1",
     "yaml": "jsr:@eemeli/yaml@^2",
     "dprint/automation/hash.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts",
     "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts",
-    "dprint/automation/publish-release": "https://raw.githubusercontent.com/dprint/automation/0.10.3/tasks/publish-release.ts"
+    "dprint/automation/publish-release": "https://raw.githubusercontent.com/dprint/automation/0.10.3/tasks/publish-release.ts",
+    "svgo/browser": "./vendor/svgo/lib/svgo.js"
   },
   "exclude": [
     "./js/",

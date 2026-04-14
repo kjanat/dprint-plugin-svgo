@@ -50,12 +50,6 @@ impl SvgoConfig {
       .and_then(|v| v.as_bool())
   }
 
-  /// Get whether multipass optimization is enabled.
-  #[must_use]
-  pub fn is_multipass(&self) -> Option<bool> {
-    self.main.get("multipass").and_then(|v| v.as_bool())
-  }
-
   /// Get a value from the main configuration.
   #[must_use]
   pub fn get_main_value(&self, key: &str) -> Option<&serde_json::Value> {
@@ -148,12 +142,6 @@ pub fn resolve_config(
 
   main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
 
-  // Handle SVGO multipass option
-  main.insert(
-    "multipass".to_string(),
-    get_value(&mut config, "multipass", false, &mut diagnostics).into(),
-  );
-
   for (key, value) in config {
     let mut value = config_key_value_to_json(value);
 
@@ -167,6 +155,12 @@ pub fn resolve_config(
 
     // Validate configuration schema
     validate_config_value(&key, &value, &mut diagnostics);
+
+    // dprint already retries unstable formatters, so multipass is unsupported.
+    let base_key = key.rfind('.').map_or(key.as_str(), |i| &key[i + 1..]);
+    if base_key == "multipass" {
+      continue;
+    }
 
     if let Some(index) = key.rfind('.') {
       let extension = key[..index].to_lowercase();
@@ -217,7 +211,6 @@ const KNOWN_SVGO_KEYS: &[&str] = &[
   "floatPrecision",
   "datauri",
   "js2svg",
-  "multipass",
   "path",
   "finalNewline",
   "useShortTags",
@@ -281,8 +274,15 @@ fn validate_config_value(
         });
       }
     }
-    "multipass" | "path" => {
-      // Known keys with no additional validation
+    "path" => {
+      // Known key with no additional validation
+    }
+    "multipass" => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: key.to_string(),
+        message: "'multipass' is not supported. dprint retries unstable formatting internally."
+          .to_string(),
+      });
     }
     _ => {
       // Warn about unknown keys that might be typos

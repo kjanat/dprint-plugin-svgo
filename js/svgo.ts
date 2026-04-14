@@ -30,6 +30,7 @@ function formatText(
     const result = optimize(fileText, {
       path: filePath,
       ...config,
+      multipass: false,
     });
 
     const formattedText = result.data;

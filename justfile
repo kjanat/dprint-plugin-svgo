@@ -34,6 +34,16 @@ build:
 test: build
     cargo test --all-features
 
+# Check sample SVG fixtures with local plugin config.
+[group('plugin')]
+samples-check:
+    rm -rf samples-tmp && cp -R samples samples-tmp && trap 'rm -rf samples-tmp' EXIT && dprint check -c=.dprint.local.jsonc --config-discovery=false
+
+# Format sample SVG fixtures in a persistent temp copy.
+[group('plugin')]
+samples-fmt:
+    rm -rf samples-tmp && cp -R samples samples-tmp && exit_code=0; dprint fmt -c=.dprint.local.jsonc --config-discovery=false || exit_code=$?; printf "*\n" > samples-tmp/.gitignore; exit $exit_code
+
 # Build a locked debug target in CI.
 [private]
 ci-build-debug target:
