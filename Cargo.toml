@@ -3,7 +3,7 @@ resolver = "3"
 members  = ["base", "patches/*", "plugin"]
 
 [workspace.package]
-version      = "0.4.0"
+version      = "0.4.1"
 edition      = "2024"
 rust-version = "1.86.0"
 readme       = "README.md"
@@ -96,6 +96,13 @@ temporal_rs   = { path = "patches/temporal_rs" }
 # rusty-v8 needs at least -O1 to not miscompile
 [profile.dev.package.v8]
 opt-level = 1
+
+[profile.release]
+opt-level     = "z"
+strip         = "symbols"
+lto           = true
+panic         = "abort"
+codegen-units = 1
 
 [profile.release.package.deno_core]
 opt-level = 3
