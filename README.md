@@ -24,19 +24,9 @@ See [SVGO's configuration].
 }
 ```
 
-### File extension specific configuration
-
-Add the file extension to the start of the configuration option. For example:
-
-```jsonc
-{
-  // ...etc...
-  "svgo": {
-    // use different settings for specific svg files
-    "svg.pretty": false
-  }
-}
-```
+Because this plugin only formats `.svg` files, configure options directly at
+the top level under `svgo`. Legacy `svg.*` keys are still accepted as aliases,
+but they are unnecessary.
 
 ## Why Does This Exist?
 

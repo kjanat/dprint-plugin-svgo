@@ -154,40 +154,35 @@ fn resolve_config_with_pretty_false() {
 }
 
 #[test]
-fn resolve_config_with_extension_override() {
+fn resolve_config_svg_alias_flattens_to_main_config() {
   let mut config = ConfigKeyMap::new();
   config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
   let result = resolve_config(config, empty_global_config());
 
-  // Extension override should be applied for svg files.
-  let svg_override = result
-    .config
-    .get_extension_override("svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert!(!svg_override.get("pretty").unwrap().as_bool().unwrap());
+  assert_eq!(result.config.is_pretty(), Some(false));
+  assert!(!result.config.has_extension_override("svg"));
 }
 
 #[test]
-fn resolve_config_with_multiple_extension_overrides() {
+fn resolve_config_svg_alias_overrides_plain_key() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("pretty".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
+
+  let result = resolve_config(config, empty_global_config());
+
+  assert_eq!(result.config.is_pretty(), Some(false));
+}
+
+#[test]
+fn resolve_config_keeps_non_svg_extension_overrides() {
   let mut config = ConfigKeyMap::new();
   config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
   config.insert("svgz.pretty".to_string(), ConfigKeyValue::Bool(true));
 
   let result = resolve_config(config, empty_global_config());
 
-  // SVG override
-  let svg_override = result
-    .config
-    .get_extension_override("svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert!(!svg_override.get("pretty").unwrap().as_bool().unwrap());
-
-  // SVGZ override
   let svgz_override = result
     .config
     .get_extension_override("svgz")
@@ -195,6 +190,30 @@ fn resolve_config_with_multiple_extension_overrides() {
     .as_object()
     .unwrap();
   assert!(svgz_override.get("pretty").unwrap().as_bool().unwrap());
+  assert_eq!(result.config.is_pretty(), Some(false));
+  assert!(!result.config.has_extension_override("svg"));
+}
+
+#[test]
+fn resolve_config_svg_plugins_alias_flattens_to_main_config() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "svg.plugins".to_string(),
+    ConfigKeyValue::Array(vec![ConfigKeyValue::String("preset-default".to_string())]),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  let plugins = result
+    .config
+    .main
+    .get("plugins")
+    .unwrap()
+    .as_array()
+    .unwrap();
+  assert_eq!(plugins.len(), 1);
+  assert_eq!(plugins[0].as_str().unwrap(), "preset-default");
+  assert!(!result.config.has_extension_override("svg"));
 }
 
 #[test]
@@ -267,8 +286,8 @@ fn resolve_config_extension_case_insensitive() {
 
   let result = resolve_config(config, empty_global_config());
 
-  // Should be stored as lowercase
-  assert!(result.config.has_extension_override("svg"));
+  assert_eq!(result.config.is_pretty(), Some(true));
+  assert!(!result.config.has_extension_override("svg"));
   assert!(!result.config.has_extension_override("SVG"));
 }
 
@@ -648,15 +667,14 @@ fn svgo_config_get_js2svg() {
 }
 
 #[test]
-fn svgo_config_has_extension_override() {
+fn svgo_config_has_extension_override_for_non_svg_extensions() {
   let mut config = ConfigKeyMap::new();
-  config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("svgz.pretty".to_string(), ConfigKeyValue::Bool(true));
 
   let result = resolve_config(config, empty_global_config());
 
-  // Test has_extension_override
-  assert!(result.config.has_extension_override("svg"));
-  assert!(!result.config.has_extension_override("svgz"));
+  assert!(result.config.has_extension_override("svgz"));
+  assert!(!result.config.has_extension_override("svg"));
   assert!(!result.config.has_extension_override("png"));
 }
 

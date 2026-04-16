@@ -81,9 +81,10 @@ impl SvgoConfig {
 /// A result containing the resolved `SvgoConfig` and any diagnostics.
 #[must_use]
 pub fn resolve_config(
-  mut config: ConfigKeyMap,
+  config: ConfigKeyMap,
   global_config: GlobalConfiguration,
 ) -> ResolveConfigurationResult<SvgoConfig> {
+  let mut config = normalize_svg_aliases(config);
   let mut diagnostics = Vec::new();
   let mut main: serde_json::Map<String, serde_json::Value> = Default::default();
   let mut extension_overrides: serde_json::Map<String, serde_json::Value> = Default::default();
@@ -184,6 +185,35 @@ pub fn resolve_config(
     },
     diagnostics,
   }
+}
+
+/// Normalizes `svg.*` keys into plain top-level keys.
+///
+/// This plugin only formats `.svg` files, so `svg.pretty` and friends are
+/// redundant. Preserve compatibility by treating them as aliases while letting
+/// the `svg.*` form override the plain key if both are present.
+fn normalize_svg_aliases(config: ConfigKeyMap) -> ConfigKeyMap {
+  let mut normalized = ConfigKeyMap::new();
+  let mut svg_aliases = Vec::new();
+
+  for (key, value) in config {
+    if let Some(index) = key.rfind('.') {
+      let extension = &key[..index];
+      let base_key = &key[index + 1..];
+      if extension.eq_ignore_ascii_case("svg") && !base_key.is_empty() {
+        svg_aliases.push((base_key.to_string(), value));
+        continue;
+      }
+    }
+
+    normalized.insert(key, value);
+  }
+
+  for (key, value) in svg_aliases {
+    normalized.insert(key, value);
+  }
+
+  normalized
 }
 
 fn config_key_value_to_json(value: ConfigKeyValue) -> serde_json::Value {

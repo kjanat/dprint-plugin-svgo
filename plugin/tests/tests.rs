@@ -111,13 +111,13 @@ fn format_with_range_returns_none() {
 }
 
 #[test]
-fn format_with_extension_override() {
+fn format_with_svg_alias_override() {
   let runtime = create_tokio_runtime();
 
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
 
-    // First resolve config with extension override
+    // `svg.*` is treated as an alias for the plain top-level setting.
     let mut config_map = ConfigKeyMap::new();
     config_map.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
@@ -483,7 +483,7 @@ fn extension_override_affects_output() {
       )
       .await;
 
-    // Format with per-extension compact output.
+    // Format with the legacy `svg.*` alias for compact output.
     let mut config_map = ConfigKeyMap::new();
     config_map.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
