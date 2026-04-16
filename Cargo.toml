@@ -16,7 +16,6 @@ publish      = false
 async-channel            = "2.5"
 calendrical_calculations = "0.2"
 core_maths               = "0.1"
-deno_core                = "0.397"
 dprint-core              = "0.67"
 dprint-development       = "0.10"
 flate2                   = "1"
@@ -33,6 +32,11 @@ web-time                 = "1.1"
 writeable                = "0.6"
 zoneinfo64               = "0.3"
 zstd                     = "0.13"
+
+[workspace.dependencies.deno_core]
+version          = "0.397.0"
+default-features = false
+features         = ["reactor-tokio", "v8_use_custom_libcxx"]
 
 [workspace.dependencies.diplomat]
 version          = "0.15"
