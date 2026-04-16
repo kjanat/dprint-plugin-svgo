@@ -17,6 +17,7 @@ use dprint_plugin_deno_base::channel::CreateChannelOptions;
 
 use crate::config::SvgoConfig;
 use crate::config::resolve_config;
+use crate::debug_log;
 use crate::formatter::SvgoFormatter;
 
 fn get_supported_extensions() -> &'static Vec<String> {
@@ -53,6 +54,7 @@ impl AsyncPluginHandler for SvgoPluginHandler {
   type Configuration = SvgoConfig;
 
   fn plugin_info(&self) -> PluginInfo {
+    debug_log("handler: plugin_info");
     PluginInfo {
       name: env!("CARGO_PKG_NAME").to_string(),
       version: env!("CARGO_PKG_VERSION").to_string(),
@@ -67,6 +69,7 @@ impl AsyncPluginHandler for SvgoPluginHandler {
   }
 
   fn license_text(&self) -> String {
+    debug_log("handler: license_text");
     include_str!("../../LICENSE").to_string()
   }
 
@@ -75,15 +78,18 @@ impl AsyncPluginHandler for SvgoPluginHandler {
     config: ConfigKeyMap,
     global_config: GlobalConfiguration,
   ) -> PluginResolveConfigurationResult<Self::Configuration> {
+    debug_log("handler: resolve_config start");
     let result = resolve_config(config, global_config);
-    PluginResolveConfigurationResult {
+    let resolved = PluginResolveConfigurationResult {
       config: result.config,
       diagnostics: result.diagnostics,
       file_matching: FileMatchingInfo {
         file_extensions: get_supported_extensions().clone(),
         file_names: vec![],
       },
-    }
+    };
+    debug_log("handler: resolve_config done");
+    resolved
   }
 
   async fn format(
@@ -91,11 +97,14 @@ impl AsyncPluginHandler for SvgoPluginHandler {
     request: FormatRequest<Self::Configuration>,
     _format_with_host: impl FnMut(HostFormatRequest) -> LocalBoxFuture<'static, FormatResult> + 'static,
   ) -> FormatResult {
+    debug_log("handler: format start");
     if request.range.is_some() {
       // no support for range formatting
       return Ok(None);
     }
 
-    self.channel.format(request).await
+    let result = self.channel.format(request).await;
+    debug_log("handler: format done");
+    result
   }
 }

@@ -1,4 +1,21 @@
 {
+  "workspace": [
+    "vendor/svgo"
+  ],
+  "tasks": {
+    "bundle": {
+      "command": "tsdown --config tsdown.config.ts --filter svgo-browser",
+      "description": "bundle to dist/svgo.mjs",
+      "dependencies": []
+    },
+    "bundle:runtime": {
+      "command": "tsdown --config tsdown.config.ts --filter svgo-runtime",
+      "description": "bundle runtime for V8 snapshot",
+      "dependencies": [
+        "bundle"
+      ]
+    }
+  },
   "imports": {
     "@std/jsonc": "jsr:@std/jsonc@^1",
     "@std/path": "jsr:@std/path@^1",
@@ -12,11 +29,13 @@
     "picocolors": "npm:picocolors@^1.1.1",
     "sax": "npm:sax@^1.5.0",
     "semver": "jsr:@std/semver@^1",
+    "tsdown": "npm:tsdown@^0.21.8",
     "yaml": "jsr:@eemeli/yaml@^2",
     "dprint/automation/hash.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts",
     "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts",
     "dprint/automation/publish-release": "https://raw.githubusercontent.com/dprint/automation/0.10.3/tasks/publish-release.ts",
-    "svgo/browser": "./vendor/svgo/lib/svgo.js"
+    "svgo/browser": "./dist/svgo.mjs",
+    "svgo/types": "./vendor/svgo/lib/types.ts"
   },
   "exclude": [
     "./js/",
@@ -28,5 +47,6 @@
   ],
   "compilerOptions": {
     "checkJs": false
-  }
+  },
+  "nodeModulesDir": "auto"
 }

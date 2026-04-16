@@ -16,5 +16,16 @@ pub mod config;
 pub mod error;
 mod formatter;
 mod handler;
+mod process_loop;
+mod process_messages;
 
 pub use handler::*;
+
+/// Logs guarded debug output for plugin process diagnostics.
+pub fn debug_log(message: &str) {
+  if std::env::var_os("SVGO_PLUGIN_DEBUG").is_some() {
+    eprintln!("[svgo-plugin] {message}");
+  }
+}
+
+pub use process_loop::handle_process_stdio_messages_sync;

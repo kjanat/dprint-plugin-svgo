@@ -1,5 +1,5 @@
 import { optimize } from "svgo/browser";
-import type { Config } from "../vendor/svgo/lib/types.ts";
+import type { Config } from "svgo/types";
 
 declare global {
   var dprint: {

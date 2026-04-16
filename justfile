@@ -13,7 +13,7 @@ verify: fmt check test site-typecheck site-build
 # Type-check the Deno scripts.
 [private]
 check-deno:
-    deno check --frozen --check-js scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/lib.ts scripts/local_test.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts
+    deno check --frozen --check-js scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/lib.ts scripts/local_test.ts scripts/output_local_plugin_ref.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts
 
 # Lint the Rust crates with clippy.
 [private]
@@ -27,7 +27,7 @@ ci-lint: check-clippy
 # Bundle the SVGO wrapper for V8.
 [group('plugin')]
 build:
-    deno bundle --frozen --format iife --platform browser --minify -o js/dist/svgo.js js/svgo.ts
+    deno task --frozen bundle:runtime
 
 # Build and run the full test suite.
 [group('plugin')]
@@ -37,12 +37,12 @@ test: build
 # Check sample SVG fixtures with local plugin config.
 [group('plugin')]
 samples-check:
-    rm -rf samples-tmp && cp -R samples samples-tmp && trap 'rm -rf samples-tmp' EXIT && dprint check -c=.dprint.local.jsonc --config-discovery=false
+    rm -rf samples-tmp && cp -R samples samples-tmp && trap 'rm -rf samples-tmp' EXIT && plugin_ref=$(deno run --frozen --allow-read scripts/output_local_plugin_ref.ts) && dprint check -c=.dprint.local.jsonc --config-discovery=false --plugins "$plugin_ref"
 
 # Format sample SVG fixtures in a persistent temp copy.
 [group('plugin')]
 samples-fmt:
-    rm -rf samples-tmp && cp -R samples samples-tmp && exit_code=0; dprint fmt -c=.dprint.local.jsonc --config-discovery=false || exit_code=$?; printf "*\n" > samples-tmp/.gitignore; exit $exit_code
+    rm -rf samples-tmp && cp -R samples samples-tmp && plugin_ref=$(deno run --frozen --allow-read scripts/output_local_plugin_ref.ts) && exit_code=0; dprint fmt -c=.dprint.local.jsonc --config-discovery=false --plugins "$plugin_ref" || exit_code=$?; printf "*\n" > samples-tmp/.gitignore; exit $exit_code
 
 # Build a locked debug target in CI.
 [private]

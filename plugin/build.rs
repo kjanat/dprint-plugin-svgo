@@ -1,7 +1,7 @@
 //! Build script for the SVGO dprint plugin.
 //!
 //! Performs three steps at compile time:
-//! 1. Bundles JS (svgo.ts + SVGO) via `deno bundle`
+//! 1. Bundles JS (svgo.ts + SVGO) via `tsdown`
 //! 2. Creates a V8 heap snapshot from the bundled JS for fast runtime startup
 //! 3. Extracts supported file extensions (["svg"]) by calling into the JS
 //!
@@ -24,32 +24,26 @@ fn main() {
   let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
   let startup_snapshot_path = out_dir.join("STARTUP_SNAPSHOT.bin");
   let js_dir = root_dir.join("js");
+  let startup_code_path = js_dir.join("dist/svgo.js");
   let supported_extensions_path = out_dir.join("SUPPORTED_EXTENSIONS.json");
 
-  eprintln!("Running JS build...");
-  let build_result = Command::new("deno")
-    .args([
-      "bundle",
-      "--frozen",
-      "--format",
-      "iife",
-      "--platform",
-      "browser",
-      "--minify",
-      "-o",
-      "js/dist/svgo.js",
-      "js/svgo.ts",
-    ])
-    .current_dir(root_dir)
-    .status();
-  match build_result {
-    Ok(status) => {
-      assert!(status.code() == Some(0), "Error building.");
+  if env::var_os("DPRINT_SVGO_SKIP_JS_BUILD").is_some() {
+    eprintln!("Skipping JS build because DPRINT_SVGO_SKIP_JS_BUILD is set.");
+  } else {
+    eprintln!("Running JS build...");
+    let build_result = Command::new("deno")
+      .args(["task", "--frozen", "bundle:runtime"])
+      .current_dir(root_dir)
+      .status();
+    match build_result {
+      Ok(status) => {
+        assert!(status.code() == Some(0), "Error building.");
+      }
+      Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+        eprintln!("Skipping build because deno executable not found.");
+      }
+      Err(err) => panic!("Error building to script: {err}"),
     }
-    Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-      eprintln!("Skipping build because deno executable not found.");
-    }
-    Err(err) => panic!("Error building to script: {err}"),
   }
 
   println!(
@@ -58,7 +52,19 @@ fn main() {
   );
   println!(
     "cargo:rerun-if-changed={}",
-    root_dir.join("vendor/svgo").display()
+    js_dir.join("console.js").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("vendor/svgo/package.json").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("vendor/svgo/lib").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("vendor/svgo/plugins").display()
   );
   println!(
     "cargo:rerun-if-changed={}",
@@ -68,8 +74,17 @@ fn main() {
     "cargo:rerun-if-changed={}",
     root_dir.join("deno.lock").display()
   );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("tsdown.config.ts").display()
+  );
+  println!(
+    "cargo:rerun-if-changed={}",
+    root_dir.join("dist/svgo.mjs").display()
+  );
+  println!("cargo:rerun-if-changed={}", startup_code_path.display());
+  println!("cargo:rerun-if-env-changed=DPRINT_SVGO_SKIP_JS_BUILD");
 
-  let startup_code_path = js_dir.join("dist/svgo.js");
   assert!(startup_code_path.exists(), "Run `just build` first.");
   let snapshot = create_snapshot(startup_snapshot_path, &startup_code_path);
   let snapshot = Box::leak(snapshot);

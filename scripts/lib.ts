@@ -10,16 +10,26 @@ export const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();
 export const vendorSvgoDirPath = rootDirPath.join("vendor", "svgo");
 export const releaseDirPath = rootDirPath.join("target", "release");
 const denoConfigPath = rootDirPath.join("deno.jsonc");
-const dprintConfigPath = rootDirPath.join(".dprint.jsonc");
-const localTestSkippedDirNames = new Set([".git", "dist", "node_modules", "target", "vendor"]);
 
 export async function buildJsBundle() {
-  await $`deno bundle --frozen --format iife --platform browser --minify -o js/dist/svgo.js js/svgo.ts`
+  await $`deno task --frozen bundle:runtime`
     .cwd(rootDirPath);
 }
 
-export async function cargoBuildRelease() {
-  await $`cargo build --release`.cwd(rootDirPath);
+export async function cargoBuildRelease(
+  options: { skipJsBuildInBuildScript?: boolean } = {},
+) {
+  const command = new Deno.Command("cargo", {
+    args: ["build", "--release"],
+    cwd: rootDirPath.toString(),
+    stdout: "inherit",
+    stderr: "inherit",
+    env: options.skipJsBuildInBuildScript ? { DPRINT_SVGO_SKIP_JS_BUILD: "1" } : undefined,
+  });
+  const status = await command.spawn().status;
+  if (!status.success) {
+    throw new Error(`cargo build --release failed with exit code ${status.code}.`);
+  }
 }
 
 export async function cargoTestAllFeatures() {
@@ -54,7 +64,7 @@ export async function syncSvgoDenoImports() {
     }
   }
 
-  imports["svgo/browser"] = "./vendor/svgo/lib/svgo.js";
+  imports["svgo/browser"] = "./dist/svgo.mjs";
 
   for (const [name, version] of Object.entries(dependencies)) {
     if (typeof version !== "string") {
@@ -142,37 +152,92 @@ export async function createPluginFile(
 }
 
 export async function prepareLocalTestArtifacts() {
+  console.error("[local-test] bundling runtime JS...");
   await buildJsBundle();
-  await cargoBuildRelease();
-  await zipCurrentPlatformReleaseBinary();
+
+  console.error("[local-test] building Rust release binary...");
+  await cargoBuildRelease({ skipJsBuildInBuildScript: true });
+
+  console.error("[local-test] zipping current platform binary...");
+  const zipFilePath = await zipCurrentPlatformReleaseBinary();
+
+  console.error("[local-test] writing plugin.json...");
   const pluginFilePath = await createPluginFile({
     outputDir: releaseDirPath.toString(),
     test: true,
   });
+
+  console.error("[local-test] calculating plugin checksum...");
   const checksum = await getFileChecksum(pluginFilePath);
+
+  console.error("[local-test] artifacts ready.");
   return {
     checksum,
     pluginFilePath,
+    zipFilePath,
   };
 }
 
-export async function createLocalTestWorkspace(pluginReference: string) {
+export async function createLocalTestWorkspace(pluginChecksum: string) {
   const tempDirPath = await Deno.makeTempDir({
     dir: rootDirPath.join("target").toString(),
     prefix: "local-test-",
   });
   const workspaceDirPath = join(tempDirPath, "workspace");
-  await copyDirectory(rootDirPath.toString(), workspaceDirPath);
-  const configPath = await writeLocalTestConfig(pluginReference, workspaceDirPath);
+  await Deno.mkdir(workspaceDirPath, { recursive: true });
+  await copyLocalTestPluginArtifacts(workspaceDirPath);
+  const fixturePath = await writeLocalTestFixture(workspaceDirPath);
+  const configPath = await writeLocalTestConfig(workspaceDirPath, pluginChecksum);
   return {
     configPath,
+    fixturePath,
     tempDirPath,
     workspaceDirPath,
   };
 }
 
-export async function runDprintFormat(configPath: string) {
-  await $`dprint fmt --config ${configPath}`.cwd($.path(configPath).parentOrThrow());
+export async function runDprintFormat(
+  configPath: string,
+  targetPath?: string,
+  timeoutMs = 120_000,
+) {
+  const args = ["fmt", "--config", configPath];
+  if (targetPath != null) {
+    args.push(targetPath);
+  }
+
+  const abortController = new AbortController();
+  let timedOut = false;
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    abortController.abort();
+  }, timeoutMs);
+
+  const command = new Deno.Command("dprint", {
+    args,
+    cwd: $.path(configPath).parentOrThrow().toString(),
+    stdout: "inherit",
+    stderr: "inherit",
+    signal: abortController.signal,
+  });
+
+  try {
+    const child = command.spawn();
+    const status = await child.status;
+    if (!status.success) {
+      if (timedOut || status.code === 124 || status.code === 143) {
+        throw new Error(`dprint fmt timed out after ${timeoutMs / 1000} seconds.`);
+      }
+      throw new Error(`dprint fmt failed with exit code ${status.code}.`);
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`dprint fmt timed out after ${timeoutMs / 1000} seconds.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function getSvgoVersion() {
@@ -181,8 +246,7 @@ export async function getSvgoVersion() {
 }
 
 async function zipCurrentPlatformReleaseBinary() {
-  const platform = processPlugin.getCurrentPlatform();
-  const zipFileName = processPlugin.getStandardZipFileName(PLUGIN_NAME, platform);
+  const zipFileName = getCurrentPlatformZipFileName();
   const binaryName = Deno.build.os === "windows" ? `${PLUGIN_NAME}.exe` : PLUGIN_NAME;
   const zipFilePath = join(releaseDirPath.toString(), zipFileName);
 
@@ -200,67 +264,52 @@ async function zipCurrentPlatformReleaseBinary() {
   return zipFilePath;
 }
 
+function getCurrentPlatformZipFileName() {
+  const platform = processPlugin.getCurrentPlatform();
+  return processPlugin.getStandardZipFileName(PLUGIN_NAME, platform);
+}
+
+async function copyLocalTestPluginArtifacts(workspaceDirPath: string) {
+  const zipFileName = getCurrentPlatformZipFileName();
+  await Deno.copyFile(
+    releaseDirPath.join("plugin.json").toString(),
+    join(workspaceDirPath, "plugin.json"),
+  );
+  await Deno.copyFile(
+    releaseDirPath.join(zipFileName).toString(),
+    join(workspaceDirPath, zipFileName),
+  );
+}
+
 async function getFileChecksum(filePath: string) {
   const bytes = await Deno.readFile(filePath);
   return await getChecksum(bytes);
 }
 
-async function writeLocalTestConfig(pluginReference: string, workspaceDirPath: string) {
-  const configText = await Deno.readTextFile(dprintConfigPath.toString());
-  const config = parseJsonc(configText);
-  if (!isRecord(config)) {
-    throw new Error("Expected .dprint.jsonc to contain an object.");
-  }
-
-  const exec = config.exec;
-  if (!isRecord(exec)) {
-    throw new Error("Expected .dprint.jsonc exec config to be an object.");
-  }
-  exec.cwd = workspaceDirPath;
-
-  if (!Array.isArray(config.plugins)) {
-    throw new Error("Expected .dprint.jsonc plugins to be an array.");
-  }
-
-  const pluginIndex = config.plugins.findIndex((plugin) =>
-    typeof plugin === "string" && plugin.includes("plugins.dprint.dev/kjanat/svg-v")
-  );
-  if (pluginIndex === -1) {
-    throw new Error("Could not find the published svgo plugin entry in .dprint.jsonc.");
-  }
-  config.plugins[pluginIndex] = pluginReference;
+async function writeLocalTestConfig(workspaceDirPath: string, pluginChecksum: string) {
+  const config = {
+    $schema: "https://dprint.dev/schemas/v0.json",
+    includes: ["**/*.svg"],
+    plugins: [`./plugin.json@${pluginChecksum}`],
+    svgo: {
+      pretty: true,
+      indent: 2,
+      eol: "lf",
+      finalNewline: true,
+    },
+  };
 
   const configPath = join(workspaceDirPath, ".dprint.jsonc");
   await Deno.writeTextFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
   return configPath;
 }
 
-async function copyDirectory(sourceDirPath: string, destinationDirPath: string) {
-  await Deno.mkdir(destinationDirPath, { recursive: true });
-
-  for await (const entry of Deno.readDir(sourceDirPath)) {
-    if (entry.isDirectory && localTestSkippedDirNames.has(entry.name)) {
-      continue;
-    }
-
-    const sourcePath = join(sourceDirPath, entry.name);
-    const destinationPath = join(destinationDirPath, entry.name);
-
-    if (entry.isDirectory) {
-      await copyDirectory(sourcePath, destinationPath);
-      continue;
-    }
-
-    if (entry.isFile) {
-      await Deno.copyFile(sourcePath, destinationPath);
-      continue;
-    }
-
-    if (entry.isSymlink) {
-      const targetPath = await Deno.readLink(sourcePath);
-      await Deno.symlink(targetPath, destinationPath);
-    }
-  }
+async function writeLocalTestFixture(workspaceDirPath: string) {
+  const fixturePath = join(workspaceDirPath, "fixture.svg");
+  const fixture =
+    `<svg xmlns="http://www.w3.org/2000/svg"><g><rect width="10" height="10"/></g></svg>\n`;
+  await Deno.writeTextFile(fixturePath, fixture);
+  return fixturePath;
 }
 
 async function getSvgoPackageJson() {

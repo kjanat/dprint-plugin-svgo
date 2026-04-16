@@ -15,6 +15,7 @@ use dprint_plugin_deno_base::util::set_v8_max_memory;
 use tokio::time::timeout;
 
 use crate::config::SvgoConfig;
+use crate::debug_log;
 use crate::error::SvgoError;
 
 /// Maximum allowed nesting depth in SVG structure.
@@ -59,10 +60,12 @@ pub struct SvgoFormatter {
 
 impl Default for SvgoFormatter {
   fn default() -> Self {
+    debug_log("formatter: creating JsRuntime");
     let runtime = JsRuntime::new(CreateRuntimeOptions {
       extensions: vec![],
       startup_snapshot: Some(get_startup_snapshot()),
     });
+    debug_log("formatter: JsRuntime ready");
     Self { runtime }
   }
 }
@@ -73,6 +76,7 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     &mut self,
     request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
+    debug_log("formatter: format_text start");
     // Cancellation support not yet implemented. See: https://github.com/kjanat/dprint-plugin-svgo/issues/2
     // Range formatting not supported by SVGO - always formats entire document.
     let file_text = String::from_utf8(request.file_bytes).map_err(SvgoError::InvalidUtf8)?;
@@ -105,7 +109,9 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       seconds: FORMAT_TIMEOUT_SECS,
     })?;
 
-    result.map(|s| s.map(std::string::String::into_bytes))
+    let result = result.map(|s| s.map(std::string::String::into_bytes));
+    debug_log("formatter: format_text done");
+    result
   }
 }
 
