@@ -149,6 +149,76 @@ fn format_with_extension_override() {
 }
 
 #[test]
+fn format_with_website_example_plugins() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    let mut prefix_params = ConfigKeyMap::new();
+    prefix_params.insert(
+      "prefix".to_string(),
+      ConfigKeyValue::String("icon".to_string()),
+    );
+
+    let mut prefix_plugin = ConfigKeyMap::new();
+    prefix_plugin.insert(
+      "name".to_string(),
+      ConfigKeyValue::String("prefixIds".to_string()),
+    );
+    prefix_plugin.insert("params".to_string(), ConfigKeyValue::Object(prefix_params));
+
+    let mut config_map = ConfigKeyMap::new();
+    config_map.insert("pretty".to_string(), ConfigKeyValue::Bool(true));
+    config_map.insert("indent".to_string(), ConfigKeyValue::Number(2));
+    config_map.insert(
+      "plugins".to_string(),
+      ConfigKeyValue::Array(vec![
+        ConfigKeyValue::String("preset-default".to_string()),
+        ConfigKeyValue::String("removeViewBox".to_string()),
+        ConfigKeyValue::Object(prefix_plugin),
+      ]),
+    );
+
+    let resolved = handler
+      .resolve_config(config_map, GlobalConfiguration::default())
+      .await;
+    assert!(resolved.diagnostics.is_empty());
+
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">
+  <defs>
+    <clipPath id="shape">
+      <path d="M0 0h10v10H0z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#shape)">
+    <path d="M0 0h5v5H0z" />
+  </g>
+</svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("website-example.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(resolved.config),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+    let output = String::from_utf8(result.unwrap().unwrap()).unwrap();
+    assert!(output.contains("id=\"icon__a\""));
+    assert!(output.contains("clip-path=\"url(#icon__a)\""));
+    assert!(!output.contains("viewBox"));
+  });
+}
+
+#[test]
 fn format_with_invalid_utf8_returns_error() {
   let runtime = create_tokio_runtime();
 
