@@ -3,7 +3,7 @@ resolver = "3"
 members  = ["base", "patches/*", "plugin"]
 
 [workspace.package]
-version      = "0.3.2"
+version      = "0.4.0"
 edition      = "2024"
 rust-version = "1.86.0"
 readme       = "README.md"
