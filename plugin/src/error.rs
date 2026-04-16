@@ -13,6 +13,14 @@ pub enum SvgoError {
   #[error("Invalid UTF-8 in input: {0}")]
   InvalidUtf8(#[from] std::string::FromUtf8Error),
 
+  /// Failed to decompress svgz input.
+  #[error("Failed to decompress svgz input: {0}")]
+  SvgzDecompression(#[source] std::io::Error),
+
+  /// Failed to compress svgz output.
+  #[error("Failed to compress svgz output: {0}")]
+  SvgzCompression(#[source] std::io::Error),
+
   /// JSON serialization error.
   #[error("JSON serialization failed: {0}")]
   JsonSerialization(#[from] serde_json::Error),

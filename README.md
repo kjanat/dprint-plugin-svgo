@@ -4,6 +4,8 @@
 
 Wrapper around [SVGO] in order to use it as a dprint plugin.
 
+Formats `.svg` and `.svgz` files.
+
 ## Install
 
 1. Install [dprint]

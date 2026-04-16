@@ -12,6 +12,7 @@ categories           = ["development-tools"]
 [dependencies]
 deno_core.workspace               = true
 dprint-plugin-deno-base.workspace = true
+flate2.workspace                  = true
 serde.workspace                   = true
 serde_json.workspace              = true
 thiserror.workspace               = true

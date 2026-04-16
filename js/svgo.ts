@@ -14,7 +14,7 @@ globalThis.dprint = {
 };
 
 function getExtensions() {
-  return ["svg"];
+  return ["svg", "svgz"];
 }
 
 interface FormatTextOptions {

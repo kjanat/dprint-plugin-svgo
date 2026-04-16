@@ -1,3 +1,5 @@
+use std::io::Read;
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -12,6 +14,22 @@ use dprint_core::plugins::FormatRequest;
 use dprint_core::plugins::NullCancellationToken;
 use dprint_plugin_deno_base::util::create_tokio_runtime;
 use dprint_plugin_svgo::SvgoPluginHandler;
+use flate2::Compression;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+
+fn gzip_bytes(text: &str) -> Vec<u8> {
+  let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+  encoder.write_all(text.as_bytes()).unwrap();
+  encoder.finish().unwrap()
+}
+
+fn gunzip_bytes(bytes: &[u8]) -> String {
+  let mut decoder = GzDecoder::new(bytes);
+  let mut decoded = String::new();
+  decoder.read_to_string(&mut decoded).unwrap();
+  decoded
+}
 
 // Handler trait method tests
 
@@ -51,6 +69,12 @@ fn resolve_config_returns_svg_extensions() {
         .file_matching
         .file_extensions
         .contains(&"svg".to_string())
+    );
+    assert!(
+      result
+        .file_matching
+        .file_extensions
+        .contains(&"svgz".to_string())
     );
   });
 }
@@ -145,6 +169,39 @@ fn format_with_svg_alias_override() {
 
     assert!(result.is_ok());
     assert!(result.unwrap().is_some());
+  });
+}
+
+#[test]
+fn format_svgz_round_trips_compressed_svg() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+    let svg =
+      r#"<svg xmlns="http://www.w3.org/2000/svg"><g><rect width="10" height="10"/></g></svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("test.svgz"),
+          file_bytes: gzip_bytes(svg),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+    let output = result.unwrap().expect("svgz should be reformatted");
+    let formatted = gunzip_bytes(&output);
+
+    assert!(formatted.contains("<svg"));
+    assert!(formatted.contains("http://www.w3.org/2000/svg"));
+    assert_ne!(formatted, svg);
   });
 }
 
