@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
 import { parse as parseToml } from "@std/toml";
-import * as TJS from "npm:typescript-json-schema";
+import * as TJS from "typescript-json-schema";
 import { getSvgoCompilerPaths, getSvgoVersion, rootDirPath } from "./lib.ts";
 
 const schemaTypeName = "DprintPluginSvgoConfig";

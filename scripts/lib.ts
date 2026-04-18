@@ -1,4 +1,4 @@
-import { parse as parseJsonc } from "jsr:@std/jsonc";
+import { parse as parseJsonc } from "@std/jsonc";
 import { join } from "@std/path";
 import { CargoToml, processPlugin } from "dprint/automation/mod.ts";
 import { getChecksum } from "dprint/automation/hash.ts";

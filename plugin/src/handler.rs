@@ -100,6 +100,7 @@ impl AsyncPluginHandler for SvgoPluginHandler {
     debug_log("handler: format start");
     if request.range.is_some() {
       // no support for range formatting
+      debug_log("handler: format done");
       return Ok(None);
     }
 

@@ -4,12 +4,12 @@
   ],
   "tasks": {
     "bundle": {
-      "command": "tsdown --config tsdown.config.ts --filter svgo-browser",
+      "command": "FILTER=svgo-browser deno run -A --frozen bundle.ts",
       "description": "bundle to dist/svgo.mjs",
       "dependencies": []
     },
     "bundle:runtime": {
-      "command": "tsdown --config tsdown.config.ts --filter svgo-runtime",
+      "command": "FILTER=svgo-runtime deno run -A --frozen bundle.ts",
       "description": "bundle runtime for V8 snapshot",
       "dependencies": [
         "bundle"
@@ -17,20 +17,22 @@
     }
   },
   "imports": {
-    "@std/jsonc": "jsr:@std/jsonc@^1",
-    "@std/path": "jsr:@std/path@^1",
-    "@std/toml": "jsr:@std/toml@^1",
-    "commander": "npm:commander@^11.1.0",
-    "css-select": "npm:css-select@^5.1.0",
-    "css-tree": "npm:css-tree@^3.0.1/dist/csstree.esm",
-    "css-what": "npm:css-what@^6.1.0",
+    "@kjanat/dreamcli": "jsr:@kjanat/dreamcli@^2.1.0",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
+    "@std/path": "jsr:@std/path@^1.1.4",
+    "@std/toml": "jsr:@std/toml@^1.0.11",
+    "commander": "npm:commander@^14.0.3",
+    "css-select": "npm:css-select@^7.0.0",
+    "css-tree": "npm:css-tree@^3.2.1/dist/csstree.esm",
+    "css-what": "npm:css-what@^8.0.0",
     "csso": "npm:csso@^5.0.5/dist/csso.esm",
     "dax": "jsr:@david/dax@^0.45",
     "picocolors": "npm:picocolors@^1.1.1",
-    "sax": "npm:sax@^1.5.0",
-    "semver": "jsr:@std/semver@^1",
-    "tsdown": "npm:tsdown@^0.21.8",
-    "yaml": "jsr:@eemeli/yaml@^2",
+    "sax": "npm:sax@^1.6.0",
+    "semver": "jsr:@std/semver@^1.0.8",
+    "tsdown": "npm:tsdown@^0.21.9",
+    "typescript-json-schema": "npm:typescript-json-schema@^0.67.1",
+    "yaml": "jsr:@eemeli/yaml@^2.8.2",
     "dprint/automation/hash.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/hash.ts",
     "dprint/automation/mod.ts": "https://raw.githubusercontent.com/dprint/automation/0.10.3/mod.ts",
     "dprint/automation/publish-release": "https://raw.githubusercontent.com/dprint/automation/0.10.3/tasks/publish-release.ts",

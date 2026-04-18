@@ -13,7 +13,7 @@ verify: fmt check test site-typecheck site-build
 # Type-check the Deno scripts.
 [private]
 check-deno:
-    deno check --frozen --check-js scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/lib.ts scripts/local_test.ts scripts/output_local_plugin_ref.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts
+    deno check --frozen --check-js bundle.ts scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/lib.ts scripts/local_test.ts scripts/output_local_plugin_ref.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts
 
 # Lint the Rust crates with clippy.
 [private]
