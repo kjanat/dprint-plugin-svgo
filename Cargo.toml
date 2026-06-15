@@ -3,7 +3,7 @@ resolver = "3"
 members  = ["base", "patches/*", "plugin"]
 
 [workspace.package]
-version      = "0.4.0"
+version      = "0.5.0"
 edition      = "2024"
 rust-version = "1.86.0"
 readme       = "README.md"
@@ -16,9 +16,9 @@ publish      = false
 async-channel            = "2.5"
 calendrical_calculations = "0.2"
 core_maths               = "0.1"
-deno_core                = "0.397"
 dprint-core              = "0.67"
 dprint-development       = "0.10"
+flate2                   = "1"
 iana-time-zone           = "0.1"
 icu_locale_core          = "2.1"
 log                      = "0.4"
@@ -32,6 +32,11 @@ web-time                 = "1.1"
 writeable                = "0.6"
 zoneinfo64               = "0.3"
 zstd                     = "0.13"
+
+[workspace.dependencies.deno_core]
+version          = "0.397.0"
+default-features = false
+features         = ["reactor-tokio", "v8_use_custom_libcxx"]
 
 [workspace.dependencies.diplomat]
 version          = "0.15"
@@ -96,6 +101,13 @@ temporal_rs   = { path = "patches/temporal_rs" }
 # rusty-v8 needs at least -O1 to not miscompile
 [profile.dev.package.v8]
 opt-level = 1
+
+[profile.release]
+opt-level     = "z"
+strip         = "symbols"
+lto           = true
+panic         = "abort"
+codegen-units = 1
 
 [profile.release.package.deno_core]
 opt-level = 3

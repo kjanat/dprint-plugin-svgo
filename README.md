@@ -4,6 +4,8 @@
 
 Wrapper around [SVGO] in order to use it as a dprint plugin.
 
+Formats `.svg` and `.svgz` files.
+
 ## Install
 
 1. Install [dprint]
@@ -17,7 +19,6 @@ See [SVGO's configuration].
 {
   // ...etc...
   "svgo": {
-    "multipass": true,
     "pretty": true,
     "indent": 2,
     "eol": "lf"
@@ -25,20 +26,9 @@ See [SVGO's configuration].
 }
 ```
 
-### File extension specific configuration
-
-Add the file extension to the start of the configuration option. For example:
-
-```jsonc
-{
-  // ...etc...
-  "svgo": {
-    "multipass": true,
-    // use different settings for specific svg files
-    "svg.multipass": false
-  }
-}
-```
+Because this plugin only formats `.svg` files, configure options directly at
+the top level under `svgo`. Legacy `svg.*` keys are still accepted as aliases,
+but they are unnecessary.
 
 ## Why Does This Exist?
 

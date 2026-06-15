@@ -5,15 +5,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
+git submodule update --init --recursive
+
 just build               # Bundle SVGO wrapper for V8
 just test                # Build + run all tests
 just check               # Type-check TS + cargo clippy
 just fmt                 # Format everything (dprint)
-just schema              # Generate JSON Schema
+just schema              # Generate site/schema.json
 just ci                  # Regenerate CI workflow YAML
 just local-test          # Build release + format a disposable workspace with dprint
 just update              # Check for SVGO updates + release
-just verify              # Run the standard verification suite
+just verify              # Run fmt/check/test + site verification
 
 cargo build              # Build debug
 cargo build --release    # Build release
@@ -44,7 +46,7 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 **Formatter** (`plugin/src/formatter.rs`): Constructs JS code with config, executes via V8, returns formatted SVG
 
-**Config** (`plugin/src/config.rs`): Maps dprint config to SVGO js2svg options (indent, eol, pretty, multipass)
+**Config** (`plugin/src/config.rs`): Maps dprint config to SVGO js2svg options (indent, eol, pretty)
 
 **JS Bridge** (`js/svgo.ts`): Exposes `formatText()` and `getExtensions()` to Rust via globalThis.dprint
 
@@ -52,9 +54,13 @@ dprint CLI -> SvgoPluginHandler -> Channel (thread pool) -> JsRuntime (V8) -> SV
 
 ### Build Process
 
-`just build` bundles `js/svgo.ts` + SVGO via `deno bundle` into a single IIFE. `plugin/build.rs` creates a V8 snapshot from the bundle and extracts supported extensions (["svg"]).
+`just build` bundles `js/svgo.ts` against the vendored `vendor/svgo` sources pinned by the submodule. `plugin/build.rs` creates a V8 snapshot from the final bundle and extracts supported extensions (["svg"]).
 
-No node_modules — Deno resolves npm packages on the fly.
+The schema is generated from `scripts/schema_types.ts` and written to `site/schema.json` for site builds. Release CI generates root `schema.json` as an artifact.
+
+Initialize the vendored SVGO submodule after cloning with `git submodule update --init --recursive`.
+
+No node_modules for the plugin/runtime side — Deno resolves SVGO's runtime npm dependencies via `deno.jsonc`. The `site/` directory uses Bun for install, typecheck, and build.
 
 ## Configuration
 
@@ -63,7 +69,6 @@ Plugin uses `"svgo"` config key in dprint.jsonc:
 ```jsonc
 {
   "svgo": {
-    "multipass": true,
     "pretty": true,
     "indent": 2,
     "eol": "lf"
@@ -71,7 +76,7 @@ Plugin uses `"svgo"` config key in dprint.jsonc:
 }
 ```
 
-Extension overrides: `"svg.multipass": false`
+Extension overrides: `"svg.pretty": false`
 
 Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
@@ -86,13 +91,15 @@ Global config integration: `indentWidth` -> indent, `newLineKind` -> eol
 
 - `scripts/lib.ts` - Shared automation helpers used by repo scripts
 - `scripts/schema_types.ts` - JSON-safe SVGO type shim used for schema generation
-- `scripts/generate_schema.ts` - Generate JSON Schema from SVGO's plugin registry
+- `scripts/generate_schema.ts` - Generate schema from the vendored SVGO type surface and attach stable site metadata
 - `scripts/create_plugin_file.ts` - Generate release plugin.json
 - `scripts/output_svgo_version.ts` - Get SVGO version for release notes
-- `scripts/update.ts` - Check for SVGO updates, bump version, tag release
+- `scripts/update.ts` - Advance the SVGO submodule tag, sync Deno imports, bump version, tag release
 
 ## CI/Release
 
 Multi-platform builds: macOS (x86_64, aarch64), Windows (x86_64), Linux (x86_64, aarch64)
 
-Tag triggers release workflow that builds, creates checksums, generates plugin.json with download URLs.
+Normal CI verifies the real site build on Linux. Pages builds the site explicitly with Bun and ships `dist/`.
+
+Tag triggers release workflow that builds, creates checksums, and generates plugin.json with download URLs.

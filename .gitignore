@@ -5,6 +5,9 @@ node_modules
 
 bun.lock
 
-schema.json
 plugin.json
 dist
+*.log
+# Ignore generated files from schema/runtime bundling; do not commit
+schema.json
+svgo.deno.bundle.mjs

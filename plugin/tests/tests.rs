@@ -1,3 +1,5 @@
+use std::io::Read;
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -12,6 +14,22 @@ use dprint_core::plugins::FormatRequest;
 use dprint_core::plugins::NullCancellationToken;
 use dprint_plugin_deno_base::util::create_tokio_runtime;
 use dprint_plugin_svgo::SvgoPluginHandler;
+use flate2::Compression;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+
+fn gzip_bytes(text: &str) -> Vec<u8> {
+  let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+  encoder.write_all(text.as_bytes()).unwrap();
+  encoder.finish().unwrap()
+}
+
+fn gunzip_bytes(bytes: &[u8]) -> String {
+  let mut decoder = GzDecoder::new(bytes);
+  let mut decoded = String::new();
+  decoder.read_to_string(&mut decoded).unwrap();
+  decoded
+}
 
 // Handler trait method tests
 
@@ -52,6 +70,12 @@ fn resolve_config_returns_svg_extensions() {
         .file_extensions
         .contains(&"svg".to_string())
     );
+    assert!(
+      result
+        .file_matching
+        .file_extensions
+        .contains(&"svgz".to_string())
+    );
   });
 }
 
@@ -62,7 +86,7 @@ fn resolve_config_with_custom_settings() {
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
     let mut config = ConfigKeyMap::new();
-    config.insert("multipass".to_string(), ConfigKeyValue::Bool(true));
+    config.insert("finalNewline".to_string(), ConfigKeyValue::Bool(true));
     config.insert("indent".to_string(), ConfigKeyValue::Number(4));
 
     let result = handler
@@ -71,15 +95,14 @@ fn resolve_config_with_custom_settings() {
 
     assert!(result.diagnostics.is_empty());
     // Verify config was resolved
-    assert!(
-      result
-        .config
-        .main
-        .get("multipass")
-        .unwrap()
-        .as_bool()
-        .unwrap()
-    );
+    let js2svg = result
+      .config
+      .main
+      .get("js2svg")
+      .unwrap()
+      .as_object()
+      .unwrap();
+    assert!(js2svg.get("finalNewline").unwrap().as_bool().unwrap());
   });
 }
 
@@ -112,15 +135,15 @@ fn format_with_range_returns_none() {
 }
 
 #[test]
-fn format_with_extension_override() {
+fn format_with_svg_alias_override() {
   let runtime = create_tokio_runtime();
 
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
 
-    // First resolve config with extension override
+    // `svg.*` is treated as an alias for the plain top-level setting.
     let mut config_map = ConfigKeyMap::new();
-    config_map.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+    config_map.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
     let resolved = handler
       .resolve_config(config_map, GlobalConfiguration::default())
@@ -146,6 +169,109 @@ fn format_with_extension_override() {
 
     assert!(result.is_ok());
     assert!(result.unwrap().is_some());
+  });
+}
+
+#[test]
+fn format_svgz_round_trips_compressed_svg() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+    let svg =
+      r#"<svg xmlns="http://www.w3.org/2000/svg"><g><rect width="10" height="10"/></g></svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("test.svgz"),
+          file_bytes: gzip_bytes(svg),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+    let output = result.unwrap().expect("svgz should be reformatted");
+    let formatted = gunzip_bytes(&output);
+
+    assert!(formatted.contains("<svg"));
+    assert!(formatted.contains("http://www.w3.org/2000/svg"));
+    assert_ne!(formatted, svg);
+  });
+}
+
+#[test]
+fn format_with_website_example_plugins() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    let mut prefix_params = ConfigKeyMap::new();
+    prefix_params.insert(
+      "prefix".to_string(),
+      ConfigKeyValue::String("icon".to_string()),
+    );
+
+    let mut prefix_plugin = ConfigKeyMap::new();
+    prefix_plugin.insert(
+      "name".to_string(),
+      ConfigKeyValue::String("prefixIds".to_string()),
+    );
+    prefix_plugin.insert("params".to_string(), ConfigKeyValue::Object(prefix_params));
+
+    let mut config_map = ConfigKeyMap::new();
+    config_map.insert("pretty".to_string(), ConfigKeyValue::Bool(true));
+    config_map.insert("indent".to_string(), ConfigKeyValue::Number(2));
+    config_map.insert(
+      "plugins".to_string(),
+      ConfigKeyValue::Array(vec![
+        ConfigKeyValue::String("preset-default".to_string()),
+        ConfigKeyValue::String("removeViewBox".to_string()),
+        ConfigKeyValue::Object(prefix_plugin),
+      ]),
+    );
+
+    let resolved = handler
+      .resolve_config(config_map, GlobalConfiguration::default())
+      .await;
+    assert!(resolved.diagnostics.is_empty());
+
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">
+  <defs>
+    <clipPath id="shape">
+      <path d="M0 0h10v10H0z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#shape)">
+    <path d="M0 0h5v5H0z" />
+  </g>
+</svg>"#;
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("website-example.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(resolved.config),
+          range: None,
+          token: Arc::new(NullCancellationToken),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    assert!(result.is_ok());
+    let output = String::from_utf8(result.unwrap().unwrap()).unwrap();
+    assert!(output.contains("id=\"icon__a\""));
+    assert!(output.contains("clip-path=\"url(#icon__a)\""));
+    assert!(!output.contains("viewBox"));
   });
 }
 
@@ -245,15 +371,15 @@ fn format_file_without_extension() {
 }
 
 #[test]
-fn format_with_multipass_config() {
+fn format_with_final_newline_config() {
   let runtime = create_tokio_runtime();
 
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
 
     let mut config_map = ConfigKeyMap::new();
-    config_map.insert("multipass".to_string(), ConfigKeyValue::Bool(true));
     config_map.insert("pretty".to_string(), ConfigKeyValue::Bool(true));
+    config_map.insert("finalNewline".to_string(), ConfigKeyValue::Bool(true));
 
     let resolved = handler
       .resolve_config(config_map, GlobalConfiguration::default())
@@ -283,13 +409,9 @@ fn format_with_multipass_config() {
 
     assert!(result.is_ok());
     let formatted = String::from_utf8(result.unwrap().unwrap()).unwrap();
-    // Multipass should optimize nested groups - verify output is smaller
-    assert!(
-      formatted.len() < svg.len(),
-      "Multipass should reduce SVG size"
-    );
-    // Should still be valid SVG (rect may be converted to path)
+    // Should still be valid SVG.
     assert!(formatted.contains("svg"));
+    assert!(formatted.ends_with('\n'));
   });
 }
 
@@ -390,7 +512,7 @@ fn extension_override_affects_output() {
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
 
-    // SVG with nested groups that multipass can optimize
+    // SVG fixture used to verify extension-specific overrides.
     let svg = r#"<svg xmlns="http://www.w3.org/2000/svg">
       <g>
         <g>
@@ -399,18 +521,18 @@ fn extension_override_affects_output() {
       </g>
     </svg>"#;
 
-    // Format without multipass (default)
-    let config_no_multipass = handler
+    // Format with default pretty output.
+    let default_config = handler
       .resolve_config(ConfigKeyMap::new(), GlobalConfiguration::default())
       .await;
 
-    let result_no_multipass = handler
+    let default_result = handler
       .format(
         FormatRequest {
           config_id: FormatConfigId::from_raw(0),
           file_path: PathBuf::from("test.svg"),
           file_bytes: svg.to_string().into_bytes(),
-          config: Arc::new(config_no_multipass.config),
+          config: Arc::new(default_config.config),
           range: None,
           token: Arc::new(NullCancellationToken),
         },
@@ -418,21 +540,21 @@ fn extension_override_affects_output() {
       )
       .await;
 
-    // Format with multipass via extension override
+    // Format with the legacy `svg.*` alias for compact output.
     let mut config_map = ConfigKeyMap::new();
-    config_map.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+    config_map.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
-    let config_with_multipass = handler
+    let compact_config = handler
       .resolve_config(config_map, GlobalConfiguration::default())
       .await;
 
-    let result_with_multipass = handler
+    let compact_result = handler
       .format(
         FormatRequest {
           config_id: FormatConfigId::from_raw(0),
           file_path: PathBuf::from("test.svg"),
           file_bytes: svg.to_string().into_bytes(),
-          config: Arc::new(config_with_multipass.config),
+          config: Arc::new(compact_config.config),
           range: None,
           token: Arc::new(NullCancellationToken),
         },
@@ -441,25 +563,25 @@ fn extension_override_affects_output() {
       .await;
 
     // Both should succeed
-    assert!(result_no_multipass.is_ok());
-    assert!(result_with_multipass.is_ok());
+    assert!(default_result.is_ok());
+    assert!(compact_result.is_ok());
 
-    let output_no_multipass = result_no_multipass.unwrap();
-    let output_with_multipass = result_with_multipass.unwrap();
+    let default_output = default_result.unwrap();
+    let compact_output = compact_result.unwrap();
 
     // Both should produce output
-    assert!(output_no_multipass.is_some());
-    assert!(output_with_multipass.is_some());
+    assert!(default_output.is_some());
+    assert!(compact_output.is_some());
 
-    // Multipass should produce smaller output due to group collapsing
-    let len_no_multipass = output_no_multipass.unwrap().len();
-    let len_with_multipass = output_with_multipass.unwrap().len();
+    // Compact output should be no larger than pretty output.
+    let len_default = default_output.unwrap().len();
+    let len_compact = compact_output.unwrap().len();
 
     assert!(
-      len_with_multipass <= len_no_multipass,
-      "Multipass ({}) should not produce larger output than default ({})",
-      len_with_multipass,
-      len_no_multipass
+      len_compact <= len_default,
+      "Compact output ({}) should not be larger than default ({})",
+      len_compact,
+      len_default
     );
   });
 }

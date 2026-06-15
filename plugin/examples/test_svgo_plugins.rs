@@ -175,7 +175,6 @@ fn main() {
             "removeDesc"
         ]);
         config_map.insert("plugins".to_string(), serde_json::to_string(&plugins_config).unwrap().into());
-        config_map.insert("multipass".to_string(), "true".into());
         config_map.insert("pretty".to_string(), "true".into());
 
         let config_result = resolve_config(config_map, Default::default());

@@ -14,5 +14,5 @@
 *.png binary
 
 patches/** linguist-vendored
-Cargo.lock linguist-generated -diff
+# Cargo.lock linguist-generated -diff
 .github/workflows/ci.yml linguist-generated

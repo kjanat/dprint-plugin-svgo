@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::io::Read;
+use std::io::Write;
 use std::path::MAIN_SEPARATOR;
 use std::path::Path;
 use std::sync::OnceLock;
@@ -12,9 +14,13 @@ use dprint_plugin_deno_base::runtime::CreateRuntimeOptions;
 use dprint_plugin_deno_base::runtime::JsRuntime;
 use dprint_plugin_deno_base::snapshot::deserialize_snapshot;
 use dprint_plugin_deno_base::util::set_v8_max_memory;
+use flate2::Compression;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
 use tokio::time::timeout;
 
 use crate::config::SvgoConfig;
+use crate::debug_log;
 use crate::error::SvgoError;
 
 /// Maximum allowed nesting depth in SVG structure.
@@ -57,12 +63,20 @@ pub struct SvgoFormatter {
   runtime: JsRuntime,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum SvgFileKind {
+  Svg,
+  Svgz,
+}
+
 impl Default for SvgoFormatter {
   fn default() -> Self {
+    debug_log("formatter: creating JsRuntime");
     let runtime = JsRuntime::new(CreateRuntimeOptions {
       extensions: vec![],
       startup_snapshot: Some(get_startup_snapshot()),
     });
+    debug_log("formatter: JsRuntime ready");
     Self { runtime }
   }
 }
@@ -73,9 +87,11 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     &mut self,
     request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
+    debug_log("formatter: format_text start");
     // Cancellation support not yet implemented. See: https://github.com/kjanat/dprint-plugin-svgo/issues/2
     // Range formatting not supported by SVGO - always formats entire document.
-    let file_text = String::from_utf8(request.file_bytes).map_err(SvgoError::InvalidUtf8)?;
+    let file_kind = svg_file_kind(&request.file_path);
+    let file_text = decode_svg_bytes(request.file_bytes, file_kind)?;
 
     // Validate SVG structure before processing
     validate_svg_structure(&file_text)?;
@@ -105,7 +121,47 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       seconds: FORMAT_TIMEOUT_SECS,
     })?;
 
-    result.map(|s| s.map(std::string::String::into_bytes))
+    let result = result?;
+    let result = match result {
+      Some(text) => Some(encode_svg_bytes(text, file_kind)?),
+      None => None,
+    };
+    debug_log("formatter: format_text done");
+    Ok(result)
+  }
+}
+
+fn svg_file_kind(path: &Path) -> SvgFileKind {
+  match path.extension().and_then(|extension| extension.to_str()) {
+    Some(extension) if extension.eq_ignore_ascii_case("svgz") => SvgFileKind::Svgz,
+    _ => SvgFileKind::Svg,
+  }
+}
+
+fn decode_svg_bytes(bytes: Vec<u8>, file_kind: SvgFileKind) -> Result<String, SvgoError> {
+  match file_kind {
+    SvgFileKind::Svg => String::from_utf8(bytes).map_err(SvgoError::InvalidUtf8),
+    SvgFileKind::Svgz => {
+      let mut decoder = GzDecoder::new(bytes.as_slice());
+      let mut decoded = Vec::new();
+      decoder
+        .read_to_end(&mut decoded)
+        .map_err(SvgoError::SvgzDecompression)?;
+      String::from_utf8(decoded).map_err(SvgoError::InvalidUtf8)
+    }
+  }
+}
+
+fn encode_svg_bytes(text: String, file_kind: SvgFileKind) -> Result<Vec<u8>, SvgoError> {
+  match file_kind {
+    SvgFileKind::Svg => Ok(text.into_bytes()),
+    SvgFileKind::Svgz => {
+      let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+      encoder
+        .write_all(text.as_bytes())
+        .map_err(SvgoError::SvgzCompression)?;
+      encoder.finish().map_err(SvgoError::SvgzCompression)
+    }
   }
 }
 

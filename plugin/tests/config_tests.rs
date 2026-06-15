@@ -25,9 +25,6 @@ fn resolve_config_defaults() {
   assert_eq!(result.config.get_indent(), Some(2));
   assert_eq!(result.config.get_eol(), Some("lf"));
   assert_eq!(result.config.is_pretty(), Some(true));
-
-  // Check default multipass
-  assert_eq!(result.config.is_multipass(), Some(false));
 }
 
 #[test]
@@ -95,13 +92,15 @@ fn resolve_config_with_global_newline_kind() {
 }
 
 #[test]
-fn resolve_config_with_multipass() {
+fn resolve_config_rejects_multipass() {
   let mut config = ConfigKeyMap::new();
   config.insert("multipass".to_string(), ConfigKeyValue::Bool(true));
 
   let result = resolve_config(config, empty_global_config());
 
-  assert_eq!(result.config.is_multipass(), Some(true));
+  assert_eq!(result.diagnostics.len(), 1);
+  assert!(result.diagnostics[0].message.contains("not supported"));
+  assert!(result.config.get_main_value("multipass").is_none());
 }
 
 #[test]
@@ -155,52 +154,66 @@ fn resolve_config_with_pretty_false() {
 }
 
 #[test]
-fn resolve_config_with_extension_override() {
+fn resolve_config_svg_alias_flattens_to_main_config() {
   let mut config = ConfigKeyMap::new();
-  config.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
 
   let result = resolve_config(config, empty_global_config());
 
-  // Main config should have default multipass
-  assert_eq!(result.config.is_multipass(), Some(false));
-
-  // Extension override should have multipass true
-  let svg_override = result
-    .config
-    .get_extension_override("svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert!(svg_override.get("multipass").unwrap().as_bool().unwrap());
+  assert_eq!(result.config.is_pretty(), Some(false));
+  assert!(!result.config.has_extension_override("svg"));
 }
 
 #[test]
-fn resolve_config_with_multiple_extension_overrides() {
+fn resolve_config_svg_alias_overrides_plain_key() {
   let mut config = ConfigKeyMap::new();
-  config.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("pretty".to_string(), ConfigKeyValue::Bool(true));
   config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
-  config.insert("svgz.multipass".to_string(), ConfigKeyValue::Bool(false));
 
   let result = resolve_config(config, empty_global_config());
 
-  // SVG override
-  let svg_override = result
-    .config
-    .get_extension_override("svg")
-    .unwrap()
-    .as_object()
-    .unwrap();
-  assert!(svg_override.get("multipass").unwrap().as_bool().unwrap());
-  assert!(!svg_override.get("pretty").unwrap().as_bool().unwrap());
+  assert_eq!(result.config.is_pretty(), Some(false));
+}
 
-  // SVGZ override
+#[test]
+fn resolve_config_keeps_non_svg_extension_overrides() {
+  let mut config = ConfigKeyMap::new();
+  config.insert("svg.pretty".to_string(), ConfigKeyValue::Bool(false));
+  config.insert("svgz.pretty".to_string(), ConfigKeyValue::Bool(true));
+
+  let result = resolve_config(config, empty_global_config());
+
   let svgz_override = result
     .config
     .get_extension_override("svgz")
     .unwrap()
     .as_object()
     .unwrap();
-  assert!(!svgz_override.get("multipass").unwrap().as_bool().unwrap());
+  assert!(svgz_override.get("pretty").unwrap().as_bool().unwrap());
+  assert_eq!(result.config.is_pretty(), Some(false));
+  assert!(!result.config.has_extension_override("svg"));
+}
+
+#[test]
+fn resolve_config_svg_plugins_alias_flattens_to_main_config() {
+  let mut config = ConfigKeyMap::new();
+  config.insert(
+    "svg.plugins".to_string(),
+    ConfigKeyValue::Array(vec![ConfigKeyValue::String("preset-default".to_string())]),
+  );
+
+  let result = resolve_config(config, empty_global_config());
+
+  let plugins = result
+    .config
+    .main
+    .get("plugins")
+    .unwrap()
+    .as_array()
+    .unwrap();
+  assert_eq!(plugins.len(), 1);
+  assert_eq!(plugins[0].as_str().unwrap(), "preset-default");
+  assert!(!result.config.has_extension_override("svg"));
 }
 
 #[test]
@@ -269,12 +282,12 @@ fn resolve_config_unknown_key_passes_through_with_warning() {
 #[test]
 fn resolve_config_extension_case_insensitive() {
   let mut config = ConfigKeyMap::new();
-  config.insert("SVG.multipass".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("SVG.pretty".to_string(), ConfigKeyValue::Bool(true));
 
   let result = resolve_config(config, empty_global_config());
 
-  // Should be stored as lowercase
-  assert!(result.config.has_extension_override("svg"));
+  assert_eq!(result.config.is_pretty(), Some(true));
+  assert!(!result.config.has_extension_override("svg"));
   assert!(!result.config.has_extension_override("SVG"));
 }
 
@@ -628,13 +641,12 @@ fn resolve_config_valid_float_precision() {
 #[test]
 fn svgo_config_get_main_value() {
   let mut config = ConfigKeyMap::new();
-  config.insert("multipass".to_string(), ConfigKeyValue::Bool(true));
   config.insert("floatPrecision".to_string(), ConfigKeyValue::Number(3));
 
   let result = resolve_config(config, empty_global_config());
 
   // Test get_main_value
-  assert!(result.config.get_main_value("multipass").is_some());
+  assert!(result.config.get_main_value("floatPrecision").is_some());
   assert!(result.config.get_main_value("js2svg").is_some());
   assert!(result.config.get_main_value("nonexistent").is_none());
 }
@@ -655,15 +667,14 @@ fn svgo_config_get_js2svg() {
 }
 
 #[test]
-fn svgo_config_has_extension_override() {
+fn svgo_config_has_extension_override_for_non_svg_extensions() {
   let mut config = ConfigKeyMap::new();
-  config.insert("svg.multipass".to_string(), ConfigKeyValue::Bool(true));
+  config.insert("svgz.pretty".to_string(), ConfigKeyValue::Bool(true));
 
   let result = resolve_config(config, empty_global_config());
 
-  // Test has_extension_override
-  assert!(result.config.has_extension_override("svg"));
-  assert!(!result.config.has_extension_override("svgz"));
+  assert!(result.config.has_extension_override("svgz"));
+  assert!(!result.config.has_extension_override("svg"));
   assert!(!result.config.has_extension_override("png"));
 }
 
@@ -701,19 +712,16 @@ proptest! {
   #[test]
   fn prop_resolve_config_handles_combined_settings(
     indent in 0i32..20,
-    multipass in prop::bool::ANY,
     pretty in prop::bool::ANY,
   ) {
     let mut config = ConfigKeyMap::new();
     config.insert("indent".to_string(), ConfigKeyValue::Number(indent));
-    config.insert("multipass".to_string(), ConfigKeyValue::Bool(multipass));
     config.insert("pretty".to_string(), ConfigKeyValue::Bool(pretty));
 
     let result = resolve_config(config, empty_global_config());
 
     // Should produce valid config with expected values
     assert_eq!(result.config.get_indent(), Some(i64::from(indent)));
-    assert_eq!(result.config.is_multipass(), Some(multipass));
     assert_eq!(result.config.is_pretty(), Some(pretty));
   }
 

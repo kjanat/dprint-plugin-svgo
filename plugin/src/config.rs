@@ -50,12 +50,6 @@ impl SvgoConfig {
       .and_then(|v| v.as_bool())
   }
 
-  /// Get whether multipass optimization is enabled.
-  #[must_use]
-  pub fn is_multipass(&self) -> Option<bool> {
-    self.main.get("multipass").and_then(|v| v.as_bool())
-  }
-
   /// Get a value from the main configuration.
   #[must_use]
   pub fn get_main_value(&self, key: &str) -> Option<&serde_json::Value> {
@@ -87,9 +81,10 @@ impl SvgoConfig {
 /// A result containing the resolved `SvgoConfig` and any diagnostics.
 #[must_use]
 pub fn resolve_config(
-  mut config: ConfigKeyMap,
+  config: ConfigKeyMap,
   global_config: GlobalConfiguration,
 ) -> ResolveConfigurationResult<SvgoConfig> {
+  let mut config = normalize_svg_aliases(config);
   let mut diagnostics = Vec::new();
   let mut main: serde_json::Map<String, serde_json::Value> = Default::default();
   let mut extension_overrides: serde_json::Map<String, serde_json::Value> = Default::default();
@@ -148,12 +143,6 @@ pub fn resolve_config(
 
   main.insert("js2svg".to_string(), serde_json::Value::Object(js2svg));
 
-  // Handle SVGO multipass option
-  main.insert(
-    "multipass".to_string(),
-    get_value(&mut config, "multipass", false, &mut diagnostics).into(),
-  );
-
   for (key, value) in config {
     let mut value = config_key_value_to_json(value);
 
@@ -167,6 +156,12 @@ pub fn resolve_config(
 
     // Validate configuration schema
     validate_config_value(&key, &value, &mut diagnostics);
+
+    // dprint already retries unstable formatters, so multipass is unsupported.
+    let base_key = key.rfind('.').map_or(key.as_str(), |i| &key[i + 1..]);
+    if base_key == "multipass" {
+      continue;
+    }
 
     if let Some(index) = key.rfind('.') {
       let extension = key[..index].to_lowercase();
@@ -190,6 +185,35 @@ pub fn resolve_config(
     },
     diagnostics,
   }
+}
+
+/// Normalizes `svg.*` keys into plain top-level keys.
+///
+/// This plugin only formats `.svg` files, so `svg.pretty` and friends are
+/// redundant. Preserve compatibility by treating them as aliases while letting
+/// the `svg.*` form override the plain key if both are present.
+fn normalize_svg_aliases(config: ConfigKeyMap) -> ConfigKeyMap {
+  let mut normalized = ConfigKeyMap::new();
+  let mut svg_aliases = Vec::new();
+
+  for (key, value) in config {
+    if let Some(index) = key.rfind('.') {
+      let extension = &key[..index];
+      let base_key = &key[index + 1..];
+      if extension.eq_ignore_ascii_case("svg") && !base_key.is_empty() {
+        svg_aliases.push((base_key.to_string(), value));
+        continue;
+      }
+    }
+
+    normalized.insert(key, value);
+  }
+
+  for (key, value) in svg_aliases {
+    normalized.insert(key, value);
+  }
+
+  normalized
 }
 
 fn config_key_value_to_json(value: ConfigKeyValue) -> serde_json::Value {
@@ -217,7 +241,6 @@ const KNOWN_SVGO_KEYS: &[&str] = &[
   "floatPrecision",
   "datauri",
   "js2svg",
-  "multipass",
   "path",
   "finalNewline",
   "useShortTags",
@@ -281,8 +304,15 @@ fn validate_config_value(
         });
       }
     }
-    "multipass" | "path" => {
-      // Known keys with no additional validation
+    "path" => {
+      // Known key with no additional validation
+    }
+    "multipass" => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: key.to_string(),
+        message: "'multipass' is not supported. dprint retries unstable formatting internally."
+          .to_string(),
+      });
     }
     _ => {
       // Warn about unknown keys that might be typos

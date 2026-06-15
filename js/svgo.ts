@@ -1,4 +1,5 @@
-import { type Config, optimize } from "svgo/browser";
+import { optimize } from "svgo/browser";
+import type { Config } from "svgo/types";
 
 declare global {
   var dprint: {
@@ -13,7 +14,7 @@ globalThis.dprint = {
 };
 
 function getExtensions() {
-  return ["svg"];
+  return ["svg", "svgz"];
 }
 
 interface FormatTextOptions {
@@ -29,6 +30,7 @@ function formatText(
     const result = optimize(fileText, {
       path: filePath,
       ...config,
+      multipass: false,
     });
 
     const formattedText = result.data;
@@ -38,8 +40,6 @@ function formatText(
       return formattedText;
     }
   } catch (error) {
-    // If SVGO fails to optimize (e.g., invalid SVG), return undefined to keep original
-    // Sanitize error message to avoid leaking internal paths
     const fileName = filePath.split(/[/\\]/).pop() || filePath;
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(`SVGO error for ${fileName}: ${errorMessage}`);

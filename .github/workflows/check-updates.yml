@@ -21,9 +21,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.DPRINT_PAT }}
+          submodules: recursive
 
       - uses: denoland/setup-deno@v2
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
       - uses: dsherret/rust-toolchain-file@v1
 
       - name: Run script
