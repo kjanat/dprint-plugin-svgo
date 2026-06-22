@@ -1086,6 +1086,101 @@ fn format_svg_with_comments() {
   });
 }
 
+// Cancellation tests
+
+#[test]
+fn format_with_already_cancelled_token_returns_cancelled() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>"#;
+
+    // A token that is cancelled before the request is ever processed.
+    let token = tokio_util::sync::CancellationToken::new();
+    token.cancel();
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("cancelled.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(token),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // The format should be reported as a (recoverable) error mentioning cancellation.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+      err_msg.contains("cancelled"),
+      "Unexpected error message: {}",
+      err_msg
+    );
+  });
+}
+
+#[test]
+fn format_cancelled_mid_operation_returns_cancelled() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+
+    // A moderately large SVG so the V8 optimization takes long enough for the
+    // concurrent cancellation to win the race.
+    let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
+    for i in 0..5000 {
+      svg.push_str(&format!(
+        r#"<rect x="{}" y="{}" width="10" height="10"/>"#,
+        i % 100,
+        i / 100
+      ));
+    }
+    svg.push_str("</svg>");
+
+    let token = tokio_util::sync::CancellationToken::new();
+    let token_for_request = token.clone();
+
+    let format_fut = handler.format(
+      FormatRequest {
+        config_id: FormatConfigId::from_raw(0),
+        file_path: PathBuf::from("mid_cancel.svg"),
+        file_bytes: svg.into_bytes(),
+        config: Arc::new(Default::default()),
+        range: None,
+        token: Arc::new(token_for_request),
+      },
+      |_| std::future::ready(Ok(None)).boxed_local(),
+    );
+
+    // Cancel as soon as the format future starts making progress.
+    let cancel_fut = async {
+      token.cancel();
+    };
+
+    let (result, ()) = deno_core::futures::future::join(format_fut, cancel_fut).await;
+
+    // The operation should be interrupted and surface a cancellation error.
+    assert!(
+      result.is_err(),
+      "expected cancellation error, got: {:?}",
+      result
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+      err_msg.contains("cancelled"),
+      "Unexpected error message: {}",
+      err_msg
+    );
+  });
+}
+
 #[test]
 fn format_svg_with_many_elements_succeeds() {
   let runtime = create_tokio_runtime();

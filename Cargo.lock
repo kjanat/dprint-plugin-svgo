@@ -619,6 +619,7 @@ dependencies = [
  "sha256",
  "thiserror",
  "tokio",
+ "tokio-util",
  "zstd",
 ]
 

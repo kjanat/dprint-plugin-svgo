@@ -88,8 +88,16 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
     request: FormatRequest<SvgoConfig>,
   ) -> Result<Option<Vec<u8>>, deno_core::anyhow::Error> {
     debug_log("formatter: format_text start");
-    // Cancellation support not yet implemented. See: https://github.com/kjanat/dprint-plugin-svgo/issues/2
     // Range formatting not supported by SVGO - always formats entire document.
+
+    // Cooperative cancellation: if the request was already cancelled before we
+    // started, bail out immediately without doing any work.
+    let token = request.token.clone();
+    if token.is_cancelled() {
+      debug_log("formatter: format_text cancelled before start");
+      return Err(SvgoError::Cancelled.into());
+    }
+
     let file_kind = svg_file_kind(&request.file_path);
     let file_text = decode_svg_bytes(request.file_bytes, file_kind)?;
 
@@ -112,14 +120,26 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       "(async () => {{ return await dprint.formatText({{ ...{}, config: {} }}); }})()",
       request_value, config_json,
     );
-    let result = timeout(
-      Duration::from_secs(FORMAT_TIMEOUT_SECS),
-      self.runtime.execute_format_script(code),
-    )
-    .await
-    .map_err(|_| SvgoError::Timeout {
-      seconds: FORMAT_TIMEOUT_SECS,
-    })?;
+    // Race the (timeout-bounded) V8 execution against cancellation so that a
+    // long-running optimization can be interrupted mid-format, e.g. when an
+    // editor cancels the request. The cancellation branch is checked first so
+    // it takes priority once the token fires.
+    let result = tokio::select! {
+      biased;
+
+      () = token.wait_cancellation() => {
+        debug_log("formatter: format_text cancelled");
+        return Err(SvgoError::Cancelled.into());
+      }
+      result = timeout(
+        Duration::from_secs(FORMAT_TIMEOUT_SECS),
+        self.runtime.execute_format_script(code),
+      ) => {
+        result.map_err(|_| SvgoError::Timeout {
+          seconds: FORMAT_TIMEOUT_SECS,
+        })?
+      }
+    };
 
     let result = result?;
     let result = match result {

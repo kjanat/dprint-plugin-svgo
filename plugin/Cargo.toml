@@ -29,6 +29,7 @@ features  = ["time"]
 dprint-development.workspace = true
 pretty_assertions.workspace  = true
 proptest.workspace           = true
+tokio-util.workspace         = true
 
 [build-dependencies]
 sha256.workspace = true
