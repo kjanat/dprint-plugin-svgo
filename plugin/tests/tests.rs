@@ -1127,14 +1127,12 @@ fn format_with_already_cancelled_token_returns_cancelled() {
 }
 
 #[test]
-fn format_cancelled_mid_operation_returns_cancelled() {
+fn format_cancelled_concurrently_returns_cancelled() {
   let runtime = create_tokio_runtime();
 
   runtime.block_on(async {
     let handler = SvgoPluginHandler::default();
 
-    // A moderately large SVG so the V8 optimization takes long enough for the
-    // concurrent cancellation to win the race.
     let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
     for i in 0..5000 {
       svg.push_str(&format!(
@@ -1160,9 +1158,14 @@ fn format_cancelled_mid_operation_returns_cancelled() {
       |_| std::future::ready(Ok(None)).boxed_local(),
     );
 
-    // Let the format future run for at least one scheduler turn before
-    // cancelling, so this exercises the in-flight `select!` path rather than
-    // the pre-start `is_cancelled()` short-circuit.
+    // Cancel concurrently with the request. In practice the channel must spin up
+    // a fresh V8 runtime before the worker dequeues this request, so the cancel
+    // lands first and the formatter's pre-start `is_cancelled()` check wins. We
+    // cannot reliably hit the in-flight `select!` arm here: SVGO runs as one
+    // synchronous V8 tick, so the worker can't observe cancellation until it has
+    // already finished. This test only asserts that a concurrently-cancelled
+    // request surfaces `Cancelled`; the protocol wiring is covered by the
+    // deterministic loop tests in `process_loop`.
     let cancel_fut = async {
       tokio::task::yield_now().await;
       token.cancel();
@@ -1170,7 +1173,6 @@ fn format_cancelled_mid_operation_returns_cancelled() {
 
     let (result, ()) = deno_core::futures::future::join(format_fut, cancel_fut).await;
 
-    // The operation should be interrupted and surface a typed cancellation error.
     let err = result.unwrap_err();
     assert!(
       matches!(
