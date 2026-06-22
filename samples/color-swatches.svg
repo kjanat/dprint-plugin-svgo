@@ -1,6 +1,6 @@
 <!-- Color swatches should appear next to each color value -->
 <!-- Click a swatch to open the color picker with format alternatives -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
   <!-- Hex colors: 6-digit, 3-digit, 8-digit with alpha -->
   <rect x="10" y="10" width="80" height="40" fill="#ff6b35" />
   <rect x="100" y="10" width="80" height="40" fill="#f00" />
@@ -24,13 +24,8 @@
   <rect x="100" y="210" width="80" height="40" fill="hsla(340, 70%, 55%, 0.8)" />
 
   <!-- Stroke colors get swatches too -->
-  <circle
-    cx="50"
-    cy="300"
-    r="30"
-    fill="none"
-    stroke="#e76f51"
-    stroke-width="4" />
+  <circle cx="50" cy="300" r="30"
+          fill="none" stroke="#e76f51" stroke-width="4" />
 
   <!-- stop-color in gradients -->
   <defs>

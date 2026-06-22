@@ -4,19 +4,12 @@
      - "Deprecated" badge with ~~strikethrough~~ description
      - "Experimental" badge
 -->
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  xmlns:xlink="http://www.w3.org/1999/xlink"
-  viewBox="0 0 400 400">
+<svg viewBox="0 0 400 400"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <!-- Hover <svg>: Widely available, shows [MDN Reference] | [Spec] links -->
   <!-- Hover <rect>: Widely available, spec link to SVG2 shapes -->
-  <rect
-    x="10"
-    y="10"
-    rx="8"
-    width="120"
-    height="60"
-    fill="#2a9d8f" />
+  <rect x="10" y="10" rx="8" width="120" height="60"
+        fill="#2a9d8f" />
 
   <!-- Hover <circle>: Widely available -->
   <circle cx="200" cy="40" r="30" fill="#e76f51" />
@@ -26,13 +19,8 @@
 
   <!-- Hover "fill": shows spec URL + MDN link -->
   <!-- Hover "opacity": shows spec URL + baseline -->
-  <ellipse
-    cx="300"
-    cy="90"
-    rx="50"
-    ry="30"
-    fill="#264653"
-    opacity="0.7" />
+  <ellipse cx="300" cy="90" rx="50" ry="30"
+           fill="#264653" opacity="0.7" />
 
   <!-- Hover <linearGradient>: shows baseline + spec -->
   <defs>
@@ -45,29 +33,17 @@
     </filter>
   </defs>
 
-  <rect
-    x="10"
-    y="130"
-    rx="12"
-    width="180"
-    height="80"
-    fill="url(#sunset)" />
+  <rect x="10" y="130" rx="12" width="180" height="80"
+        fill="url(#sunset)" />
 
   <!-- Hover <filter>, <feGaussianBlur>: shows spec links -->
-  <circle
-    cx="300"
-    cy="170"
-    r="40"
-    fill="#2a9d8f"
-    filter="url(#blur)" />
+  <circle cx="300" cy="170" r="40"
+          fill="#2a9d8f"
+          filter="url(#blur)" />
 
   <!-- DEPRECATED ATTRIBUTES — hover shows ~~strikethrough~~ + "Deprecated" badge -->
-  <text
-    x="10"
-    y="260"
-    clip="rect(0,100,100,0)"
-    font-size="13"
-    font-stretch="condensed">
+  <text x="10" y="260"
+        clip="rect(0,100,100,0)" font-size="13" font-stretch="condensed">
     Deprecated attrs (hover clip, font-stretch)
   </text>
 
@@ -75,13 +51,9 @@
   <use x="10" y="280" xlink:href="#sunset" />
 
   <!-- EXPERIMENTAL ATTRIBUTES — hover shows "Experimental" badge -->
-  <image
-    x="10"
-    y="300"
-    width="32"
-    height="32"
-    href="icon.png"
-    fetchpriority="high" />
+  <image x="10" y="300" width="32" height="32"
+         href="icon.png"
+         fetchpriority="high" />
 
   <text y="360" font-size="12">
     <textPath href="#curve" side="left">
