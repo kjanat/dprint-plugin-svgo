@@ -1114,13 +1114,14 @@ fn format_with_already_cancelled_token_returns_cancelled() {
       )
       .await;
 
-    // The format should be reported as a (recoverable) error mentioning cancellation.
-    assert!(result.is_err());
-    let err_msg = result.unwrap_err().to_string();
+    // The format should surface a typed cancellation error.
+    let err = result.unwrap_err();
     assert!(
-      err_msg.contains("cancelled"),
-      "Unexpected error message: {}",
-      err_msg
+      matches!(
+        err.downcast_ref::<dprint_plugin_svgo::error::SvgoError>(),
+        Some(dprint_plugin_svgo::error::SvgoError::Cancelled)
+      ),
+      "Unexpected error: {err}"
     );
   });
 }
@@ -1159,24 +1160,24 @@ fn format_cancelled_mid_operation_returns_cancelled() {
       |_| std::future::ready(Ok(None)).boxed_local(),
     );
 
-    // Cancel as soon as the format future starts making progress.
+    // Let the format future run for at least one scheduler turn before
+    // cancelling, so this exercises the in-flight `select!` path rather than
+    // the pre-start `is_cancelled()` short-circuit.
     let cancel_fut = async {
+      tokio::task::yield_now().await;
       token.cancel();
     };
 
     let (result, ()) = deno_core::futures::future::join(format_fut, cancel_fut).await;
 
-    // The operation should be interrupted and surface a cancellation error.
+    // The operation should be interrupted and surface a typed cancellation error.
+    let err = result.unwrap_err();
     assert!(
-      result.is_err(),
-      "expected cancellation error, got: {:?}",
-      result
-    );
-    let err_msg = result.unwrap_err().to_string();
-    assert!(
-      err_msg.contains("cancelled"),
-      "Unexpected error message: {}",
-      err_msg
+      matches!(
+        err.downcast_ref::<dprint_plugin_svgo::error::SvgoError>(),
+        Some(dprint_plugin_svgo::error::SvgoError::Cancelled)
+      ),
+      "Unexpected error: {err}"
     );
   });
 }
