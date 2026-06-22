@@ -19,15 +19,15 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v6
-        with: 
-           token: ${{ secrets.DPRINT_PAT }} 
-           submodules: recursive
+        with:
+          token: ${{ secrets.DPRINT_PAT }}
+          submodules: recursive
 
       - uses: denoland/setup-deno@v2
       - uses: extractions/setup-just@v4
       - uses: dsherret/rust-toolchain-file@v1
 
-      - name: Run script 
+      - name: Run script
         env: { GITHUB_TOKEN: "${{ secrets.DPRINT_PAT }}" }
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
