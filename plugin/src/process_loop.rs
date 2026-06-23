@@ -78,7 +78,7 @@ where
   TWrite: Write + Unpin,
 {
   schema_establishment_phase(&mut stdin_reader, &mut stdout_writer)
-    .context("Failed estabilishing schema.")?;
+    .context("Failed establishing schema.")?;
 
   // Move the blocking stdin reader onto a dedicated thread so the async loop
   // below can keep servicing messages while a format is in flight. Parsed
