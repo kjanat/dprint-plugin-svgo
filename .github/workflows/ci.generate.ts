@@ -80,7 +80,7 @@ type Step = Record<string, any>;
 
 function checkout(): Step {
   return {
-    uses: "actions/checkout@v6",
+    uses: "actions/checkout@v7",
     with: { submodules: "recursive" },
   };
 }
@@ -366,7 +366,7 @@ function draftReleaseJob() {
     steps: [
       {
         name: "Checkout",
-        uses: "actions/checkout@v6",
+        uses: "actions/checkout@v7",
         with: { submodules: "recursive" },
       },
       { name: "Download artifacts", uses: "actions/download-artifact@v8" },
@@ -412,7 +412,7 @@ function draftReleaseJob() {
       },
       {
         name: "Release",
-        uses: "softprops/action-gh-release@v2",
+        uses: "softprops/action-gh-release@v3",
         env: { GITHUB_TOKEN: "${{ github.token }}" },
         with: {
           draft: true,
