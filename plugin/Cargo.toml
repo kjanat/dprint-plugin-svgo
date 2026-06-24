@@ -23,7 +23,10 @@ features  = ["process"]
 
 [dependencies.tokio]
 workspace = true
-features  = ["time"]
+features  = ["macros", "sync", "time"]
+
+[dependencies.tokio-util]
+workspace = true
 
 [dev-dependencies]
 dprint-development.workspace = true

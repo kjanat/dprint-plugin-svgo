@@ -49,4 +49,8 @@ pub enum SvgoError {
     /// Timeout duration in seconds.
     seconds: u64,
   },
+
+  /// Format operation was cancelled via the request's cancellation token.
+  #[error("Format operation was cancelled")]
+  Cancelled,
 }

@@ -1086,6 +1086,46 @@ fn format_svg_with_comments() {
   });
 }
 
+// Cancellation tests
+
+#[test]
+fn format_with_already_cancelled_token_returns_cancelled() {
+  let runtime = create_tokio_runtime();
+
+  runtime.block_on(async {
+    let handler = SvgoPluginHandler::default();
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>"#;
+
+    // A token that is cancelled before the request is ever processed.
+    let token = tokio_util::sync::CancellationToken::new();
+    token.cancel();
+
+    let result = handler
+      .format(
+        FormatRequest {
+          config_id: FormatConfigId::from_raw(0),
+          file_path: PathBuf::from("cancelled.svg"),
+          file_bytes: svg.to_string().into_bytes(),
+          config: Arc::new(Default::default()),
+          range: None,
+          token: Arc::new(token),
+        },
+        |_| std::future::ready(Ok(None)).boxed_local(),
+      )
+      .await;
+
+    // The format should surface a typed cancellation error.
+    let err = result.unwrap_err();
+    assert!(
+      matches!(
+        err.downcast_ref::<dprint_plugin_svgo::error::SvgoError>(),
+        Some(dprint_plugin_svgo::error::SvgoError::Cancelled)
+      ),
+      "Unexpected error: {err}"
+    );
+  });
+}
+
 #[test]
 fn format_svg_with_many_elements_succeeds() {
   let runtime = create_tokio_runtime();

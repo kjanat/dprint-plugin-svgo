@@ -1,5 +1,5 @@
 <!-- Hover each element name to see description + baseline + MDN link -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
   <!-- Hover "defs": container for reusable definitions -->
   <defs>
     <!-- Hover "linearGradient": defines a linear color gradient -->
@@ -61,12 +61,8 @@
   <!-- Hover "image": embeds an external image resource -->
   <!-- assets/hover-image-badge.svg -->
   <!-- Works also, but is less portable: href="https://raw.githubusercontent.com/kjanat/svg-language-server/master/samples/assets/hover-image-badge.svg"-->
-  <image
-    x="340"
-    y="10"
-    width="50"
-    height="50"
-    href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+Cgk8ZGVmcz4KCQk8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KCQkJPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI2NDY1MyIgLz4KCQkJPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMmE5ZDhmIiAvPgoJCTwvbGluZWFyR3JhZGllbnQ+CgkJPGxpbmVhckdyYWRpZW50IGlkPSJzdW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KCQkJPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y0YTI2MSIgLz4KCQkJPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZTc2ZjUxIiAvPgoJCTwvbGluZWFyR3JhZGllbnQ+Cgk8L2RlZnM+Cgk8cmVjdCByeD0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0idXJsKCNiZykiIC8+Cgk8Y2lyY2xlIGN4PSIzNiIgY3k9IjE1IiByPSI3IiBmaWxsPSJ1cmwoI3N1bikiIC8+Cgk8cGF0aCBkPSJNNyAzOSAxOCAyNCAyNSAzMiAzMSAyMSA0MyAzOVoiIGZpbGw9IiNlOWM0NmEiIC8+Cgk8cGF0aCBkPSJNNyAzOSAxNiAyOSAyMiAzNSAzMCAyNCA0MyAzOVoiIGZpbGw9IiNmMWZhZWUiIG9wYWNpdHk9Ii44NSIgLz4KPC9zdmc+Cg==" />
+  <image x="340" y="10" width="50" height="50"
+         href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+Cgk8ZGVmcz4KCQk8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KCQkJPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI2NDY1MyIgLz4KCQkJPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMmE5ZDhmIiAvPgoJCTwvbGluZWFyR3JhZGllbnQ+CgkJPGxpbmVhckdyYWRpZW50IGlkPSJzdW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KCQkJPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y0YTI2MSIgLz4KCQkJPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZTc2ZjUxIiAvPgoJCTwvbGluZWFyR3JhZGllbnQ+Cgk8L2RlZnM+Cgk8cmVjdCByeD0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0idXJsKCNiZykiIC8+Cgk8Y2lyY2xlIGN4PSIzNiIgY3k9IjE1IiByPSI3IiBmaWxsPSJ1cmwoI3N1bikiIC8+Cgk8cGF0aCBkPSJNNyAzOSAxOCAyNCAyNSAzMiAzMSAyMSA0MyAzOVoiIGZpbGw9IiNlOWM0NmEiIC8+Cgk8cGF0aCBkPSJNNyAzOSAxNiAyOSAyMiAzNSAzMCAyNCA0MyAzOVoiIGZpbGw9IiNmMWZhZWUiIG9wYWNpdHk9Ii44NSIgLz4KPC9zdmc+Cg==" />
 
   <!-- Hover "foreignObject": embeds non-SVG content (usually HTML) -->
   <foreignObject x="10" y="260" width="200" height="30">

@@ -57,7 +57,7 @@ jobs:
       CARGO_INCREMENTAL: 0
       RUST_BACKTRACE: "full"
     steps:
-      - uses: "actions/checkout@v6"
+      - uses: "actions/checkout@v7"
         with:
           submodules: "recursive"
       - uses: "dsherret/rust-toolchain-file@v1"
@@ -136,7 +136,7 @@ jobs:
       CARGO_INCREMENTAL: 0
       RUST_BACKTRACE: "full"
     steps:
-      - uses: "actions/checkout@v6"
+      - uses: "actions/checkout@v7"
         with:
           submodules: "recursive"
       - uses: "dsherret/rust-toolchain-file@v1"
@@ -260,7 +260,7 @@ jobs:
       contents: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           submodules: "recursive"
       - name: "Download artifacts"
@@ -301,7 +301,7 @@ jobs:
         id: "get_plugin_file_checksum"
         run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
       - name: "Release"
-        uses: "softprops/action-gh-release@v2"
+        uses: "softprops/action-gh-release@v3"
         env:
           GITHUB_TOKEN: "${{ github.token }}"
         with:
