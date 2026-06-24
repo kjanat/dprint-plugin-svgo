@@ -120,10 +120,10 @@ impl Formatter<SvgoConfig> for SvgoFormatter {
       "(async () => {{ return await dprint.formatText({{ ...{}, config: {} }}); }})()",
       request_value, config_json,
     );
-    // Race the (timeout-bounded) V8 execution against cancellation so that a
-    // long-running optimization can be interrupted mid-format, e.g. when an
-    // editor cancels the request. The cancellation branch is checked first so
-    // it takes priority once the token fires.
+    // Race the timeout-wrapped V8 future against cooperative cancellation.
+    // SVGO runs synchronously inside V8, so a poll already inside `optimize()`
+    // cannot be preempted by timeout or cancellation; both are observed before
+    // start or between polls, and the process loop suppresses late responses.
     let result = tokio::select! {
       biased;
 

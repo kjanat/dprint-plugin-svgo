@@ -1127,64 +1127,6 @@ fn format_with_already_cancelled_token_returns_cancelled() {
 }
 
 #[test]
-fn format_cancelled_concurrently_returns_cancelled() {
-  let runtime = create_tokio_runtime();
-
-  runtime.block_on(async {
-    let handler = SvgoPluginHandler::default();
-
-    let mut svg = String::from(r#"<svg xmlns="http://www.w3.org/2000/svg">"#);
-    for i in 0..5000 {
-      svg.push_str(&format!(
-        r#"<rect x="{}" y="{}" width="10" height="10"/>"#,
-        i % 100,
-        i / 100
-      ));
-    }
-    svg.push_str("</svg>");
-
-    let token = tokio_util::sync::CancellationToken::new();
-    let token_for_request = token.clone();
-
-    let format_fut = handler.format(
-      FormatRequest {
-        config_id: FormatConfigId::from_raw(0),
-        file_path: PathBuf::from("mid_cancel.svg"),
-        file_bytes: svg.into_bytes(),
-        config: Arc::new(Default::default()),
-        range: None,
-        token: Arc::new(token_for_request),
-      },
-      |_| std::future::ready(Ok(None)).boxed_local(),
-    );
-
-    // Cancel concurrently with the request. In practice the channel must spin up
-    // a fresh V8 runtime before the worker dequeues this request, so the cancel
-    // lands first and the formatter's pre-start `is_cancelled()` check wins. We
-    // cannot reliably hit the in-flight `select!` arm here: SVGO runs as one
-    // synchronous V8 tick, so the worker can't observe cancellation until it has
-    // already finished. This test only asserts that a concurrently-cancelled
-    // request surfaces `Cancelled`; the protocol wiring is covered by the
-    // deterministic loop tests in `process_loop`.
-    let cancel_fut = async {
-      tokio::task::yield_now().await;
-      token.cancel();
-    };
-
-    let (result, ()) = deno_core::futures::future::join(format_fut, cancel_fut).await;
-
-    let err = result.unwrap_err();
-    assert!(
-      matches!(
-        err.downcast_ref::<dprint_plugin_svgo::error::SvgoError>(),
-        Some(dprint_plugin_svgo::error::SvgoError::Cancelled)
-      ),
-      "Unexpected error: {err}"
-    );
-  });
-}
-
-#[test]
 fn format_svg_with_many_elements_succeeds() {
   let runtime = create_tokio_runtime();
 

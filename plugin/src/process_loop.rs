@@ -80,10 +80,17 @@ where
   schema_establishment_phase(&mut stdin_reader, &mut stdout_writer)
     .context("Failed establishing schema.")?;
 
-  // Move the blocking stdin reader onto a dedicated thread so the async loop
-  // below can keep servicing messages while a format is in flight. Parsed
-  // messages (or the terminating read error) are forwarded over the channel.
-  let (message_tx, mut message_rx) =
+  let message_rx = spawn_message_reader(stdin_reader);
+  drive_message_loop(handler, stdout_writer, message_rx).await
+}
+
+fn spawn_message_reader<TRead>(
+  mut stdin_reader: MessageReader<TRead>,
+) -> tokio::sync::mpsc::UnboundedReceiver<std::io::Result<ProcessPluginMessage>>
+where
+  TRead: Read + Unpin + Send + 'static,
+{
+  let (message_tx, message_rx) =
     tokio::sync::mpsc::unbounded_channel::<std::io::Result<ProcessPluginMessage>>();
   std::thread::spawn(move || {
     loop {
@@ -97,46 +104,48 @@ where
     }
   });
 
+  message_rx
+}
+
+async fn drive_message_loop<THandler, TWrite>(
+  handler: THandler,
+  mut stdout_writer: MessageWriter<TWrite>,
+  mut message_rx: tokio::sync::mpsc::UnboundedReceiver<std::io::Result<ProcessPluginMessage>>,
+) -> Result<()>
+where
+  THandler: AsyncPluginHandler,
+  TWrite: Write + Unpin,
+{
   let mut next_message_id = 1_u32;
   let mut configs = HashMap::<u32, Rc<StoredConfig<THandler::Configuration>>>::new();
   // Cancellation tokens for in-flight formats, keyed by request message id.
   let mut format_tokens = HashMap::<u32, CancellationToken>::new();
   // Concurrently running formats; each resolves to (request message id, result).
   let mut in_flight = FuturesUnordered::new();
+  let mut input_closed = false;
 
   loop {
+    if input_closed && in_flight.is_empty() {
+      return Ok(());
+    }
+
     tokio::select! {
-      // Prefer flushing finished formats: a ready result means that format is
-      // already done, so there is nothing left to cancel for it.
+      // Prefer queued input over starting pending formats. This lets a queued
+      // `CancelFormat` mark the token before the formatter first observes it.
       biased;
 
-      Some((message_id, result)) = in_flight.next(), if !in_flight.is_empty() => {
-        // Only respond if the host did not cancel: `CancelFormat` removes the
-        // token, so a missing entry means the format was cancelled and the
-        // protocol expects no reply.
-        if format_tokens.remove(&message_id).is_some() {
-          let body = match result {
-            Ok(text) => MessageBody::FormatResponse(ResponseBody {
-              message_id,
-              data: text,
-            }),
-            Err(err) => MessageBody::Error(ResponseBody {
-              message_id,
-              data: format!("{:#}", err).into_bytes(),
-            }),
-          };
-          send_response_body(&mut stdout_writer, &mut next_message_id, body)?;
-        }
-      }
-
-      message = message_rx.recv() => {
+      message = message_rx.recv(), if !input_closed => {
         let message = match message {
-          None => return Ok(()),
+          None => {
+            input_closed = true;
+            continue;
+          }
           Some(Ok(message)) => message,
           Some(Err(err))
             if matches!(err.kind(), ErrorKind::UnexpectedEof | ErrorKind::BrokenPipe) =>
           {
-            return Ok(());
+            input_closed = true;
+            continue;
           }
           Some(Err(err)) => return Err(err.into()),
         };
@@ -356,6 +365,25 @@ where
           }
         }
       }
+
+      Some((message_id, result)) = in_flight.next(), if !in_flight.is_empty() => {
+        // Only respond if the host did not cancel: `CancelFormat` removes the
+        // token, so a missing entry means the format was cancelled and the
+        // protocol expects no reply.
+        if format_tokens.remove(&message_id).is_some() {
+          let body = match result {
+            Ok(text) => MessageBody::FormatResponse(ResponseBody {
+              message_id,
+              data: text,
+            }),
+            Err(err) => MessageBody::Error(ResponseBody {
+              message_id,
+              data: format!("{:#}", err).into_bytes(),
+            }),
+          };
+          send_response_body(&mut stdout_writer, &mut next_message_id, body)?;
+        }
+      }
     }
   }
 }
@@ -410,6 +438,7 @@ mod tests {
   use std::io::Cursor;
   use std::sync::Arc;
   use std::sync::Mutex;
+  use std::time::Duration;
 
   use dprint_core::async_runtime::LocalBoxFuture;
   use dprint_core::async_runtime::async_trait;
@@ -430,7 +459,10 @@ mod tests {
 
   /// Sentinel input that makes [`MockHandler::format`] block until cancelled.
   const WAIT_SENTINEL: &[u8] = b"WAIT";
+  /// Sentinel input that makes [`MockHandler::format`] yield once before finishing.
+  const YIELD_SENTINEL: &[u8] = b"YIELD";
   const FORMATTED_OUTPUT: &[u8] = b"FORMATTED";
+  const TEST_TIMEOUT: Duration = Duration::from_secs(5);
 
   #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
   struct MockConfig;
@@ -439,7 +471,10 @@ mod tests {
   /// the cancellation token; any other input formats immediately. This lets the
   /// loop tests be deterministic — the "waiting" format only finishes once the
   /// token is cancelled.
-  struct MockHandler;
+  #[derive(Default)]
+  struct MockHandler {
+    start_cancelled_values: Arc<Mutex<Vec<bool>>>,
+  }
 
   #[async_trait(?Send)]
   impl AsyncPluginHandler for MockHandler {
@@ -481,9 +516,18 @@ mod tests {
       _format_with_host: impl FnMut(HostFormatRequest) -> LocalBoxFuture<'static, FormatResult>
       + 'static,
     ) -> FormatResult {
+      self
+        .start_cancelled_values
+        .lock()
+        .unwrap()
+        .push(request.token.is_cancelled());
+
       if request.file_bytes == WAIT_SENTINEL {
         request.token.wait_cancellation().await;
         Ok(None)
+      } else if request.file_bytes == YIELD_SENTINEL {
+        tokio::task::yield_now().await;
+        Ok(Some(FORMATTED_OUTPUT.to_vec()))
       } else {
         Ok(Some(FORMATTED_OUTPUT.to_vec()))
       }
@@ -529,6 +573,47 @@ mod tests {
     }
   }
 
+  /// Parses the loop's output into message bodies.
+  fn decode_output(output: Vec<u8>) -> Vec<MessageBody> {
+    let mut reader = MessageReader::new(Cursor::new(output));
+    let mut bodies = Vec::new();
+    while let Ok(message) = ProcessPluginMessage::read(&mut reader) {
+      bodies.push(message.body);
+    }
+    bodies
+  }
+
+  fn run_with_handler(
+    handler: MockHandler,
+    messages: Vec<ProcessPluginMessage>,
+  ) -> Vec<MessageBody> {
+    let output = Arc::new(Mutex::new(Vec::new()));
+    let writer = SharedWriter(output.clone());
+    let (message_tx, message_rx) =
+      tokio::sync::mpsc::unbounded_channel::<std::io::Result<ProcessPluginMessage>>();
+    for message in messages {
+      message_tx.send(Ok(message)).unwrap();
+    }
+    drop(message_tx);
+
+    let runtime = create_tokio_runtime();
+    runtime.block_on(async {
+      tokio::time::timeout(
+        TEST_TIMEOUT,
+        drive_message_loop(handler, MessageWriter::new(writer), message_rx),
+      )
+      .await
+      .expect("process loop test timed out")
+      .unwrap();
+    });
+    let bytes = output.lock().unwrap().clone();
+    decode_output(bytes)
+  }
+
+  fn run(messages: Vec<ProcessPluginMessage>) -> Vec<MessageBody> {
+    run_with_handler(MockHandler::default(), messages)
+  }
+
   /// Encodes the schema handshake byte (`0`) followed by the given messages,
   /// exactly as the dprint CLI would send them.
   fn encode_input(messages: Vec<ProcessPluginMessage>) -> Vec<u8> {
@@ -543,10 +628,26 @@ mod tests {
     buf
   }
 
-  /// Parses the loop's output, skipping the schema handshake, into message bodies.
-  fn decode_output(output: Vec<u8>) -> Vec<MessageBody> {
-    let mut reader = MessageReader::new(Cursor::new(output));
-    // Skip the schema response: `0` then the schema version.
+  fn run_encoded_input(input: Vec<u8>) -> Vec<MessageBody> {
+    let output = Arc::new(Mutex::new(Vec::new()));
+    let writer = SharedWriter(output.clone());
+    let runtime = create_tokio_runtime();
+    runtime.block_on(async {
+      tokio::time::timeout(
+        TEST_TIMEOUT,
+        run_message_loop(
+          MockHandler::default(),
+          MessageReader::new(Cursor::new(input)),
+          MessageWriter::new(writer),
+        ),
+      )
+      .await
+      .expect("process loop test timed out")
+      .unwrap();
+    });
+
+    let bytes = output.lock().unwrap().clone();
+    let mut reader = MessageReader::new(Cursor::new(bytes));
     reader.read_u32().unwrap();
     reader.read_u32().unwrap();
     let mut bodies = Vec::new();
@@ -556,36 +657,37 @@ mod tests {
     bodies
   }
 
-  fn run(input: Vec<u8>) -> Vec<MessageBody> {
-    let output = Arc::new(Mutex::new(Vec::new()));
-    let writer = SharedWriter(output.clone());
-    let runtime = create_tokio_runtime();
-    runtime
-      .block_on(run_message_loop(
-        MockHandler,
-        MessageReader::new(Cursor::new(input)),
-        MessageWriter::new(writer),
-      ))
-      .unwrap();
-    let bytes = output.lock().unwrap().clone();
-    decode_output(bytes)
+  #[test]
+  fn encoded_loop_performs_schema_handshake() {
+    let bodies = run_encoded_input(encode_input(vec![register_config_msg(1, 0)]));
+
+    assert!(
+      bodies
+        .iter()
+        .any(|body| matches!(body, MessageBody::Success(1))),
+      "expected a Success for the RegisterConfig, got: {bodies:?}"
+    );
   }
 
   #[test]
   fn cancel_format_suppresses_the_response() {
-    // Register config 0, start a format that blocks until cancelled, then cancel
-    // it. The blocking format only completes after the cancel fires, so this
-    // deterministically exercises the in-flight cancellation path.
-    let input = encode_input(vec![
+    let start_cancelled_values = Arc::new(Mutex::new(Vec::new()));
+    let handler = MockHandler {
+      start_cancelled_values: start_cancelled_values.clone(),
+    };
+    // Enqueue a format, then enqueue its cancel before the format is first
+    // polled. The blocking format only completes after the token is cancelled,
+    // so this covers pre-start cancellation plus response suppression.
+    let messages = vec![
       register_config_msg(1, 0),
       format_msg(100, 0, WAIT_SENTINEL),
       ProcessPluginMessage {
         id: 2,
         body: MessageBody::CancelFormat(100),
       },
-    ]);
+    ];
 
-    let bodies = run(input);
+    let bodies = run_with_handler(handler, messages);
 
     // The register succeeded, proving the loop ran...
     assert!(
@@ -603,16 +705,37 @@ mod tests {
       }),
       "expected no response for the cancelled format, got: {bodies:?}"
     );
+    assert_eq!(
+      *start_cancelled_values.lock().unwrap(),
+      vec![true],
+      "expected queued cancellation before format start"
+    );
+  }
+
+  #[test]
+  fn eof_drains_accepted_format_before_returning() {
+    let bodies = run(vec![
+      register_config_msg(1, 0),
+      format_msg(100, 0, YIELD_SENTINEL),
+    ]);
+
+    let response = bodies.iter().find_map(|body| match body {
+      MessageBody::FormatResponse(r) if r.message_id == 100 => Some(r.data.clone()),
+      _ => None,
+    });
+    assert_eq!(
+      response,
+      Some(Some(FORMATTED_OUTPUT.to_vec())),
+      "expected EOF to drain accepted format, got: {bodies:?}"
+    );
   }
 
   #[test]
   fn format_without_cancel_sends_a_response() {
-    let input = encode_input(vec![
+    let bodies = run(vec![
       register_config_msg(1, 0),
       format_msg(100, 0, b"hello"),
     ]);
-
-    let bodies = run(input);
 
     let response = bodies.iter().find_map(|body| match body {
       MessageBody::FormatResponse(r) if r.message_id == 100 => Some(r.data.clone()),
