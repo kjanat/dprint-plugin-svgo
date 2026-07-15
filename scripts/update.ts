@@ -10,6 +10,7 @@ import $ from "dax";
 import {
   buildJsBundle,
   cargoTestAllFeatures,
+  getSvgoVersion,
   refreshDenoLock,
   rootDirPath,
   syncSvgoDenoImports,
@@ -19,15 +20,20 @@ import {
 $.logStep("Fetching svgo tags...");
 await $`git fetch --tags origin`.cwd(vendorSvgoDirPath);
 
-const currentTag = await getCurrentSvgoTag();
+// Derive the vendored version from package.json rather than requiring the
+// submodule HEAD to land exactly on a tag: SVGO's version-bump commit is not
+// the commit that carries the release tag, so a vendored pin can legitimately
+// sit one commit away from its `v*` tag.
+const currentVersion = await getSvgoVersion();
 const latestTag = await getLatestSvgoTag();
+const latestVersion = latestTag.replace(/^v/, "");
 
-if (currentTag === latestTag) {
-  $.log(`SVGO already at ${currentTag}.`);
+if (isUpToDate(currentVersion, latestVersion)) {
+  $.log(`SVGO already at ${currentVersion}.`);
   Deno.exit(0);
 }
 
-$.logStep(`Upgrading svgo from ${currentTag} to ${latestTag}...`);
+$.logStep(`Upgrading svgo from ${currentVersion} to ${latestVersion}...`);
 await $`git checkout ${latestTag}`.cwd(vendorSvgoDirPath);
 
 $.logStep("Syncing Deno imports and lockfile...");
@@ -70,16 +76,15 @@ async function bumpMinorVersion() {
   return newVersion;
 }
 
-async function getCurrentSvgoTag() {
-  const lines = await $`git tag --points-at HEAD`.cwd(vendorSvgoDirPath).text();
-  const tags = lines
-    .split(/\r?\n/)
-    .map((line: string) => line.trim())
-    .filter((line: string) => /^v\d/.test(line));
-  if (tags.length === 0) {
-    throw new Error("Expected vendor/svgo HEAD to point at an SVGO version tag.");
+function isUpToDate(currentVersion: string, latestVersion: string) {
+  const current = semver.parse(currentVersion);
+  const latest = semver.parse(latestVersion);
+  if (current == null || latest == null) {
+    throw new Error(
+      `Expected valid semver versions, got ${currentVersion} and ${latestVersion}.`,
+    );
   }
-  return sortSemverTags(tags).at(-1)!;
+  return semver.greaterOrEqual(current, latest);
 }
 
 async function getLatestSvgoTag() {
