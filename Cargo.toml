@@ -1,6 +1,7 @@
 [workspace]
-resolver = "3"
-members  = ["base", "patches/*", "plugin"]
+resolver        = "3"
+members         = ["base", "patches/*", "plugin"]
+default-members = ["base", "plugin"]
 
 [workspace.package]
 version      = "0.6.0"

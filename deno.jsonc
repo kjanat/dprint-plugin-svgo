@@ -17,7 +17,7 @@
     }
   },
   "imports": {
-    "@kjanat/dreamcli": "jsr:@kjanat/dreamcli@^2.1.0",
+    "@kjanat/dreamcli": "jsr:@kjanat/dreamcli@3.0.0-rc.11",
     "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/toml": "jsr:@std/toml@^1.0.11",
@@ -50,5 +50,8 @@
   "compilerOptions": {
     "checkJs": false
   },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "minimumDependencyAge": {
+    "exclude": ["jsr:@kjanat/*"]
+  }
 }
