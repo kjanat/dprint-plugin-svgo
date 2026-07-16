@@ -6,8 +6,9 @@
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@eemeli/yaml@^2.8.2": "2.8.2",
+    "jsr:@kjanat/ansispeck@0.2": "0.2.0",
     "jsr:@kjanat/dreamcli@*": "2.0.1",
-    "jsr:@kjanat/dreamcli@^2.1.0": "2.1.0",
+    "jsr:@kjanat/dreamcli@3.0.0-rc.11": "3.0.0-rc.11",
     "jsr:@std/bytes@^1.0.5": "1.0.6",
     "jsr:@std/collections@^1.1.3": "1.1.3",
     "jsr:@std/fmt@1": "1.0.9",
@@ -97,11 +98,17 @@
     "@eemeli/yaml@2.8.2": {
       "integrity": "58f95e7b82f2717963d31f350a9c7cdc098a7b481a3f64c58e979e2e999db0b0"
     },
+    "@kjanat/ansispeck@0.2.0": {
+      "integrity": "974d1d01276a4759e92203e49997d525c7dd1a39d1deb1b3d03b03b5f2545079"
+    },
     "@kjanat/dreamcli@2.0.1": {
       "integrity": "f3b868fd91019544e07300ae886a2c5bfdc038b088cabb7980debdbf6aa96312"
     },
-    "@kjanat/dreamcli@2.1.0": {
-      "integrity": "d42e68be1168f1b35fbe4d7a6313d58da7f365c464cf736442a02ddb3d8290e9"
+    "@kjanat/dreamcli@3.0.0-rc.11": {
+      "integrity": "0ebeb9cb28274ed790ebae25b8e6289f74c832f0bd6e4e5d5974e33b08824764",
+      "dependencies": [
+        "jsr:@kjanat/ansispeck"
+      ]
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
@@ -4221,7 +4228,7 @@
     "dependencies": [
       "jsr:@david/dax@0.45",
       "jsr:@eemeli/yaml@^2.8.2",
-      "jsr:@kjanat/dreamcli@^2.1.0",
+      "jsr:@kjanat/dreamcli@3.0.0-rc.11",
       "jsr:@std/jsonc@^1.0.2",
       "jsr:@std/path@^1.1.4",
       "jsr:@std/semver@^1.0.8",
