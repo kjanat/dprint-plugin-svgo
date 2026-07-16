@@ -52,9 +52,23 @@ await cargoTestAllFeatures();
 $.logStep(`Committing and publishing ${newVersion}...`);
 await $`git add -f .gitmodules vendor/svgo deno.jsonc deno.lock Cargo.toml Cargo.lock`;
 await $`git commit -m ${newVersion}`;
-await $`git push origin HEAD:master`;
+await pushReleaseToMaster();
 await $`git tag ${newVersion}`;
 await $`git push origin ${newVersion}`;
+
+async function pushReleaseToMaster() {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) {
+      await $`git fetch origin master`;
+      await $`git rebase origin/master`;
+    }
+    const result = await $`git push origin HEAD:master`.noThrow();
+    if (result.code === 0) {
+      return;
+    }
+  }
+  throw new Error("Failed to push the release commit to master after rebasing onto origin/master.");
+}
 
 async function bumpMinorVersion() {
   const projectFile = rootDirPath.join("Cargo.toml");

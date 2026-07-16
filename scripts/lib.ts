@@ -11,6 +11,8 @@ export const vendorSvgoDirPath = rootDirPath.join("vendor", "svgo");
 export const releaseDirPath = rootDirPath.join("target", "release");
 const denoConfigPath = rootDirPath.join("deno.jsonc");
 
+const REPO_OWNED_NPM_IMPORTS = new Set(["tsdown", "typescript-json-schema"]);
+
 export async function buildJsBundle() {
   await $`deno task --frozen bundle:runtime`
     .cwd(rootDirPath);
@@ -37,7 +39,7 @@ export async function cargoTestAllFeatures() {
 }
 
 export async function refreshDenoLock() {
-  await $`deno cache --frozen=false --lock=deno.lock js/svgo.ts scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/local_test.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts`
+  await $`deno cache --frozen=false --lock=deno.lock scripts/create_plugin_file.ts scripts/generate_schema.ts scripts/local_test.ts scripts/output_svgo_version.ts scripts/update.ts .github/workflows/ci.generate.ts`
     .cwd(rootDirPath);
 }
 
@@ -57,9 +59,13 @@ export async function syncSvgoDenoImports() {
   const imports = config.imports;
   const managedImportNames = new Set([...Object.keys(dependencies), "svgo/browser"]);
 
-  // SVGO owns the npm import aliases in deno.jsonc, so drop any stale ones first.
   for (const [name, value] of Object.entries(imports)) {
-    if (typeof value === "string" && value.startsWith("npm:") && !managedImportNames.has(name)) {
+    if (
+      typeof value === "string" &&
+      value.startsWith("npm:") &&
+      !managedImportNames.has(name) &&
+      !REPO_OWNED_NPM_IMPORTS.has(name)
+    ) {
       delete imports[name];
     }
   }
