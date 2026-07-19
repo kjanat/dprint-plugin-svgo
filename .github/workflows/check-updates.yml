@@ -1,7 +1,29 @@
 name: Check Updates
+run-name: "${{ (inputs.version && format('{0}: {1} → {2} (vermon)', inputs.package, inputs.previous || 'new', inputs.version)) || inputs.reason }}"
 
 on:
   workflow_dispatch:
+    inputs:
+      reason:
+        description: Human-readable trigger summary, used as the run name when no structured inputs are given
+        required: false
+        type: string
+      package:
+        description: Package whose release triggered this run
+        required: false
+        type: string
+      registry:
+        description: Registry the release was observed on
+        required: false
+        type: string
+      version:
+        description: Newly observed version
+        required: false
+        type: string
+      previous:
+        description: Previously observed version
+        required: false
+        type: string
   schedule:
     # do this three times a week
     - cron: "0 7 * * 1,3,5"
