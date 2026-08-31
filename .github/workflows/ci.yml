@@ -119,9 +119,9 @@ jobs:
           GH_TOKEN: "${{ github.token }}"
         run: "TAG=\"${GITHUB_REF#refs/tags/}\"
 
-          gh release view \"$TAG\" --repo \"$GITHUB_REPOSITORY\" ||
+          gh release view \"${TAG}\" --repo \"${GITHUB_REPOSITORY}\" ||
 
-          \  gh release create \"$TAG\" --repo \"$GITHUB_REPOSITORY\" --draft --title \"$TAG\" --notes \"Assets are being uploaded by CI.\""
+          \  gh release create \"${TAG}\" --repo \"${GITHUB_REPOSITORY}\" --draft --title \"${TAG}\" --notes \"Assets are being uploaded by CI.\""
   build:
     name: "${{ matrix.config.target }}"
     if: "!cancelled() && github.event_name == 'push' && (needs.create_release.result == 'success' || needs.create_release.result == 'skipped')"
@@ -208,14 +208,18 @@ jobs:
         if: "matrix.config.target == 'x86_64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
         run: "zip -r dprint-plugin-svgo-x86_64-apple-darwin.zip dprint-plugin-svgo
 
-          echo \"ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')\"
+
+          echo \"ZIP_CHECKSUM=${checksum}\" >> \"${GITHUB_OUTPUT}\""
         working-directory: "target/x86_64-apple-darwin/release"
       - name: "Pre-release (aarch64-apple-darwin)"
         id: "pre_release_aarch64_apple_darwin"
         if: "matrix.config.target == 'aarch64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
         run: "zip -r dprint-plugin-svgo-aarch64-apple-darwin.zip dprint-plugin-svgo
 
-          echo \"ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')\"
+
+          echo \"ZIP_CHECKSUM=${checksum}\" >> \"${GITHUB_OUTPUT}\""
         working-directory: "target/aarch64-apple-darwin/release"
       - name: "Pre-release (x86_64-pc-windows-msvc)"
         id: "pre_release_x86_64_pc_windows_msvc"
@@ -231,45 +235,49 @@ jobs:
         if: "matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
         run: "zip -r dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip dprint-plugin-svgo
 
-          echo \"ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')\"
+
+          echo \"ZIP_CHECKSUM=${checksum}\" >> \"${GITHUB_OUTPUT}\""
         working-directory: "target/x86_64-unknown-linux-gnu/release"
       - name: "Pre-release (aarch64-unknown-linux-gnu)"
         id: "pre_release_aarch64_unknown_linux_gnu"
         if: "matrix.config.target == 'aarch64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
         run: "zip -r dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip dprint-plugin-svgo
 
-          echo \"ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')\"
+
+          echo \"ZIP_CHECKSUM=${checksum}\" >> \"${GITHUB_OUTPUT}\""
         working-directory: "target/aarch64-unknown-linux-gnu/release"
       - name: "Upload release asset (x86_64-apple-darwin)"
         if: "matrix.config.target == 'x86_64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
         shell: "bash"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip --clobber --repo \"${GITHUB_REPOSITORY}\""
       - name: "Upload release asset (aarch64-apple-darwin)"
         if: "matrix.config.target == 'aarch64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
         shell: "bash"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip --clobber --repo \"${GITHUB_REPOSITORY}\""
       - name: "Upload release asset (x86_64-pc-windows-msvc)"
         if: "matrix.config.target == 'x86_64-pc-windows-msvc' && startsWith(github.ref, 'refs/tags/')"
         shell: "bash"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip --clobber --repo \"${GITHUB_REPOSITORY}\""
       - name: "Upload release asset (x86_64-unknown-linux-gnu)"
         if: "matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
         shell: "bash"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip --clobber --repo \"${GITHUB_REPOSITORY}\""
       - name: "Upload release asset (aarch64-unknown-linux-gnu)"
         if: "matrix.config.target == 'aarch64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
         shell: "bash"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip --clobber --repo \"${GITHUB_REPOSITORY}\""
     needs: "create_release"
   publish_release:
     name: "publish_release"
@@ -290,32 +298,46 @@ jobs:
       - name: "Download release assets"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release download \"${GITHUB_REF#refs/tags/}\" --repo \"$GITHUB_REPOSITORY\" --pattern \"*.zip\""
+        run: "gh release download \"${GITHUB_REF#refs/tags/}\" --repo \"${GITHUB_REPOSITORY}\" --pattern \"*.zip\""
       - name: "Output checksums"
-        run: "echo \"dprint-plugin-svgo-x86_64-apple-darwin.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')\"
+        run: "checksum=\"$(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')\"
 
-          echo \"dprint-plugin-svgo-aarch64-apple-darwin.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')\"
+          echo \"dprint-plugin-svgo-x86_64-apple-darwin.zip: ${checksum}\"
 
-          echo \"dprint-plugin-svgo-x86_64-pc-windows-msvc.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')\"
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-aarch64-apple-darwin.zip | awk '{print $1}')\"
 
-          echo \"dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')\"
+          echo \"dprint-plugin-svgo-aarch64-apple-darwin.zip: ${checksum}\"
 
-          echo \"dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: $(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')\""
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-x86_64-pc-windows-msvc.zip | awk '{print $1}')\"
+
+          echo \"dprint-plugin-svgo-x86_64-pc-windows-msvc.zip: ${checksum}\"
+
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip | awk '{print $1}')\"
+
+          echo \"dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip: ${checksum}\"
+
+          checksum=\"$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')\"
+
+          echo \"dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip: ${checksum}\""
       - name: "Create plugin file"
         run: "just ci-create-plugin-file"
       - name: "Get svgo version"
         id: "get_svgo_version"
-        run: "echo \"SVGO_VERSION=$(just ci-output-svgo-version)\" >> \"$GITHUB_OUTPUT\""
+        run: "svgo_version=\"$(just ci-output-svgo-version)\"
+
+          echo \"SVGO_VERSION=${svgo_version}\" >> \"${GITHUB_OUTPUT}\""
       - name: "Get tag version"
         id: "get_tag_version"
-        run: "echo \"TAG_VERSION=${GITHUB_REF/refs\\/tags\\//}\" >> \"$GITHUB_OUTPUT\""
+        run: "echo \"TAG_VERSION=${GITHUB_REF/refs\\/tags\\//}\" >> \"${GITHUB_OUTPUT}\""
       - name: "Get plugin file checksum"
         id: "get_plugin_file_checksum"
-        run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
+        run: "checksum=\"$(shasum -a 256 plugin.json | awk '{print $1}')\"
+
+          echo \"CHECKSUM=${checksum}\" >> \"${GITHUB_OUTPUT}\""
       - name: "Upload plugin file and schema"
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: "gh release upload \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" plugin.json schema.json --clobber --repo \"$GITHUB_REPOSITORY\""
+        run: "gh release upload \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" plugin.json schema.json --clobber --repo \"${GITHUB_REPOSITORY}\""
       - name: "Publish release"
         env:
           GH_TOKEN: "${{ github.token }}"
@@ -382,4 +404,4 @@ jobs:
 
           RELEASE_BODY
 
-          gh release edit \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --repo \"$GITHUB_REPOSITORY\" --title \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --notes-file release_body.md --draft=false"
+          gh release edit \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --repo \"${GITHUB_REPOSITORY}\" --title \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --notes-file release_body.md --draft=false"
