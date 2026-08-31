@@ -9,7 +9,13 @@ Formats `.svg` and `.svgz` files.
 ## Install
 
 1. Install [dprint]
-2. Follow instructions at [https://github.com/kjanat/dprint-plugin-svgo/releases/][release:releases]
+2. Add the plugin:
+
+   ```sh
+   dprint add kjanat/svgo
+   ```
+
+   or follow instructions at [https://github.com/kjanat/dprint-plugin-svgo/releases/][release:releases]
 
 ## Configuration
 
