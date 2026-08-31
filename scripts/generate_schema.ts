@@ -46,6 +46,7 @@ export async function generateSchema(outputPath?: string) {
       paths: await getSvgoCompilerPaths(),
       strictNullChecks: true,
       target: "ES2022",
+      types: [],
     },
     rootDirPath.toString(),
   );

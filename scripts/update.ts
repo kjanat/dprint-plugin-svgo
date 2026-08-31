@@ -102,7 +102,7 @@ function isUpToDate(currentVersion: string, latestVersion: string) {
 }
 
 async function getLatestSvgoTag() {
-  const lines = await $`git tag --list v*`.cwd(vendorSvgoDirPath).text();
+  const lines = await $`git tag --list ${"v*"}`.cwd(vendorSvgoDirPath).text();
   const tags = lines
     .split(/\r?\n/)
     .map((line: string) => line.trim())
