@@ -48,5 +48,5 @@ Additionally it's much faster. This plugin will format files in parallel and you
 [ci]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml
 [badge]: https://github.com/kjanat/dprint-plugin-svgo/actions/workflows/ci.yml/badge.svg
 [dprint]: https://dprint.dev/install/
-[SVGO's configuration]: https://svgo.dev/docs/configuration/
+[SVGO's configuration]: https://github.com/svg/svgo#configuration
 [SVGO]: https://svgo.dev/ "SVGO, short for SVG Optimizer, is a Node.js library and command-line application for optimizing SVG files."
