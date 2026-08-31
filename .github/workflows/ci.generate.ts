@@ -59,10 +59,6 @@ const SITE_VERIFY_TARGET = "x86_64-unknown-linux-gnu";
 
 // --- Derived values ---
 
-function artifactsName(t: Target) {
-  return `${t.target}-artifacts`;
-}
-
 function zipFileName(t: Target) {
   return `${REPO_NAME}-${t.target}.zip`;
 }
@@ -239,15 +235,15 @@ function preRelease(t: Target): Step {
   return step;
 }
 
-function uploadArtifact(t: Target): Step {
+function uploadReleaseAsset(t: Target): Step {
   return {
-    name: `Upload artifacts (${t.target})`,
+    name: `Upload release asset (${t.target})`,
     if: `matrix.config.target == '${t.target}' && startsWith(github.ref, 'refs/tags/')`,
-    uses: "actions/upload-artifact@v7",
-    with: {
-      name: artifactsName(t),
-      path: `target/${t.target}/release/${zipFileName(t)}`,
-    },
+    shell: "bash",
+    env: { GH_TOKEN: "${{ github.token }}" },
+    run: `gh release upload "\${GITHUB_REF#refs/tags/}" target/${t.target}/release/${
+      zipFileName(t)
+    } --clobber --repo "$GITHUB_REPOSITORY"`,
   };
 }
 
@@ -286,6 +282,7 @@ function buildJob(
   return {
     name: "${{ matrix.config.target }}",
     if: condition,
+    permissions: { contents: includeRelease ? "write" : "read" },
     "runs-on": "${{ matrix.config.os }}",
     strategy: { matrix: matrixConfig(items) },
     env: { CARGO_INCREMENTAL: 0, RUST_BACKTRACE: "full" },
@@ -303,7 +300,7 @@ function buildJob(
       test("debug"),
       test("release"),
       ...(includeRelease ? items.map(preRelease) : []),
-      ...(includeRelease ? items.map(uploadArtifact) : []),
+      ...(includeRelease ? items.map(uploadReleaseAsset) : []),
     ],
   };
 }
@@ -355,10 +352,32 @@ In a dprint configuration file:
 `;
 }
 
-/** Create the draft release job that downloads artifacts, computes checksums, and publishes. */
-function draftReleaseJob() {
+/** Create the empty draft release that build jobs stream their assets into. */
+function createReleaseJob() {
   return {
-    name: "draft_release",
+    name: "create_release",
+    if: "startsWith(github.ref, 'refs/tags/')",
+    "runs-on": "ubuntu-latest",
+    permissions: { contents: "write" },
+    steps: [
+      {
+        name: "Create draft release",
+        env: { GH_TOKEN: "${{ github.token }}" },
+        run: [
+          'TAG="${GITHUB_REF#refs/tags/}"',
+          'gh release view "$TAG" --repo "$GITHUB_REPOSITORY" ||',
+          '  gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --title "$TAG" --notes "Assets are being uploaded by CI."',
+        ].join("\n"),
+      },
+    ],
+  };
+}
+
+/** Finish the draft release: add plugin.json and schema.json, write the body, publish. */
+function publishReleaseJob() {
+  const ghToken = () => ({ GH_TOKEN: "${{ github.token }}" });
+  return {
+    name: "publish_release",
     if: "startsWith(github.ref, 'refs/tags/')",
     needs: "build",
     "runs-on": "ubuntu-latest",
@@ -369,7 +388,6 @@ function draftReleaseJob() {
         uses: "actions/checkout@v7",
         with: { submodules: "recursive" },
       },
-      { name: "Download artifacts", uses: "actions/download-artifact@v8" },
       setupDeno(),
       setupJust(),
       {
@@ -377,10 +395,10 @@ function draftReleaseJob() {
         run: "deno run --frozen -A scripts/generate_schema.ts schema.json",
       },
       {
-        name: "Move downloaded artifacts to root directory",
-        run: [
-          ...targets.map((t) => `mv ${artifactsName(t)}/${zipFileName(t)} .`),
-        ].join("\n"),
+        name: "Download release assets",
+        env: ghToken(),
+        run:
+          'gh release download "${GITHUB_REF#refs/tags/}" --repo "$GITHUB_REPOSITORY" --pattern "*.zip"',
       },
       {
         name: "Output checksums",
@@ -411,15 +429,20 @@ function draftReleaseJob() {
           'echo "CHECKSUM=$(shasum -a 256 plugin.json | awk \'{print $1}\')" >> "$GITHUB_OUTPUT"',
       },
       {
-        name: "Release",
-        uses: "softprops/action-gh-release@v3",
-        env: { GITHUB_TOKEN: "${{ github.token }}" },
-        with: {
-          draft: true,
-          files: [...targets.map(zipFileName), "plugin.json", "schema.json"]
-            .join("\n"),
-          body: releaseBody(),
-        },
+        name: "Upload plugin file and schema",
+        env: ghToken(),
+        run:
+          'gh release upload "${{ steps.get_tag_version.outputs.TAG_VERSION }}" plugin.json schema.json --clobber --repo "$GITHUB_REPOSITORY"',
+      },
+      {
+        name: "Publish release",
+        env: ghToken(),
+        run: [
+          "cat > release_body.md <<'RELEASE_BODY'",
+          releaseBody(),
+          "RELEASE_BODY",
+          'gh release edit "${{ steps.get_tag_version.outputs.TAG_VERSION }}" --repo "$GITHUB_REPOSITORY" --title "${{ steps.get_tag_version.outputs.TAG_VERSION }}" --notes-file release_body.md --draft=false',
+        ].join("\n"),
       },
     ],
   };
@@ -444,8 +467,15 @@ const ci = {
     check: buildJob(prTargets, "github.event_name == 'pull_request'", {
       includeRelease: false,
     }),
-    build: buildJob(targets, "github.event_name == 'push'"),
-    draft_release: draftReleaseJob(),
+    create_release: createReleaseJob(),
+    build: {
+      ...buildJob(
+        targets,
+        "!cancelled() && github.event_name == 'push' && (needs.create_release.result == 'success' || needs.create_release.result == 'skipped')",
+      ),
+      needs: "create_release",
+    },
+    publish_release: publishReleaseJob(),
   },
 };
 

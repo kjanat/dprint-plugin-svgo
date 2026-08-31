@@ -41,6 +41,8 @@ jobs:
   check:
     name: "${{ matrix.config.target }}"
     if: "github.event_name == 'pull_request'"
+    permissions:
+      contents: "read"
     runs-on: "${{ matrix.config.os }}"
     strategy:
       matrix:
@@ -105,9 +107,26 @@ jobs:
       - name: "Test (Release)"
         if: "matrix.config.run_tests == 'true' && startsWith(github.ref, 'refs/tags/')"
         run: "just ci-test-release"
+  create_release:
+    name: "create_release"
+    if: "startsWith(github.ref, 'refs/tags/')"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: "write"
+    steps:
+      - name: "Create draft release"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "TAG=\"${GITHUB_REF#refs/tags/}\"
+
+          gh release view \"$TAG\" --repo \"$GITHUB_REPOSITORY\" ||
+
+          \  gh release create \"$TAG\" --repo \"$GITHUB_REPOSITORY\" --draft --title \"$TAG\" --notes \"Assets are being uploaded by CI.\""
   build:
     name: "${{ matrix.config.target }}"
-    if: "github.event_name == 'push'"
+    if: "!cancelled() && github.event_name == 'push' && (needs.create_release.result == 'success' || needs.create_release.result == 'skipped')"
+    permissions:
+      contents: "write"
     runs-on: "${{ matrix.config.os }}"
     strategy:
       matrix:
@@ -221,38 +240,39 @@ jobs:
 
           echo \"ZIP_CHECKSUM=$(shasum -a 256 dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
         working-directory: "target/aarch64-unknown-linux-gnu/release"
-      - name: "Upload artifacts (x86_64-apple-darwin)"
+      - name: "Upload release asset (x86_64-apple-darwin)"
         if: "matrix.config.target == 'x86_64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
-        uses: "actions/upload-artifact@v7"
-        with:
-          name: "x86_64-apple-darwin-artifacts"
-          path: "target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip"
-      - name: "Upload artifacts (aarch64-apple-darwin)"
+        shell: "bash"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-apple-darwin/release/dprint-plugin-svgo-x86_64-apple-darwin.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+      - name: "Upload release asset (aarch64-apple-darwin)"
         if: "matrix.config.target == 'aarch64-apple-darwin' && startsWith(github.ref, 'refs/tags/')"
-        uses: "actions/upload-artifact@v7"
-        with:
-          name: "aarch64-apple-darwin-artifacts"
-          path: "target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip"
-      - name: "Upload artifacts (x86_64-pc-windows-msvc)"
+        shell: "bash"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-apple-darwin/release/dprint-plugin-svgo-aarch64-apple-darwin.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+      - name: "Upload release asset (x86_64-pc-windows-msvc)"
         if: "matrix.config.target == 'x86_64-pc-windows-msvc' && startsWith(github.ref, 'refs/tags/')"
-        uses: "actions/upload-artifact@v7"
-        with:
-          name: "x86_64-pc-windows-msvc-artifacts"
-          path: "target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip"
-      - name: "Upload artifacts (x86_64-unknown-linux-gnu)"
+        shell: "bash"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-pc-windows-msvc/release/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+      - name: "Upload release asset (x86_64-unknown-linux-gnu)"
         if: "matrix.config.target == 'x86_64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
-        uses: "actions/upload-artifact@v7"
-        with:
-          name: "x86_64-unknown-linux-gnu-artifacts"
-          path: "target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip"
-      - name: "Upload artifacts (aarch64-unknown-linux-gnu)"
+        shell: "bash"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/x86_64-unknown-linux-gnu/release/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+      - name: "Upload release asset (aarch64-unknown-linux-gnu)"
         if: "matrix.config.target == 'aarch64-unknown-linux-gnu' && startsWith(github.ref, 'refs/tags/')"
-        uses: "actions/upload-artifact@v7"
-        with:
-          name: "aarch64-unknown-linux-gnu-artifacts"
-          path: "target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip"
-  draft_release:
-    name: "draft_release"
+        shell: "bash"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${GITHUB_REF#refs/tags/}\" target/aarch64-unknown-linux-gnu/release/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip --clobber --repo \"$GITHUB_REPOSITORY\""
+    needs: "create_release"
+  publish_release:
+    name: "publish_release"
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: "build"
     runs-on: "ubuntu-latest"
@@ -263,22 +283,14 @@ jobs:
         uses: "actions/checkout@v7"
         with:
           submodules: "recursive"
-      - name: "Download artifacts"
-        uses: "actions/download-artifact@v8"
       - uses: "denoland/setup-deno@v2"
       - uses: "extractions/setup-just@v4"
       - name: "Generate schema"
         run: "deno run --frozen -A scripts/generate_schema.ts schema.json"
-      - name: "Move downloaded artifacts to root directory"
-        run: "mv x86_64-apple-darwin-artifacts/dprint-plugin-svgo-x86_64-apple-darwin.zip .
-
-          mv aarch64-apple-darwin-artifacts/dprint-plugin-svgo-aarch64-apple-darwin.zip .
-
-          mv x86_64-pc-windows-msvc-artifacts/dprint-plugin-svgo-x86_64-pc-windows-msvc.zip .
-
-          mv x86_64-unknown-linux-gnu-artifacts/dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip .
-
-          mv aarch64-unknown-linux-gnu-artifacts/dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip ."
+      - name: "Download release assets"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release download \"${GITHUB_REF#refs/tags/}\" --repo \"$GITHUB_REPOSITORY\" --pattern \"*.zip\""
       - name: "Output checksums"
         run: "echo \"dprint-plugin-svgo-x86_64-apple-darwin.zip: $(shasum -a 256 dprint-plugin-svgo-x86_64-apple-darwin.zip | awk '{print $1}')\"
 
@@ -300,79 +312,74 @@ jobs:
       - name: "Get plugin file checksum"
         id: "get_plugin_file_checksum"
         run: "echo \"CHECKSUM=$(shasum -a 256 plugin.json | awk '{print $1}')\" >> \"$GITHUB_OUTPUT\""
-      - name: "Release"
-        uses: "softprops/action-gh-release@v3"
+      - name: "Upload plugin file and schema"
         env:
-          GITHUB_TOKEN: "${{ github.token }}"
-        with:
-          draft: true
-          files: "dprint-plugin-svgo-x86_64-apple-darwin.zip
+          GH_TOKEN: "${{ github.token }}"
+        run: "gh release upload \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" plugin.json schema.json --clobber --repo \"$GITHUB_REPOSITORY\""
+      - name: "Publish release"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: "cat > release_body.md <<'RELEASE_BODY'
 
-            dprint-plugin-svgo-aarch64-apple-darwin.zip
-
-            dprint-plugin-svgo-x86_64-pc-windows-msvc.zip
-
-            dprint-plugin-svgo-x86_64-unknown-linux-gnu.zip
-
-            dprint-plugin-svgo-aarch64-unknown-linux-gnu.zip
-
-            plugin.json
-
-            schema.json"
-          body: "# SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
+          # SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}
 
 
-            ## Install
+          ## Install
 
 
-            Dependencies:
+          Dependencies:
 
 
-            - Install dprint's CLI >= 0.40.0
+          - Install dprint's CLI >= 0.40.0
 
 
-            In a dprint configuration file:
+          In a dprint configuration file:
 
 
-            1. Specify the plugin url and checksum in the `\"plugins\"` array or run `dprint add kjanat/svgo`:
+          1. Specify the plugin url and checksum in the `\"plugins\"` array or run `dprint add kjanat/svgo`:
 
 
-            \   ```jsonc
+          \   ```jsonc
 
-            \   {
+          \   {
 
-            \     // etc...
+          \     // etc...
 
-            \     \"plugins\": [
+          \     \"plugins\": [
 
-            \       // ...add other dprint plugins here...
+          \       // ...add other dprint plugins here...
 
-            \       \"https://github.com/kjanat/dprint-plugin-svgo/releases/download/${{ steps.get_tag_version.outputs.TAG_VERSION }}/plugin.json@${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}\"
+          \       \"https://github.com/kjanat/dprint-plugin-svgo/releases/download/${{ steps.get_tag_version.outputs.TAG_VERSION }}/plugin.json@${{ steps.get_plugin_file_checksum.outputs.CHECKSUM }}\"
 
-            \     ]
+          \     ]
 
-            \   }
+          \   }
 
-            \   ```
-
-
-            2. Add a `\"svgo\"` configuration property if desired.
+          \   ```
 
 
-            \   ```jsonc
+          2. Add a `\"svgo\"` configuration property if desired.
 
-            \   {
 
-            \     // ...etc...
+          \   ```jsonc
 
-            \     \"svgo\": {
+          \   {
 
-            \        \"pretty\": true,
+          \     // ...etc...
 
-            \        \"indent\": 2
+          \     \"svgo\": {
 
-            \      }
+          \        \"pretty\": true,
 
-            \   }
+          \        \"indent\": 2
 
-            \   ```\n"
+          \      }
+
+          \   }
+
+          \   ```
+
+
+          RELEASE_BODY
+
+          gh release edit \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --repo \"$GITHUB_REPOSITORY\" --title \"${{ steps.get_tag_version.outputs.TAG_VERSION }}\" --notes-file release_body.md --draft=false"
