@@ -448,7 +448,7 @@ function publishReleaseJob() {
           "cat > release_body.md <<'RELEASE_BODY'",
           releaseBody(),
           "RELEASE_BODY",
-          'gh release edit "${{ steps.get_tag_version.outputs.TAG_VERSION }}" --repo "${GITHUB_REPOSITORY}" --title "${{ steps.get_tag_version.outputs.TAG_VERSION }}" --notes-file release_body.md --draft=false',
+          'gh release edit "${{ steps.get_tag_version.outputs.TAG_VERSION }}" --repo "${GITHUB_REPOSITORY}" --title "${{ steps.get_tag_version.outputs.TAG_VERSION }} - SVGO ${{ steps.get_svgo_version.outputs.SVGO_VERSION }}" --notes-file release_body.md --draft=false',
         ].join("\n"),
       },
     ],
