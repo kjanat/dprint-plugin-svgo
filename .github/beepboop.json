@@ -1,0 +1,20 @@
+{
+  "$schema": "https://beepboop.kjanat.dev/schema/v1.json",
+  "streams": {
+    "maintenance": {
+      "versioning": "none",
+      "workflows": {
+        "check-updates": { "file": "check-updates.yml", "ref": "master", "mode": "dispatch" }
+      }
+    }
+  },
+  "subscriptions": [
+    {
+      "id": "svgo-release",
+      "source": "npm:svgo",
+      "event": "package.version.changed",
+      "stream": "maintenance",
+      "operation": "check-updates"
+    }
+  ]
+}

@@ -17,12 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write
+      contents: read
+      id-token: write
 
     steps:
+      - name: Authenticate as Beepboop
+        id: beepboop
+        uses: kjanat/beepboop/actions/token@ee97aa4aad9688f2ccf07e09338d4193740d19f0
+        with:
+          permissions: '{"contents":"write"}'
+
       - name: Clone repository
         uses: actions/checkout@v7
-        with: { token: "${{ secrets.DPRINT_PAT }}", submodules: recursive }
+        with: { token: "${{ steps.beepboop.outputs.token }}", submodules: recursive }
 
       - uses: denoland/setup-deno@v2
       - uses: extractions/setup-just@v4
@@ -30,10 +37,10 @@ jobs:
 
       - name: Bump version and tag
         env:
-          GITHUB_TOKEN: ${{ secrets.DPRINT_PAT }}
-          GH_WORKFLOW_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ steps.beepboop.outputs.token }}
+          GIT_AUTHOR_NAME: ${{ steps.beepboop.outputs.bot-login }}
+          GIT_AUTHOR_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
+          GIT_COMMITTER_NAME: ${{ steps.beepboop.outputs.bot-login }}
+          GIT_COMMITTER_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
           RELEASE_KIND: ${{ github.event.inputs.releaseKind }}
-        run: |
-          git config user.email "${GH_WORKFLOW_ACTOR}@users.noreply.github.com"
-          git config user.name "${GH_WORKFLOW_ACTOR}[bot]"
-          deno run -A dprint/automation/publish-release "--${RELEASE_KIND}" Cargo.toml
+        run: deno run -A dprint/automation/publish-release "--${RELEASE_KIND}" Cargo.toml
