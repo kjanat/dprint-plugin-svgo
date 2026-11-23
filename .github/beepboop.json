@@ -2,9 +2,13 @@
   "$schema": "https://beepboop.kjanat.dev/schema/v1.json",
   "streams": {
     "maintenance": {
-      "versioning": "none",
+      "versionScope": "none",
       "workflows": {
-        "check-updates": { "file": "check-updates.yml", "ref": "master", "mode": "dispatch" }
+        "check-updates": {
+          "file": "check-updates.yml",
+          "ref": "master",
+          "mode": "dispatch"
+        }
       }
     }
   },
